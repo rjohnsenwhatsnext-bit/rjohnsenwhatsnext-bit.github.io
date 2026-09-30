@@ -1,0 +1,197 @@
+{
+  "frontier": {
+    "source": "frontier-master.png",
+    "crops": {
+      "0": {
+        "left": 2,
+        "top": 4,
+        "width": 420,
+        "height": 354
+      },
+      "1": {
+        "left": 421,
+        "top": 76,
+        "width": 358,
+        "height": 288
+      },
+      "2": {
+        "left": 784,
+        "top": 61,
+        "width": 353,
+        "height": 297
+      },
+      "3": {
+        "left": 1141,
+        "top": 89,
+        "width": 302,
+        "height": 255
+      },
+      "4": {
+        "left": 5,
+        "top": 384,
+        "width": 376,
+        "height": 308
+      },
+      "5": {
+        "left": 369,
+        "top": 404,
+        "width": 359,
+        "height": 290
+      },
+      "6": {
+        "left": 731,
+        "top": 380,
+        "width": 400,
+        "height": 306
+      },
+      "7": {
+        "left": 1127,
+        "top": 412,
+        "width": 319,
+        "height": 278
+      },
+      "8": {
+        "left": 8,
+        "top": 725,
+        "width": 370,
+        "height": 300
+      },
+      "9": {
+        "left": 384,
+        "top": 765,
+        "width": 378,
+        "height": 264
+      },
+      "10": {
+        "left": 761,
+        "top": 680,
+        "width": 240,
+        "height": 368
+      },
+      "11": {
+        "left": 1000,
+        "top": 761,
+        "width": 446,
+        "height": 254
+      }
+    }
+  },
+  "imperial": {
+    "source": "imperial-master.png",
+    "crops": {
+      "0": {
+        "left": 10,
+        "top": 9,
+        "width": 336,
+        "height": 369
+      },
+      "1": {
+        "left": 363,
+        "top": 65,
+        "width": 355,
+        "height": 304
+      },
+      "2": {
+        "left": 733,
+        "top": 89,
+        "width": 353,
+        "height": 284
+      },
+      "3": {
+        "left": 1100,
+        "top": 63,
+        "width": 343,
+        "height": 300
+      },
+      "4": {
+        "left": 12,
+        "top": 417,
+        "width": 341,
+        "height": 280
+      },
+      "5": {
+        "left": 368,
+        "top": 405,
+        "width": 348,
+        "height": 284
+      },
+      "6": {
+        "left": 724,
+        "top": 382,
+        "width": 356,
+        "height": 319
+      },
+      "7": {
+        "left": 1098,
+        "top": 373,
+        "width": 339,
+        "height": 337
+      },
+      "8": {
+        "left": 9,
+        "top": 729,
+        "width": 366,
+        "height": 306
+      },
+      "9": {
+        "left": 387,
+        "top": 734,
+        "width": 351,
+        "height": 303
+      },
+      "10": {
+        "left": 794,
+        "top": 698,
+        "width": 224,
+        "height": 342
+      },
+      "11": {
+        "left": 1057,
+        "top": 713,
+        "width": 379,
+        "height": 316
+      }
+    }
+  },
+  "land": {
+    "source": "land-master.png",
+    "crops": {
+      "0": {
+        "left": 10,
+        "top": 17,
+        "width": 531,
+        "height": 516
+      },
+      "1": {
+        "left": 584,
+        "top": 0,
+        "width": 352,
+        "height": 533
+      },
+      "2": {
+        "left": 1000,
+        "top": 144,
+        "width": 528,
+        "height": 385
+      },
+      "3": {
+        "left": 2,
+        "top": 575,
+        "width": 486,
+        "height": 401
+      },
+      "4": {
+        "left": 536,
+        "top": 632,
+        "width": 440,
+        "height": 343
+      },
+      "5": {
+        "left": 1008,
+        "top": 617,
+        "width": 519,
+        "height": 360
+      }
+    }
+  }
+}

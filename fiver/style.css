@@ -1,0 +1,61 @@
+/* Fiver: plain and readable for Codex to style. Gold = right spot, teal =
+   in the word, slate = not in it. Not another game's colours. */
+:root { --bg: #16181d; --ink: #f1ede4; --dim: #9aa3ad; --hit: #d9a521; --near: #2a9d9a; --miss: #3a3f47; --tile: #23262d; --line: #3b4048; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 600 16px/1.35 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+body { display: flex; flex-direction: column; height: 100dvh; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+header { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+header h1 { flex: 1; margin: 0; text-align: center; letter-spacing: 6px; font-size: 24px; }
+.icon { background: none; border: 1px solid var(--line); color: var(--ink); width: 38px; height: 38px; border-radius: 10px; font-size: 18px; }
+#levels { display: flex; gap: 6px; padding: 8px 12px; }
+#levels button { flex: 1; background: var(--tile); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 7px 4px; font: inherit; font-size: 14px; }
+#levels button small { display: block; font-size: 10px; color: var(--dim); font-weight: 500; }
+#levels button.on { border-color: var(--hit); box-shadow: inset 0 0 0 1px var(--hit); }
+#levels button.done::after { content: ' ✓'; color: var(--hit); }
+main { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding: 6px; }
+#board { display: grid; gap: 6px; }
+.rowb { display: grid; gap: 6px; }
+.tile { display: inline-flex; align-items: center; justify-content: center; aspect-ratio: 1; border: 2px solid var(--line); border-radius: 6px; font-size: 26px; text-transform: uppercase; }
+.tile.filled { border-color: #6b7280; animation: pop 0.1s; }
+.tile.hit { background: var(--hit); border-color: var(--hit); color: #1d1605; }
+.tile.near { background: var(--near); border-color: var(--near); color: #04201f; }
+.tile.miss { background: var(--miss); border-color: var(--miss); }
+.tile.flip { animation: flip 0.45s ease both; }
+.rowb.shake { animation: shake 0.35s; }
+@keyframes pop { 50% { transform: scale(1.08); } }
+@keyframes flip { 0% { transform: rotateX(0); } 50% { transform: rotateX(90deg); } 100% { transform: rotateX(0); } }
+@keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+#keyboard { padding: 6px 4px 10px; display: grid; gap: 6px; }
+.krow { display: flex; gap: 5px; justify-content: center; }
+.key { flex: 1; max-width: 44px; height: 54px; border: 0; border-radius: 7px; background: #4b525c; color: var(--ink); font: inherit; font-size: 15px; text-transform: uppercase; }
+.key.wide { max-width: 68px; flex: 1.5; font-size: 12px; }
+.key.hit { background: var(--hit); color: #1d1605; }
+.key.near { background: var(--near); color: #04201f; }
+.key.miss { background: #2a2e34; color: #7c848d; }
+#toast { position: fixed; top: 110px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: 15px; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 10; }
+#toast.show { opacity: 1; }
+dialog { width: min(420px, calc(100% - 28px)); border: 1px solid var(--line); border-radius: 14px; background: #1d2026; color: var(--ink); padding: 22px; text-align: center; }
+dialog::backdrop { background: #000a; }
+dialog h2 { margin: 0 0 8px; }
+dialog .tile { width: 34px; font-size: 18px; margin-right: 8px; vertical-align: middle; }
+dialog p { text-align: left; }
+#resultWord { text-align: center; font-size: 22px; letter-spacing: 4px; text-transform: uppercase; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 14px 0; }
+.stats b { display: block; font-size: 26px; }
+.stats span { font-size: 11px; color: var(--dim); font-weight: 500; }
+.dist { display: grid; gap: 4px; text-align: left; margin-bottom: 12px; }
+.dist div { display: grid; grid-template-columns: 16px 1fr; gap: 6px; align-items: center; font-size: 13px; }
+.dist i { display: block; background: var(--miss); padding: 2px 6px; text-align: right; font-style: normal; min-width: 22px; border-radius: 3px; }
+.dist i.now { background: var(--hit); color: #1d1605; }
+.small { color: var(--dim); font-size: 13px; text-align: center !important; }
+.row { display: flex; gap: 8px; }
+.row button, dialog > button { flex: 1; }
+button.primary, dialog button { font: inherit; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--tile); color: var(--ink); }
+button.primary { background: var(--hit); color: #1d1605; border-color: var(--hit); }
+.hidden { display: none !important; }
+.toggle { display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; padding: 12px 0; }
+.toggle small { display: block; color: var(--dim); font-weight: 500; font-size: 12px; }
+.toggle input { width: 22px; height: 22px; accent-color: var(--hit); }
+
+/* the keyboard sits clear of the bottom banner (ads.js sets --ad-banner) */
+#keyboard{padding-bottom:calc(10px + var(--ad-banner, 0px))}

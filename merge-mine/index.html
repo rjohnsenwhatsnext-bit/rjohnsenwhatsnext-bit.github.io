@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="capacitor-core.js"></script>
+<script>window.ARCADE_ADS = {"android":{},"ios":{}}; window.ARCADE_ADS_LIVE = false; window.ARCADE_GAME = {"slug":"merge-mine","idSuffix":"mergemine","version":1,"release":false};</script>
+<script src="arcade-telemetry.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#1b140e">
+<title>Merge Mine</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="visual.css">
+</head>
+<body data-view="home">
+
+<section id="home" class="screen">
+  <p class="eyebrow">A GOLDFIELDS MINE, 1890s</p>
+  <h1 class="sr-only">MERGE MINE</h1>
+  <p class="lede">Dig it. Merge it. Build the mine.</p>
+  <button id="play" class="big">Down the shaft</button>
+  <button id="homeSettings" class="textButton">Settings & how to play</button>
+  <p class="small">Tap the rock face and the tool shed for pieces. Drag two the same together to make something better. Fill the orders, spend the coins on the mine.</p>
+</section>
+
+<main id="game" class="hidden">
+  <header id="bar">
+    <button id="settings" aria-label="Settings">⚙</button>
+    <button id="energy" aria-label="Energy"><b id="energyN">100</b><small id="energyT"></small></button>
+    <div id="coins"><b id="coinsN">0</b><small>coins</small></div>
+    <div id="lvl"><b id="lvlN">1</b><span id="xpBar"><i></i></span></div>
+    <button id="site">The mine</button>
+  </header>
+  <section id="orders" aria-label="Orders"></section>
+  <section id="board" aria-label="The board"></section>
+  <footer id="info"><span id="infoText">Tap the rock face to dig.</span><button id="sell" class="hidden">Sell</button></footer>
+</main>
+
+<dialog id="siteDlg">
+  <p class="eyebrow" id="areaName"></p>
+  <div id="siteScene"><img id="siteArt" alt="Current mine construction"><span id="siteStage"></span></div>
+  <nav id="siteAreas" aria-label="Mine areas"></nav>
+  <h2 id="projName"></h2>
+  <p id="projNote"></p>
+  <div id="projDots"></div>
+  <button id="build" class="big">Build</button>
+  <button id="closeSite">Back to the board</button>
+</dialog>
+
+<dialog id="settingsDlg">
+  <p class="eyebrow">THE MINER'S HANDBOOK</p><h2>Take a breather</h2>
+  <label>Sound effects <input id="soundOn" type="checkbox"></label>
+  <label>Animated effects <input id="motionOn" type="checkbox"></label>
+  <p>Tap the rock face or tool shed for pieces. Drag matching pieces together to merge. Fill workers' orders, then build your mine.</p>
+  <p>Select a crate, then tap it again to open. Two matching crates merge into a bigger one.</p>
+  <button id="replayTutorial">Show me how again</button><button id="closeSettings" class="big">Back to it</button><button id="backHome">Main menu</button>
+</dialog>
+<div id="crateReveal" role="status" aria-live="polite"></div>
+
+<dialog id="energyDlg">
+  <h2>Out of puff</h2>
+  <p id="energyNote"></p>
+  <button id="adEnergy" class="big">Watch an ad: +50 energy</button>
+  <button id="closeEnergy">Wait it out</button>
+</dialog>
+
+<div id="toast" role="status"></div>
+<script type="module" src="main.mjs"></script>
+</body>
+</html>

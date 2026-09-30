@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#101418">
+<title>Orbit Break</title>
+<link rel="stylesheet" href="shell/shell.css">
+</head>
+<body>
+<div id="app"></div>
+<script src="capacitor-core.js"></script>
+<script>window.ARCADE_ADS = {"android":{},"ios":{}}; window.ARCADE_ADS_LIVE = false; window.ARCADE_GAME = {"slug":"orbit-break","idSuffix":"orbitbreak","version":2,"release":false};</script>
+<script src="shell/telemetry.js"></script>
+<script type="module">
+import { runGame } from './shell/shell.js';
+import game from './game.js';
+runGame(game, {"slug":"orbit-break","title":"Orbit Break","tagline":"Thread the gate. Escape the planet.","howToPlay":"Press LAUNCH to fly through the moving gap. Lead the rotation. Each sector gets faster and tighter; direction switches, a second gate and debris follow. Watch the reactor timer.","accent":"#82ffe0","background":"#080e25","idSuffix":"orbitbreak","version":2,"overTitle":"Signal lost","reviveLabel":"Watch an ad: recharge this orbit","owner":"ryan","store":{"shortDescription":"Time your launch through the spinning gap before your charge runs out.","fullDescription":"Find the opening. Take your shot.\n\nOrbit Break is a one tap timing game. A glowing ring spins around you with a single gap in it. Tap to launch, but aim ahead: the ring keeps turning while you fly. Clear the ring before your charge runs out, then face the next orbit.\n\n- One tap to play, quick to restart\n- Rings alternate direction and get harder as you go\n- Hit the centre of the gap for a precision bonus\n- Your best score is saved on your device\n\nNo account needed.\n\nThe game is free with ads. When a run ends you can choose to watch an ad to recharge that orbit and keep going."},"anchor":"center","controls":[{"label":"LAUNCH","key":"Space"}],"fluid":true,"icon":"store/art-v2/icon-1024.png"});
+</script>
+</body>
+</html>

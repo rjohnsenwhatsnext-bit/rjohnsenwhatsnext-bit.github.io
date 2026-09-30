@@ -1,0 +1,5 @@
+// Compact host snapshots: unchanged town geometry is recreated from the seed.
+export function packAlive(objs){let s='';for(let i=0;i<objs.length;i+=8){let b=0;for(let j=0;j<8;j++)if(objs[i+j]?.alive)b|=1<<j;s+=String.fromCharCode(b);}return btoa(s);}
+export function unpackAlive(text,count){if(typeof text!=='string'||text.length>20000)return null;try{const s=atob(text);if(s.length!==Math.ceil(count/8))return null;return Array.from({length:count},(_,i)=>!!(s.charCodeAt(i>>3)&(1<<(i%8))));}catch{return null;}}
+export function safeInput(value){if(!value||!Number.isFinite(value.dx)||!Number.isFinite(value.dy))return null;const m=Math.max(1,Math.hypot(value.dx,value.dy));return {dx:value.dx/m,dy:value.dy/m};}
+export function validSnapshot(s,g,round,lastTick){return !!s&&s.round===round&&Number.isInteger(s.tick)&&s.tick>=lastTick&&s.tick<=3600&&Array.isArray(s.holes)&&s.holes.length===8&&s.holes.every((h,i)=>h.id===i&&['x','y','r','score','out','vx','vy'].every(k=>Number.isFinite(h[k]))&&h.x>=-10&&h.y>=-10&&h.x<=280&&h.y<=280&&h.r>0&&h.r<150&&h.score>=0&&typeof h.name==='string'&&h.name.length<=20)&&!!unpackAlive(s.alive,g.objs.length);}

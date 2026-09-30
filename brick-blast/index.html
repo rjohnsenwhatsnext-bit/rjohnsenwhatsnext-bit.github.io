@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="capacitor-core.js"></script>
+<script>window.ARCADE_ADS = {"android":{},"ios":{}}; window.ARCADE_ADS_LIVE = false; window.ARCADE_GAME = {"slug":"brick-blast","idSuffix":"brickblast","version":1,"release":false};</script>
+<script src="arcade-telemetry.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#1a120c">
+<title>Brick Blast</title>
+<link rel="icon" href="assets/title.webp">
+<link rel="stylesheet" href="visual.css">
+</head>
+<body data-view="home">
+<canvas id="game" aria-label="The mine: drag bricks onto the board"></canvas>
+<button id="settings" class="settings" aria-label="Settings">⚙</button>
+<dialog id="settingsPanel">
+  <div class="dialogHead"><h2>Settings</h2><button id="closeSettings" aria-label="Close settings">×</button></div>
+  <label>Mine sounds <input type="checkbox" id="sound"></label>
+  <label>Ambient motion & shake <input type="checkbox" id="motion"></label>
+  <p class="small">Drag ore shapes into empty spaces. Complete a row or column to load the dynamite cart. When it fills, stand back.</p>
+</dialog>
+
+<section id="home" class="screen">
+  <p class="eyebrow">DEEP SHAFT No. 3 · EST. 1896</p>
+  <h1>BRICK<br>BLAST</h1>
+  <p class="lede">Fill the rows. Fill the cart.<br>Let the old boy light it up.</p>
+  <p id="homeBest"></p>
+  <button id="play" class="big">Enter the mine <span aria-hidden="true">→</span></button>
+  <p class="small">A little planning. A lot of dynamite.</p>
+</section>
+
+<section id="over" class="screen hidden">
+  <p class="eyebrow">THE SHAFT IS FULL</p>
+  <h2 id="overScore">0</h2>
+  <p id="overNote"></p>
+  <button id="revive" class="big">Watch an ad: blast a hole and keep going</button>
+  <button id="again" class="big">Dig again</button>
+  <button id="toHome">Back up top</button>
+</section>
+
+<div id="toast" role="status"></div>
+<script type="module" src="main.mjs"></script>
+</body>
+</html>

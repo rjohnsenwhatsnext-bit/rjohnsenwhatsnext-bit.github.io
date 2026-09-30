@@ -1,0 +1,34 @@
+import {TYPES,staff} from './engine.mjs';
+export const roomBox=i=>({x:i%2?258:18,y:164+Math.floor(i/2)*96,w:204,h:84});
+function rect(g,x,y,w,h,c){g.fillStyle=c;g.fillRect(x,y,w,h);}
+function circle(g,x,y,r,c){g.fillStyle=c;g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();}
+function person(g,x,y,skin,shirt,t){const bob=Math.sin(t*3+x)*.7;g.save();g.translate(x,y+bob);rect(g,-5,-12,10,13,shirt);rect(g,-6,-12,12,3,shirt);rect(g,-4,1,3,7,'#203034');rect(g,1,1,3,7,'#203034');circle(g,0,-17,5,skin);rect(g,-5,-22,10,3,'#433931');rect(g,1,-18,2,1,'#333');g.strokeStyle=skin;g.lineWidth=3;g.beginPath();g.moveTo(-5,-9);g.lineTo(-8,-3);g.moveTo(5,-9);g.lineTo(8,-5+Math.sin(t*2));g.stroke();g.restore();}
+export function draw(g,s,selected,t){g.clearRect(0,0,480,480);const sky=g.createLinearGradient(0,0,0,145);sky.addColorStop(0,'#284b52');sky.addColorStop(1,'#c38969');g.fillStyle=sky;g.fillRect(0,0,480,145);circle(g,374,46,24,'#efd39a');
+ for(let l=0;l<3;l++){g.fillStyle=['#647777','#846b5d','#926d50'][l];g.beginPath();g.moveTo(0,145);for(let i=0;i<=12;i++)g.lineTo(i*40,95+l*14-Math.sin(i*1.7+l)*13);g.lineTo(480,145);g.closePath();g.fill();}
+ rect(g,0,135,480,345,'#443f35');rect(g,0,135,480,8,'#c19b64');
+ for(let i=0;i<65;i++){g.strokeStyle=i%2?'#73614a55':'#202e2d66';g.lineWidth=1;const x=(i*139)%480,y=148+(i*71)%330;g.beginPath();g.moveTo(x,y);g.lineTo(x+12,y-2);g.lineTo(x+22,y+3);g.stroke();}
+ // A weather station and shelter hatch, our own outback world.
+ rect(g,218,110,46,26,'#546867');rect(g,212,105,58,6,'#243e41');rect(g,235,116,13,19,'#142b2f');rect(g,220,114,8,5,'#eabd78');
+ rect(g,92,118,4,16,'#273f40');rect(g,134,118,4,16,'#273f40');g.save();g.translate(84,106);g.transform(1,0,-.25,1,0,0);rect(g,0,0,66,14,'#23464f');g.strokeStyle='#7e9d9d';g.lineWidth=.7;for(let i=0;i<6;i++){g.beginPath();g.moveTo(i*13,0);g.lineTo(i*13,14);g.stroke();}g.restore();
+ g.strokeStyle='#243f41';g.lineWidth=3;g.beginPath();g.moveTo(318,135);g.lineTo(326,65);g.lineTo(334,135);g.moveTo(321,111);g.lineTo(331,111);g.moveTo(323,91);g.lineTo(329,91);g.stroke();circle(g,326,63,4,s.beacon===3?'#a5deae':'#e3aa74');
+ for(let i=0;i<s.beacon;i++){g.strokeStyle='#bbdfaa70';g.lineWidth=1.3;g.beginPath();g.arc(326,63,10+i*7+Math.sin(t*2)*2,-2.8,-.35);g.stroke();}
+ for(const x of [30,175,432]){g.strokeStyle='#576150';g.lineWidth=2;g.beginPath();g.moveTo(x,135);g.lineTo(x-3,117);g.moveTo(x-2,129);g.lineTo(x-10,124);g.moveTo(x-2,123);g.lineTo(x+5,117);g.stroke();}
+ rect(g,232,140,16,316,'#1e3132');rect(g,238,146,2,302,'#b29e72');for(let y=152;y<450;y+=13)rect(g,234,y,12,2,'#7b8977');
+ const liftY=176+(Math.sin(t*.3)*.5+.5)*180;rect(g,230,liftY,20,25,'#788876');rect(g,233,liftY+4,14,17,'#263c3e');
+ for(let i=0;i<6;i++){const b=roomBox(i),r=s.rooms[i];g.save();g.beginPath();g.rect(b.x,b.y,b.w,b.h);g.clip();
+  if(!r){rect(g,b.x,b.y,b.w,b.h,'#343c33');g.setLineDash([4,5]);g.strokeStyle='#9b936b70';g.strokeRect(b.x+4,b.y+4,b.w-8,b.h-8);g.setLineDash([]);g.font='300 28px sans-serif';g.textAlign='center';g.fillStyle='#b6a989';g.fillText('+',b.x+b.w/2,b.y+42);g.font='700 8px sans-serif';g.fillText('ROOM TO GROW',b.x+b.w/2,b.y+61);g.textAlign='left';g.restore();continue;}
+  const type=TYPES[r.type];rect(g,b.x,b.y,b.w,b.h,'#273f3e');const light=g.createLinearGradient(0,b.y,0,b.y+b.h);light.addColorStop(0,type.color+'55');light.addColorStop(1,'#1d323400');g.fillStyle=light;g.fillRect(b.x,b.y,b.w,b.h);rect(g,b.x,b.y+18,b.w,2,'#101f2780');rect(g,b.x,b.y+73,b.w,11,'#172c2f');rect(g,b.x,b.y+73,b.w,2,'#ac9a7580');rect(g,b.x+5,b.y+25,3,45,'#61746b');rect(g,b.x+196,b.y+25,3,45,'#61746b');
+  rect(g,b.x+79,b.y+20,47,3,'#f3d59a');
+  if(r.type==='power'){for(let k=0;k<3;k++){const x=b.x+28+k*52;rect(g,x,b.y+34,33,31,'#697a67');rect(g,x-3,b.y+61,39,5,'#aeab77');circle(g,x+16,b.y+45,10,'#263c3d');g.save();g.translate(x+16,b.y+45);g.rotate(r.damaged?0:t*(staff(s,i).length?2:0)+k);for(let z=0;z<4;z++){g.rotate(Math.PI/2);rect(g,-2,-8,4,7,'#c6ba83');}g.restore();circle(g,x+16,b.y+45,3,'#e4c284');rect(g,x+6,b.y+60,20,2,r.damaged?'#a66151':'#cfbc69');}}
+  if(r.type==='grow'){for(let shelf=0;shelf<2;shelf++){rect(g,b.x+22,b.y+40+shelf*22,162,4,'#91a282');for(let k=0;k<7;k++){const x=b.x+30+k*23,y=b.y+35+shelf*22;rect(g,x,y,12,6,'#b18f63');g.strokeStyle='#a9c885';g.lineWidth=2;g.beginPath();g.moveTo(x+6,y);g.lineTo(x+6,y-10);g.stroke();g.fillStyle='#97b57e';g.beginPath();g.ellipse(x+3,y-6,5,2,.5,0,6.29);g.ellipse(x+9,y-9,5,2,-.6,0,6.29);g.fill();}}}
+  if(r.type==='work'){rect(g,b.x+24,b.y+54,157,7,'#be9865');rect(g,b.x+30,b.y+61,5,12,'#8c7757');rect(g,b.x+170,b.y+61,5,12,'#8c7757');rect(g,b.x+34,b.y+37,30,16,'#6a9088');circle(g,b.x+49,b.y+44,7,'#c4b57f');rect(g,b.x+119,b.y+40,28,13,'#af805e');rect(g,b.x+108,b.y+27,64,4,'#496667');for(let k=0;k<5;k++)rect(g,b.x+115+k*11,b.y+29,3,7+k%2*3,'#a9b9a4');if(staff(s,i).length&&!r.damaged&&Math.sin(t*6)>.5){g.strokeStyle='#ffe4a4';g.beginPath();g.moveTo(b.x+95,b.y+48);g.lineTo(b.x+90,b.y+41);g.moveTo(b.x+96,b.y+48);g.lineTo(b.x+103,b.y+42);g.stroke();}}
+  if(r.type==='home'){for(let k=0;k<3;k++){const x=b.x+23+k*55;for(let j=0;j<2;j++){rect(g,x,b.y+36+j*25,44,5,'#baa587');rect(g,x+3,b.y+30+j*25,37,6,'#c0826c');rect(g,x+3,b.y+30+j*25,10,6,'#dbceb3');}rect(g,x,b.y+28,3,45,'#716f55');rect(g,x+42,b.y+28,3,45,'#716f55');}}
+  if(r.type==='med'){rect(g,b.x+25,b.y+33,26,36,'#7a9180');for(let k=0;k<3;k++)for(let j=0;j<4;j++)rect(g,b.x+28+j*5,b.y+36+k*10,3,7,['#c6946e','#c7c091','#8dac97'][j%3]);for(let k=0;k<2;k++){rect(g,b.x+77+k*63,b.y+45,37,21,'#ad9eae');rect(g,b.x+81+k*63,b.y+40,29,10,'#c2adb7');rect(g,b.x+91+k*63,b.y+66,4,7,'#71867c');}}
+  const people=staff(s,i);for(let p=0;p<people.length;p++)person(g,b.x+52+p*49,b.y+64,['#d8ac82','#a66f51','#e2bf99'][s.crew.indexOf(people[p])%3],p%2?'#e1a878':'#91b7ad',t+p);
+  rect(g,b.x,b.y,b.w,18,'#203332dd');g.font='700 10px sans-serif';g.fillStyle='#f1dfb9';g.fillText(type.name.toUpperCase(),b.x+8,b.y+12);g.font='600 8px sans-serif';g.fillStyle='#a6b5a0';g.fillText('L'+r.level,b.x+b.w-20,b.y+12);
+  if(r.damaged){rect(g,b.x,b.y+18,b.w,b.h-18,'#842f282e');circle(g,b.x+181,b.y+36,9,'#d98360');g.fillStyle='#2d3531';g.font='900 13px sans-serif';g.textAlign='center';g.fillText('!',b.x+181,b.y+41);g.textAlign='left';}
+  else if(r.pending>=1){const badgeX=b.x+b.w-58,badgeY=b.y+49;rect(g,badgeX,badgeY,50,19,'#efc584');g.fillStyle='#273b39';g.font='800 10px sans-serif';g.textAlign='center';g.fillText('+'+Math.floor(r.pending),badgeX+25,badgeY+13);g.textAlign='left';}
+  g.restore();if(i===selected){g.strokeStyle='#f0c58c';g.lineWidth=2;g.strokeRect(b.x-1,b.y-1,b.w+2,b.h+2);}
+ }
+ const idle=s.crew.filter(p=>p.room===-1);for(let i=0;i<Math.min(3,idle.length);i++)person(g,181-i*18,127,'#d4ae83','#c69271',t);
+ g.fillStyle='#c7b188';g.font='700 8px sans-serif';g.textAlign='center';g.fillText('SHELTER  •  SOUTHERN INTERIOR',240,474);g.textAlign='left';}

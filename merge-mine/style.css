@@ -1,0 +1,67 @@
+/* Merge Mine: placeholder styling for Codex. Old goldfields: timber, iron,
+   lamp light. Every item is a coloured tile with its name until Codex draws
+   them. */
+:root { --ink: #f3e6cc; --dim: #b89f7c; --gold: #f0b440; --bg: #1b140e; --cell: #2b2017; --line: #4a3726; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font: 600 15px/1.3 system-ui, sans-serif; user-select: none; -webkit-user-select: none; }
+.hidden { display: none !important; }
+button { font: 800 15px system-ui, sans-serif; color: var(--ink); background: #3a2a1c; border: 2px solid #6b4a2c; border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+button:disabled { opacity: 0.45; }
+button.big { font-size: 18px; padding: 14px 24px; background: linear-gradient(#e6a32e, #b86f14); color: #2a1604; border-color: #f7c86a; }
+.eyebrow { font-size: 11px; letter-spacing: 4px; color: var(--dim); margin: 0; }
+h1 { font: 700 60px/0.95 Georgia, serif; color: var(--gold); margin: 0; }
+h2 { font: 700 26px Georgia, serif; color: var(--gold); margin: 6px 0; }
+.small { font-weight: 500; font-size: 13px; color: var(--dim); max-width: 320px; }
+.screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 32px 24px calc(24px + var(--ad-banner, 0px)); text-align: center; }
+
+#game { position: fixed; inset: 0; display: flex; flex-direction: column; gap: 8px; padding: max(8px, env(safe-area-inset-top)) 8px calc(8px + var(--ad-banner, 0px)); }
+#bar { display: grid; grid-template-columns: auto auto 1fr auto; gap: 8px; align-items: center; }
+#bar b { font-size: 18px; color: var(--gold); display: block; }
+#bar small { font-size: 10px; color: var(--dim); }
+#energy { padding: 4px 12px; text-align: left; }
+#lvl { display: flex; align-items: center; gap: 6px; }
+#xpBar { flex: 1; height: 8px; background: #3a2a1c; border-radius: 4px; overflow: hidden; }
+#xpBar i { display: block; height: 100%; width: 0; background: var(--gold); }
+
+#orders { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.order { background: #2a1f16; border: 2px solid var(--line); border-radius: 10px; padding: 6px; font-size: 11px; display: flex; flex-direction: column; gap: 4px; }
+.order.ready { border-color: var(--gold); box-shadow: 0 0 12px #f0b44066; }
+.order .who { color: var(--dim); }
+.order .wants { display: flex; gap: 3px; flex-wrap: wrap; }
+.order .want { padding: 2px 5px; border-radius: 6px; opacity: 0.55; }
+.order .want.have { opacity: 1; outline: 2px solid var(--gold); }
+.order button { padding: 5px; font-size: 12px; }
+
+#board { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(9, 1fr); gap: 3px; aspect-ratio: 7 / 9; max-width: 100%; margin: 0 auto; touch-action: none; }
+.cell { background: var(--cell); border-radius: 8px; position: relative; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 10px; line-height: 1.05; overflow: hidden; }
+.cell.sel { outline: 3px solid var(--gold); }
+.cell.drop { outline: 3px dashed var(--gold); }
+.item { width: 92%; height: 92%; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #1b140e; font-weight: 800; padding: 2px; }
+.item em { font-style: normal; font-size: 16px; }
+.item.gen { background: repeating-linear-gradient(45deg, #5a4330, #5a4330 6px, #4a3526 6px, #4a3526 12px); color: var(--gold); border: 2px solid var(--gold); }
+.c-ore { background: #9aa3ad; } .c-tool { background: #c9874a; } .c-timber { background: #b99257; } .c-lamp { background: #f2cf62; } .c-chest { background: #7d4f2b; color: var(--gold); border: 2px solid var(--gold); }
+.ghost { position: fixed; pointer-events: none; z-index: 9; width: 52px; height: 52px; transform: translate(-50%, -60%); opacity: 0.9; }
+.pop { animation: pop 0.35s ease-out; }
+@keyframes pop { 0% { transform: scale(0.4); } 70% { transform: scale(1.18); } 100% { transform: scale(1); } }
+.lucky { animation: lucky 0.9s ease-out; }
+@keyframes lucky { 0%, 100% { box-shadow: 0 0 0 #fff0; } 30% { box-shadow: 0 0 24px 8px #ffe28a; } }
+
+#info { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 40px; font-size: 13px; color: var(--dim); }
+dialog { background: #231a12; color: var(--ink); border: 2px solid #6b4a2c; border-radius: 16px; padding: 20px; width: min(92vw, 380px); text-align: center; }
+dialog::backdrop { background: #000a; }
+dialog button { display: block; width: 100%; margin-top: 10px; }
+#projDots { display: flex; justify-content: center; gap: 6px; margin: 10px 0; }
+#projDots i { width: 14px; height: 14px; border-radius: 50%; background: #3a2a1c; border: 2px solid var(--line); }
+#projDots i.done { background: var(--gold); }
+#toast { position: fixed; top: 30%; left: 50%; transform: translateX(-50%); color: var(--gold); font: 700 22px Georgia, serif; text-shadow: 0 2px 10px #000; pointer-events: none; z-index: 10; text-align: center; }
+
+/* the first-play coach (tutorial.mjs): placeholder look for Codex */
+#coach { position: fixed; left: 10px; right: 10px; bottom: calc(10px + var(--ad-banner, 0px)); z-index: 20; background: #fff6de; color: #2a1d10; border: 2px solid #f0b440; border-radius: 14px; padding: 12px 14px; box-shadow: 0 8px 30px #0008; font-size: 15px; }
+#coach p { margin: 0 0 8px; line-height: 1.35; }
+#coach div { display: flex; gap: 8px; justify-content: flex-end; }
+#coach button { padding: 6px 12px; font-size: 13px; }
+#coachSkip { background: transparent; color: #7a5a30; border-color: transparent; }
+.tut-target { position: relative; z-index: 5; animation: tutPulse 1.1s ease-in-out infinite; outline: 3px solid #ffd35a; outline-offset: 2px; border-radius: 10px; }
+@keyframes tutPulse { 50% { outline-color: #fff; box-shadow: 0 0 18px 6px #ffd35a88; } }
+@media (prefers-reduced-motion: reduce) { .tut-target { animation: none; } }
+#coach.top { bottom: auto; top: max(10px, env(safe-area-inset-top)); }

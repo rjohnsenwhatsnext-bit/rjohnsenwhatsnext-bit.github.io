@@ -1,0 +1,18 @@
+{
+  "tool": "Built-in image_gen",
+  "date": "2026-09-29",
+  "prompts": [
+    {
+      "asset": "atlas-master.png",
+      "prompt": "Use case: stylized-concept. Production game sprite atlas for SINKHOLE, an adult mining-town swallowing game. Create a square 1536px image: exactly 5 columns by 5 rows of equal cells on a genuinely TRANSPARENT background. Each isolated object centered in its own cell with generous transparent padding, no labels, no grid, no text, no shadows beyond each cell. High-end hand-painted 3D game art, orthographic aerial view looking almost straight down with just enough south-facing sides to read height. Warm dusty sandstone, rusty corrugated tin, muted eucalyptus, turquoise and cream paint. Consistent sunlight from upper left. Row 1: grey rock, old black tyre, timber crate, orange traffic cone, green wheelie bin. Row 2: roadside sign, saltbush, streetlamp, timber bench, rustic outhouse. Row 3: eucalyptus tree, red old car, cream pickup ute, corrugated water tank, tin shed. Row 4: goldfields cottage, yellow haul truck, large ornate old goldfields pub, white timber church, water tower on timber legs. Row 5: mining headframe with pulley, circular deep black sinkhole with broken rocky rim, smaller turquoise-rimmed black sinkhole, broken timber fence, stack of rusty barrels. Complete objects, detailed weathered material and roof detail, bold readable silhouettes. 25 sprites, single atlas, not a screenshot."
+    },
+    {
+      "asset": "icon-master.png",
+      "prompt": "Use case: stylized-concept. Square finished mobile game app icon for SINKHOLE. Premium illustrated 3D game art for adults: a yawning circular pitch-black sinkhole with jagged sandstone rim swallowing a red vintage pickup and a tilted corrugated-roof goldfields pub. Close overhead three-quarter composition, massive dark hole fills centre, golden dust and fragments falling inward, turquoise accents, copper sunlight, rich dark navy outer corners. Strong silhouette readable at 48 pixels, beautiful weathered surfaces, exciting playful destruction, no people, no text, no letters, no border. Full bleed square 1024x1024."
+    },
+    {
+      "asset": "feature-master.png",
+      "prompt": "Use case: stylized-concept. Landscape 1536x1024 premium game key art for SINKHOLE, a competitive town-swallowing game for adults. Aerial cinematic view over an old goldfields mining town: corrugated metal roofs, ornate timber pub, white church, mine headframe, eucalyptus, rusty red pickup, dusty streets. Enormous black sinkhole with jagged rocky rim in lower right swallows a tipping pickup, crates and part of a cottage, spiralling golden dust and rubble. Two smaller dark sinkholes with subtle turquoise and copper rings approach along distant streets. Warm late afternoon honey light, weathered detailed 3D painted art, cinematic dark teal shadows. Clear darker sky/dust and distant terrain in upper left quarter for separately typeset title. No text, no lettering, no interface, no watermarks. Striking professional game art, not childish, no violence or people."
+    }
+  ]
+}

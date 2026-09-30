@@ -1,0 +1,32 @@
+:root{--ink:#f6e8c8;--dim:#c5b99c;--gold:#ecc271;--bg:#091214;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font:700 16px/1.3 Georgia,'Times New Roman',serif;user-select:none;-webkit-user-select:none}
+#game{position:fixed;inset:0;width:100%;height:100%;touch-action:none;display:block}
+.hidden{display:none!important}
+.screen{position:fixed;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px 24px calc(28px + var(--ad-banner,0px));text-align:center;background:#061012e8}
+#home{justify-content:flex-end;gap:12px;padding-bottom:calc(max(28px,6vh) + var(--ad-banner,0px));background:linear-gradient(0deg,#071216 7%,#071216f5 21%,#07121640 52%,#07121605 73%,#07121688),url('assets/title.webp') center top/auto 76% no-repeat,#071216}
+.eyebrow{font:800 10px/1.4 system-ui,sans-serif;letter-spacing:3px;color:var(--dim);margin:0}
+#home>.eyebrow{position:absolute;top:max(25px,env(safe-area-inset-top));left:24px;text-align:left;font-size:9px;letter-spacing:2px;max-width:220px}
+h1{font-size:clamp(52px,11vh,90px);line-height:.84;margin:0 0 4px;color:var(--gold);letter-spacing:-2px;text-shadow:0 3px 0 #603e23,0 8px 18px #000;transform:rotate(-3deg)}
+h2{font-size:56px;margin:0;color:var(--gold)}
+.lede{margin:4px 0 0;font-size:16px;line-height:1.45;text-shadow:0 2px 8px #000}
+.small{font:500 12px/1.65 system-ui,sans-serif;color:var(--dim);max-width:320px;margin:0}
+#homeBest{min-height:16px;margin:0;font:700 11px system-ui;letter-spacing:2px;color:#dfb977}
+button{font:800 15px system-ui,sans-serif;color:var(--ink);background:#172628;border:1px solid #6d6650;border-radius:8px;padding:12px 20px;cursor:pointer;min-height:44px}
+button.big{font-size:17px;padding:17px 25px;background:linear-gradient(#f4d494,#c89242);color:#241b10;border-color:#ffe4ab;box-shadow:0 5px 0 #6e4725,0 8px 24px #0008;width:min(310px,90vw);text-transform:uppercase;letter-spacing:1px}
+button.big span{float:right;font-size:21px;line-height:20px}
+button:active{transform:translateY(2px)}
+button:focus-visible{outline:3px solid #6adde0;outline-offset:4px}
+.settings{position:fixed;right:max(15px,env(safe-area-inset-right));top:max(15px,env(safe-area-inset-top));z-index:7;width:44px;padding:0;font-size:23px;background:#102125e8;border-color:#a58750aa;box-shadow:0 4px 12px #0005}
+dialog{width:min(370px,calc(100vw - 32px));background:#112124;border:1px solid #ac8c53;border-radius:14px;color:var(--ink);padding:24px;box-shadow:0 20px 80px #000b}
+dialog::backdrop{background:#020a0cc9;backdrop-filter:blur(6px)}
+.dialogHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.dialogHead h2{font-size:28px}.dialogHead button{padding:0;width:44px;font-size:25px}
+dialog label{display:flex;justify-content:space-between;gap:16px;align-items:center;font:600 14px system-ui;min-height:54px;border-top:1px solid #ffffff15}
+input{accent-color:#e4b35d;width:22px;height:22px}dialog .small{margin-top:20px}
+#toast{position:fixed;top:19%;left:50%;transform:translateX(-50%);color:var(--gold);font-size:20px;text-shadow:0 2px 8px #000;pointer-events:none;z-index:6;white-space:nowrap}
+#over{background:linear-gradient(#071215cc,#071215f5),url('assets/mine.webp') center/cover}
+#overScore{font-variant-numeric:tabular-nums}#revive{font-size:14px}
+@media(min-width:700px){#home{background-size:auto,auto 100%;background-position:center,calc(50% + 210px) center;align-items:flex-start;text-align:left;padding:10vh max(40px,calc(50vw - 490px));background-image:linear-gradient(90deg,#071216 8%,#071216f5 29%,#07121677 58%,#07121611),url('assets/title.webp')}#home>.eyebrow{left:max(40px,calc(50vw - 490px));top:9vh}h1{font-size:110px}#home .lede{font-size:20px}#home .small{max-width:300px}}
+@media(max-height:650px){#home{gap:8px;padding-bottom:calc(22px + var(--ad-banner,0px))}h1{font-size:54px}.lede{font-size:14px}#home .small{font-size:10px}}
+@media(prefers-reduced-motion:reduce){button:active{transform:none}}

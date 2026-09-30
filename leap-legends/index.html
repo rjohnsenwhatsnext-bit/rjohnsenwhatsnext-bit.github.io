@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="capacitor-core.js"></script>
+<script>window.ARCADE_ADS = {"android":{},"ios":{}}; window.ARCADE_ADS_LIVE = false;</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#123e47">
+<title>Leap Legends</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="assets/icon.png">
+</head>
+<body>
+<canvas id="world" aria-label="The climb"></canvas>
+<button id="openSettings" class="settings-button" aria-label="Settings and pause" title="Settings and pause">⚙</button>
+
+<div id="bar">
+  <span id="coins" class="pill">0</span>
+  <span id="gems" class="pill gem">0</span>
+</div>
+
+<section id="home" class="screen">
+  <div class="home-identity">
+  <p class="eyebrow">THE SKY IS ONLY THE BEGINNING</p>
+  <h1>Leap<span>Legends</span></h1>
+  <div class="hero-stage"><div class="hero-halo"></div><canvas id="hero" width="320" height="320" aria-hidden="true"></canvas><div class="hero-island"></div></div>
+  <p id="bests"></p>
+  </div>
+  <div class="home-actions">
+  <div class="life-status"><div id="lives" aria-label="Lives"></div><p id="lifeTimer" class="small"></p></div>
+  <button id="play" class="big">Let's leap <span aria-hidden="true">↗</span></button>
+  <p class="control-hint">Hold either side or drag to steer · auto-bounce</p>
+  <div class="row home-nav">
+    <button id="openShop"><span aria-hidden="true">✦</span> Collection</button>
+    <button id="openDaily"><span aria-hidden="true">◈</span> Daily reward <span id="dailyDot" class="dot hidden"></span></button>
+  </div>
+  <div class="row chips">
+    <button id="piggy" class="chip"><span class="pig">🐷</span> <span id="piggyText"></span><span class="fill"><span id="piggyFill"></span></span></button>
+    <button id="seasonBtn" class="chip"></button>
+  </div>
+  <button id="starterBanner" class="offer hidden"></button>
+  <div id="league" class="league"></div>
+  <p id="vipBadge" class="vip hidden">VIP</p>
+  </div>
+</section>
+
+<section id="hud" class="hidden">
+  <div class="altimeter"><small>ALTITUDE</small><span id="height">0 m</span></div>
+  <span id="runCoins" class="pill">0</span>
+  <span id="shieldHud"></span>
+</section>
+
+<section id="over" class="screen hidden">
+  <p class="eyebrow">ONE MORE LEAP?</p>
+  <h2 id="overTitle">The storm got you</h2>
+  <p id="overHeight" class="huge">0 m</p>
+  <p id="overNudge"></p>
+  <button id="reviveAd" class="big">Watch an ad to keep going</button>
+  <button id="reviveGems" class="big gem"></button>
+  <p id="countdown" class="countdown"></p>
+  <p id="overGains" class="small"></p>
+  <button id="doubleCoins"></button>
+  <button id="overDone">Done</button>
+</section>
+
+<section id="shop" class="screen hidden">
+  <p class="eyebrow">MAKE THE CLIMB YOURS</p><h2>The collection</h2>
+  <div class="tabs">
+    <button data-tab="gear" class="on">Gear</button>
+    <button data-tab="avatars">Avatars</button>
+    <button data-tab="gems">Gems</button>
+  </div>
+  <div id="shopBody"></div>
+  <button id="closeShop">Back</button>
+</section>
+
+<section id="noLives" class="screen hidden">
+  <div class="rest-icon" aria-hidden="true">♡</div>
+  <h2>Out of lives</h2>
+  <p id="noLivesTimer" class="huge"></p>
+  <button id="lifeAd" class="big">Watch an ad for a life</button>
+  <button id="refillGems" class="big gem"></button>
+  <button id="refillBuy"></button>
+  <button id="closeNoLives">Back</button>
+</section>
+
+<section id="season" class="screen hidden">
+  <p class="eyebrow">A LITTLE HIGHER, EVERY DAY</p><h2>Skyward season</h2>
+  <p id="seasonInfo" class="small"></p>
+  <div id="seasonHeroes" aria-label="Season pass exclusive avatars"></div>
+  <button id="buyPass" class="big gem"></button>
+  <div class="track-labels"><span>Tier</span><span>Free rewards</span><span>Season pass</span></div><div id="tiers"></div>
+  <button id="closeSeason">Back</button>
+</section>
+
+<section id="leagueScreen" class="screen hidden">
+  <h2 id="leagueTitle">Weekly league</h2>
+  <p id="leagueInfo" class="small"></p>
+  <ol id="leagueTable" class="league-table"></ol>
+  <div class="row name-row"><input id="leagueName" maxlength="20" autocomplete="nickname" aria-label="Your name on the board"><button id="saveName">Save name</button></div>
+  <button id="closeLeague">Back</button>
+</section>
+
+<section id="daily" class="screen hidden">
+  <p class="eyebrow">YOUR NEXT ADVENTURE STARTS HERE</p>
+  <h2>Daily reward</h2>
+  <div id="dailyDays"></div>
+  <button id="claimDaily" class="big">Claim</button>
+  <p id="freezeInfo" class="small"></p>
+  <button id="buyFreeze" class="gem"></button>
+  <button id="closeDaily">Back</button>
+</section>
+
+<dialog id="settings" aria-labelledby="settingsTitle">
+  <p class="eyebrow">TAKE A BREATHER</p><h2 id="settingsTitle">Settings</h2>
+  <p id="pauseLabel" class="small">Make yourself at home.</p>
+  <label class="setting-row" for="soundSetting"><span>Sound effects<small>Bounces, coins and little victories</small></span><input id="soundSetting" type="checkbox" checked></label>
+  <label class="setting-row" for="motionSetting"><span>Reduced motion<small>Quieter sky and fewer effects</small></span><input id="motionSetting" type="checkbox"></label>
+  <button id="fullscreenSetting">Toggle fullscreen</button>
+  <p class="settings-help">Hold either side, or drag left and right to steer.<br>Keyboard: ← / → or A / D. Esc pauses.</p>
+  <button id="closeSettings" class="big">Back to it</button>
+  <button id="endRun" class="quiet hidden">End this run</button>
+</dialog>
+
+<div id="toast" role="status"></div>
+<script type="module" src="main.mjs"></script>
+</body>
+</html>

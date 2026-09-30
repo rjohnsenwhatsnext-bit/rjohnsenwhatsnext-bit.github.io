@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="capacitor-core.js"></script>
+<script>window.ARCADE_ADS = {"android":{},"ios":{}}; window.ARCADE_ADS_LIVE = false; window.ARCADE_GAME = {"slug":"crowns","idSuffix":"crowns","version":1,"release":false};</script>
+<script src="arcade-telemetry.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#1c1830">
+<title>Crowns</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-view="play">
+<header>
+  <button id="help" aria-label="How to play">?</button>
+  <h1>Crowns</h1>
+  <button id="statsBtn" aria-label="Stats">▦</button>
+</header>
+<p id="date"></p>
+<nav id="levels"></nav>
+<main>
+  <div id="bar"><span id="clock">0:00</span><span id="status"></span></div>
+  <div id="grid" role="grid" aria-label="Puzzle grid"></div>
+  <div id="tools">
+    <button id="undo">Undo</button>
+    <label class="toggle"><input type="checkbox" id="auto"> Auto X</label>
+    <button id="clear">Clear</button>
+  </div>
+  <button id="hint" class="hidden">Watch an ad for a hint</button>
+</main>
+
+<dialog id="rules">
+  <h2>How to play</h2>
+  <p>Put one 👑 in every <b>row</b>, every <b>column</b> and every <b>colour</b>.</p>
+  <p>Crowns can never <b>touch</b>, not even corner to corner.</p>
+  <p>Tap a square once to mark it ✕ (no crown here), twice for a 👑, three times to clear it. Auto X marks the squares a crown rules out for you.</p>
+  <p>A new puzzle every day at midnight, the same for everyone. Every puzzle has one answer and can be solved without guessing.</p>
+  <button id="closeRules" class="big">Got it</button>
+</dialog>
+
+<dialog id="done">
+  <h2 id="doneTitle">Crowned!</h2>
+  <p id="doneTime"></p>
+  <p id="doneStats"></p>
+  <button id="share" class="big">Share</button>
+  <button id="remind" class="hidden">Remind me tomorrow</button>
+  <p id="remindNote" class="hidden"></p>
+  <button id="nextLevel">Try the next level</button>
+  <div id="moreGames" hidden></div>
+  <button id="closeDone">Close</button>
+</dialog>
+
+<div id="toast" role="status"></div>
+<script type="module" src="main.mjs"></script>
+</body>
+</html>

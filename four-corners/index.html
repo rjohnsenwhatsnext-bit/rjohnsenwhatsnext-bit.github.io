@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="capacitor-core.js"></script>
+<script>window.ARCADE_ADS = {"android":{},"ios":{}}; window.ARCADE_ADS_LIVE = false; window.ARCADE_GAME = {"slug":"four-corners","idSuffix":"fourcorners","version":1,"release":false};</script>
+<script src="arcade-telemetry.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#f3efe6">
+<title>Four Corners</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-view="play">
+<header>
+  <button id="help" aria-label="How to play">?</button>
+  <h1>Four Corners</h1>
+  <button id="statsBtn" aria-label="Stats">▦</button>
+</header>
+<p id="date"></p>
+<main>
+  <p id="prompt">Make four groups of four.</p>
+  <div id="found"></div>
+  <div id="grid" aria-label="Words"></div>
+  <div id="lives"><span>Mistakes left</span><span id="dots"></span></div>
+  <div id="tools">
+    <button id="shuffle">Shuffle</button>
+    <button id="deselect">Deselect</button>
+    <button id="submit" class="big">Submit</button>
+  </div>
+  <button id="hint" class="hidden">Watch an ad for a hint</button>
+  <p id="hintLine" class="hidden"></p>
+</main>
+
+<dialog id="rules">
+  <h2>How to play</h2>
+  <p>Find four groups of four words that belong together.</p>
+  <p>Pick four and tap Submit. Get it wrong four times and it is over.</p>
+  <p>Groups go from yellow, the plainest, to purple, the most devious. Watch for words that look like they fit more than one group: only one way works.</p>
+  <p>A new puzzle every day at midnight, the same for everyone.</p>
+  <button id="closeRules" class="big">Got it</button>
+</dialog>
+
+<dialog id="done">
+  <h2 id="doneTitle">Nailed it</h2>
+  <p id="doneLine"></p>
+  <pre id="doneGrid"></pre>
+  <p id="doneStats"></p>
+  <button id="share" class="big">Share</button>
+  <button id="remind" class="hidden">Remind me tomorrow</button>
+  <p id="remindNote" class="hidden"></p>
+  <div id="moreGames" hidden></div>
+  <button id="closeDone">Close</button>
+</dialog>
+
+<div id="toast" role="status"></div>
+<script type="module" src="main.mjs"></script>
+</body>
+</html>

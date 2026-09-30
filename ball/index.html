@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#101418">
+<title>Ball</title>
+<link rel="stylesheet" href="shell/shell.css">
+</head>
+<body>
+<div id="app"></div>
+<script src="capacitor-core.js"></script>
+<script>window.ARCADE_ADS = {"android":{},"ios":{}}; window.ARCADE_ADS_LIVE = false; window.ARCADE_GAME = {"slug":"ball","idSuffix":"ball","version":1,"release":false};</script>
+<script src="shell/telemetry.js"></script>
+<script type="module">
+import { runGame } from './shell/shell.js';
+import game from './game.js';
+runGame(game, {"slug":"ball","title":"Ball","tagline":"Roll it. Bounce it. Don't pop it.","howToPlay":"Drag on the left to roll. Tap on the right to bounce, or tap with a second finger while rolling. An airborne tap queues your next bounce. Collect all rings to open the exit.","overTitle":"Popped","reviveLabel":"Watch an ad: three more lives","accent":"#f8d58b","background":"#173d3a","idSuffix":"ball","version":1,"owner":"ryan","fluid":true,"store":{"shortDescription":"Roll, bounce and time your jumps through fire, water and caves. Don't pop.","fullDescription":"Roll it. Bounce it. Don't pop it.\n\nBall is a physics platformer for your thumbs. Drag with your left thumb to roll, tap with your right to bounce, and tap again just as you land to bounce higher. The ball has real weight: it keeps rolling when you let go, speeds up down slopes and bounces when it lands.\n\n- Pass through every ring to open the exit\n- Spikes pop you; springs fling you; crumbling blocks give way\n- Roll through water and you are fireproof for a few seconds, but slippery\n- Touch fire while dry and you have three seconds to find water\n- A pump blows you up to float; a pin lets the air out to squeeze through gaps\n- Ride lifts and moving platforms, climb cave shafts wall to wall\n\nNo account needed; your progress saves on your device.\n\nThe game is free with ads. When you run out of lives you can choose to watch an ad for three more."},"icon":"store/art-v2/icon-1024.png","wide":true,"fullscreen":true});
+</script>
+</body>
+</html>

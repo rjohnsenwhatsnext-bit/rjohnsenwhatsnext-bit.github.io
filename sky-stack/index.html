@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#101418">
+<title>Sky Stack</title>
+<link rel="stylesheet" href="shell/shell.css">
+</head>
+<body>
+<div id="app"></div>
+<script src="capacitor-core.js"></script>
+<script>window.ARCADE_ADS = {"android":{},"ios":{}}; window.ARCADE_ADS_LIVE = false; window.ARCADE_GAME = {"slug":"sky-stack","idSuffix":"skystack","version":1,"release":false};</script>
+<script src="shell/telemetry.js"></script>
+<script type="module">
+import { runGame } from './shell/shell.js';
+import game from './game.js';
+runGame(game, {"slug":"sky-stack","title":"Sky Stack","tagline":"A little timing. A lot of skyline.","howToPlay":"Tap or press Space to drop the moving floor. Line it up with the tower: the overhang falls away. Three perfect drops recover a little width. How high can you build?","accent":"#ffe29b","background":"#202645","idSuffix":"skystack","version":1,"overTitle":"The sky can wait","reviveLabel":"Watch an ad: recover your last floor","owner":"ryan","store":{"shortDescription":"Drop each floor on time and build the tallest tower on the skyline.","fullDescription":"A little timing. A lot of skyline.\n\nSky Stack is a one tap tower building game. A floor swings in on the crane; tap to drop it. Whatever hangs over the edge falls away, so every miss makes your tower narrower and the next drop harder.\n\n- One tap to play, quick to restart\n- Line up three perfect drops in a row to win back a little width\n- A sunset city that rises with you\n- Your best height is saved on your device\n\nNo account needed.\n\nThe game is free with ads. When a run ends you can choose to watch an ad to recover your last floor and keep building."},"anchor":"bottom","controls":[{"label":"DROP","key":"Space"}],"icon":"store/art-v2/icon-1024.png"});
+</script>
+</body>
+</html>
