@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#2c2418">
+<title>Homestead</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-view="home">
+
+<section id="home" class="screen">
+  <p class="eyebrow">A HOMESTEAD OF YOUR OWN</p>
+  <h1>HOME<br>STEAD</h1>
+  <p class="lede">Grow it. Feed it. Truck it out.</p>
+  <button id="play" class="big">Head out to the paddocks</button>
+  <p class="small">Plant crops and come back when they are ready. Turn grain into feed at the mill, feed the chooks and cows, and fill the road train's orders to grow your homestead.</p>
+</section>
+
+<main id="game" class="hidden">
+  <header id="bar">
+    <div><small>COINS</small><b id="coins">0</b></div>
+    <div id="lvlBox"><small id="lvl">LEVEL 1</small><span id="xp"><i></i></span></div>
+    <button id="shedBtn">Shed</button>
+  </header>
+  <p id="note" class="small"></p>
+
+  <h2>Paddocks</h2>
+  <section id="paddocks"></section>
+
+  <h2>Feed mill</h2>
+  <section id="mill"></section>
+
+  <h2>Animals</h2>
+  <section id="animals"></section>
+
+  <h2>Road train orders</h2>
+  <section id="orders"></section>
+
+  <h2>Grow the station</h2>
+  <section id="buy"></section>
+</main>
+
+<dialog id="picker">
+  <h3>Plant a paddock</h3>
+  <div id="pickList"></div>
+  <button id="closePicker">Cancel</button>
+</dialog>
+
+<dialog id="waitDlg">
+  <h3 id="waitTitle">Still growing</h3>
+  <p id="waitNote"></p>
+  <button id="speed" class="big">Watch an ad: halve the wait</button>
+  <button id="closeWait">OK</button>
+</dialog>
+
+<dialog id="shed">
+  <h3>The shed</h3>
+  <div id="shedList"></div>
+  <button id="remind">Remind me when things are ready</button>
+  <p id="remindNote" class="small"></p>
+  <button id="closeShed">Close</button>
+</dialog>
+
+<div id="toast" role="status"></div>
+<script type="module" src="main.mjs"></script>
+</body>
+</html>
