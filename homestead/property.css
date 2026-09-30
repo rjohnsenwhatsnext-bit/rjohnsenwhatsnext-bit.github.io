@@ -18,3 +18,5 @@ dialog{border:1px solid #d2c795;border-radius:22px;width:min(420px,calc(100vw - 
 
 /* Keep scrolling task panels above map controls on narrow screens. */
 #panel{z-index:10}
+.land-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.land-grid button{padding:10px 4px;font-size:10px;min-height:74px}.land-grid small{display:block;margin-top:6px;color:#e8cc8d}.land-grid .owned{background:#c7cfac;color:#304b36;opacity:1}.land-grid .owned small{color:#304b36}
+#panel .wide,#panel .land-grid button{color:#fff3d9}#panel .land-grid .owned{color:#304b36}

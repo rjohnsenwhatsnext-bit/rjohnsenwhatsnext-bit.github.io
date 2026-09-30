@@ -13,6 +13,8 @@ function after(r){if(!r.ok){toast(r.reason);return false;}if(!played){played=tru
 function confirm(title,text,fn){$('confirmTitle').textContent=title;$('confirmText').textContent=text;$('confirmYes').onclick=()=>{$('confirm').close();fn();};$('confirm').showModal();}
 $('confirmNo').onclick=()=>$('confirm').close();
 const map=new PropertyMap($('world'),()=>s,pick=>{
+ if(pick.land){showLand(pick.land);return;}
+ if(pick.fence){const f=pick.fence;const reason=P.canPlace(s,'paddock',f.x,f.y,f.w,f.h);if(reason||f.w<2||f.h<2||f.w>10||f.h>10)return toast(reason||'Drag a paddock between 2 and 10 squares on each side.');const cost=(f.w+f.h)*180+160;confirm('Build this paddock fence?',f.w+' by '+f.h+' squares. '+P.cash(cost)+' for posts, wire and a gate. Your worker builds each section before stock can use it.',()=>{if(after(P.fencePlan(s,selected,f.x,f.y,f.w,f.h)))cancelPlace();});return;}
  if(pick.worker){selected=pick.worker;map.selected=selected;hud();return;}
  if(pick.place){
  const reason=P.canPlace(s,pick.place,pick.x,pick.y);if(reason)return toast(reason);
@@ -24,7 +26,7 @@ const map=new PropertyMap($('world'),()=>s,pick=>{
  if(pick.building){selectedBuilding=pick.building;map.activeBuilding=pick.building;openPanel('inspect');return;}
  if(pick.ground){if(after(P.assign(s,selected,'walk',pick.ground))){closePanel();toast('Move queued.');}}
 });
-function cancelPlace(){map.placement=null;$('placement').hidden=true;document.body.dataset.placing='false';}
+function cancelPlace(){map.placement=null;map.fenceStart=null;map.fenceEnd=null;map.landMode=false;$('placement').hidden=true;document.body.dataset.placing='false';}
 $('cancelPlace').onclick=cancelPlace;
 $('zoomIn').onclick=()=>map.zoom=Math.min(2.5,map.zoom*1.2);
 $('zoomOut').onclick=()=>map.zoom=Math.max(.35,map.zoom/1.2);
@@ -32,6 +34,11 @@ $('fit').onclick=()=>map.fit();
 $('focusWorker').onclick=()=>{map.focus(s.workers.find(w=>w.id===selected));openPanel('jobs');};
 function closePanel(){panel='';$('panel').hidden=true;document.querySelectorAll('[data-panel]').forEach(b=>b.classList.remove('on'));}
 $('closePanel').onclick=closePanel;
+function showLand(id){
+ const p=P.PARCELS.find(p=>p.id===id);if(!p)return;
+ if(s.land.includes(id))return toast('You own '+p.name+'.');
+ confirm('Buy '+p.name+'?',P.cash(p.cost)+' for 8 acres. '+(P.adjacent(s,p)?'This block joins your property.':'Buy an adjoining block first.'),()=>{if(after(P.buyLand(s,id))){map.fit();if(panel)renderPanel();}});
+}
 function openPanel(name){panel=name;cancelPlace();$('panel').hidden=false;document.querySelectorAll('[data-panel]').forEach(b=>b.classList.toggle('on',b.dataset.panel===name));renderPanel();}
 const img=art=>art>=0?'<img src="assets/farm-'+art+'.webp" alt="">':'<span style="font-size:35px;text-align:center">▧</span>';
 function item(title,description,art,label,action,disabled=false){return '<article class="item">'+img(art)+'<div><h3>'+title+'</h3><p>'+description+'</p><button '+action+(disabled?' disabled':'')+'>'+label+'</button></div></article>';}
@@ -40,7 +47,9 @@ function renderPanel(){
  const body=$('panelBody');let title='',html='';
  if(panel==='build'){
  title='Make it your own';html='<p class="panel-note">Choose a project, then tap its position on your land. Your selected worker builds it.</p>';
- for(const [kind,d] of Object.entries(P.BUILDINGS))html+=item(d.name,d.description,d.art,P.cash(d.cost),'data-project="'+kind+'"');
+ html+=button('Lay out fencing - drag a paddock','data-fencing="true"');
+ html+='<p class="panel-note">Drag from one corner to the other. Posts, wire and a gate cost $90 per fence section plus $160. Your worker then builds around the perimeter.</p>';
+ for(const [kind,d] of Object.entries(P.BUILDINGS))if(kind!=='paddock')html+=item(d.name,d.description,d.art,P.cash(d.cost),'data-project="'+kind+'"');
  }
  if(panel==='vehicles'){
  title='Tools of the trade';html='<p class="panel-note">Purchased vehicles arrive at your entrance. Workers collect them automatically for suitable jobs.</p>';
@@ -53,15 +62,15 @@ function renderPanel(){
  html+=item('Beef cattle','Start a herd. A fenced paddock and water supply are required.',12,'Buy one · $900','data-stock="cattle"');
  html+=item('Merino sheep','A smaller investment for your first paddock.',13,'Buy one · $240','data-stock="sheep"');
  const paddocks=s.buildings.filter(b=>b.kind==='paddock'&&b.built);
- html+='<p class="panel-note">Stock deliveries go to the least crowded paddock. Grass recovers with rest and rain; hungry or thirsty animals lose condition. Weight gain happens daily.</p>';
+ html+='<p class="panel-note">Paddock stock graze for themselves. Rotate them to rest the grass. Hay feeding is only needed for stock held in the yards; keep water supplied.</p>';
  for(const [i,p] of paddocks.entries()){
- html+='<h3>Paddock '+(i+1)+' � '+s.animals.filter(a=>a.paddock===p.id&&!a.yarded).length+' head</h3><p class="panel-note">Pasture '+Math.round(p.pasture??100)+'% � '+P.occupancy(s,p.id)+'/8 spaces allocated</p>';
- html+=button('Feed by ute � 2 bales + $20','data-task="feed" data-paddock="'+p.id+'"');
- html+=button('Muster by horse � $5','data-task="muster" data-target="horse" data-paddock="'+p.id+'"');
- html+=button('Muster by bike � $35','data-task="muster" data-target="bike" data-paddock="'+p.id+'"');
- for(const [n,dest] of paddocks.entries())if(dest.id!==p.id)html+=button('Move mob to paddock '+(n+1)+' � horse � $5','data-task="rotate" data-paddock="'+p.id+'" data-destination="'+dest.id+'"');
+ html+='<h3>Paddock '+(i+1)+' · '+s.animals.filter(a=>a.paddock===p.id&&!a.yarded).length+' head</h3><p class="panel-note">Pasture '+Math.round(p.pasture??100)+'% · '+P.occupancy(s,p.id)+'/'+P.capacity(p)+' spaces allocated</p>';
+ html+=button('Muster by horse · $5','data-task="muster" data-target="horse" data-paddock="'+p.id+'"');
+ html+=button('Muster by bike · $35','data-task="muster" data-target="bike" data-paddock="'+p.id+'"');
+ for(const [n,dest] of paddocks.entries())if(dest.id!==p.id)html+=button('Move mob to paddock '+(n+1)+' · horse · $5','data-task="rotate" data-paddock="'+p.id+'" data-destination="'+dest.id+'"');
  }
  html+='<p class="panel-note">Yarded stock: '+s.animals.filter(a=>a.yarded).length+'. Sell up to four head per trip. Transport: '+(s.vehicles.includes('truck')?'$60 using your truck':'$180 hired carrier')+', plus 4% selling fees. Your worker loads and delivers them before payment.</p>';
+ html+=button('Feed yarded livestock - ute, 2 bales + $20','data-task="feed"');
  html+=button('Send stock to meatworks','data-task="sell" data-target="meatworks"');
  html+=button('Send stock to saleyards','data-task="sell" data-target="saleyards"');
  html+=button('Order 8 hay bales + 60 water · $400','data-action="supplies"');
@@ -77,11 +86,24 @@ function renderPanel(){
  title='Your property';html='<div class="ledger"><span>Available funds</span><b>'+P.cash(s.money)+'</b></div><div class="ledger"><span>Land / level</span><b>'+s.acres+' acres / '+P.level(s)+'</b></div><div class="ledger"><span>Produce crates</span><b>'+s.produce+'</b></div><div class="ledger"><span>Loan outstanding</span><b>'+P.cash(s.debt)+'</b></div>';
  html+='<div class="ledger"><span>Unpaid wages</span><b>'+P.cash(s.wageArrears||0)+'</b></div>';
  html+=button('Stock farm shop with produce','data-task="shop"');
- html+=button(s.extent===23?'32 acres owned':'Buy neighbouring land · $9,000','data-action="expand"');
+ html+=button('Surrounding land - '+s.acres+' / 72 acres','data-panel="land"');
+ html+=button('Campground bookings & visitors','data-panel="camping"');
  if(!s.repayments&&!s.debt)html+=button('View starter loan terms','data-action="loan"');
  if(s.debt)html+=button('Repay loan in full · '+P.cash(s.debt),'data-action="repay"');
- html+='<p class="panel-note">The first three buildings earn $1,000. Your first feed run earns $800. Your first livestock sale earns $1,500. Camp income needs a caravan and water. Dams collect water on rainy days.</p>';
+ html+='<p class="panel-note">The first three buildings earn $1,000. Your first feed run earns $800. Your first livestock sale earns $1,500. Campers pay on arrival. Open a campsite with any completed home and water. Dams collect water on rainy days.</p>';
  html+='<h3 style="font-size:13px">Around the property</h3>'+s.events.slice(0,8).map(e=>'<div class="event">'+e.text+'</div>').join('');
+ }
+ if(panel==='land'){
+ title='Room to grow';html='<p class="panel-note">Buy blocks adjoining your land. Each block adds eight acres. Purchased land can be built on immediately.</p>';
+ html+='<div class="land-grid">';
+ for(const id of ['nw','north','ne','west','home','east','sw','south','se']){const p=P.PARCELS.find(p=>p.id===id),owned=s.land.includes(id);html+='<button data-land="'+id+'" '+(owned?'disabled':'')+' class="'+(owned?'owned':'')+'"><b>'+p.name+'</b><small>'+(owned?'Owned':P.cash(p.cost))+'</small></button>';}
+ html+='</div>'+button('View blocks on the map','data-land-map="true"');
+ }
+ if(panel==='camping'){
+ title='Campground';html='<div class="ledger"><span>Bookings / income</span><b>'+s.campGuests+' / '+P.cash(s.campIncome)+'</b></div><p class="panel-note">Guests arrive at varying times, pay $90 at check-in, stay a while and drive out. Each site hosts one travelling party. A home and water are required. Closing a site stops new bookings.</p>';
+ const camps=s.buildings.filter(b=>b.kind==='camp'&&b.built);
+ if(!camps.length)html+=button('Build your first campsite','data-project="camp"');
+ for(const [i,b] of camps.entries()){const v=s.visitors.find(v=>v.camp===b.id);html+='<h3>Campsite '+(i+1)+'</h3><p class="panel-note">'+(v?v.status==='staying'?'Guests staying - paid '+P.cash(v.fee):v.status==='arriving'?'Guests driving in':'Guests heading home':P.hasHome(s)&&s.water>=2?'Vacant - waiting for a booking':'Needs a home and water')+'</p>'+button(b.open===false?'Open for bookings':'Close to new bookings','data-camp="'+b.id+'" data-open="'+(b.open===false)+'"');}
  }
  if(panel==='inspect'){
  const b=s.buildings.find(b=>b.id===selectedBuilding);if(!b)return closePanel();const d=P.BUILDINGS[b.kind];title=d.name;
@@ -91,16 +113,20 @@ function renderPanel(){
  else if(b.kind==='shop')html+=button('Stock shop · '+s.produce+' crates','data-task="shop"');
  else if(b.kind==='paddock'||b.kind==='yards'||b.kind==='shed')html+=button('Manage livestock & feeding','data-panel="livestock"');
  else if(b.kind==='dam')html+='<p class="panel-note">Stored rainwater: '+(b.water||0)+' units. Rain arrives every third game day. Tank deliveries cover dry periods.</p>';
- else if(b.kind==='camp')html+='<p class="panel-note">'+(P.ready(s,'caravan')&&s.water>0?'Open to campers · $220 per game day.':'Needs a completed caravan and water before guests can stay.')+'</p>';
+ else if(b.kind==='camp')html+=button('Manage bookings & visitors','data-panel="camping"');
  }
  $('panelTitle').textContent=title;body.innerHTML=html;
 }
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;
+ if(d.land){showLand(d.land);return;}
+ if(d.landMap){closePanel();map.landMode=true;map.fit();$('placement').hidden=false;$('placeName').textContent='Tap a neighbouring block to buy';$('placeHint').textContent='Drag to look around. Gold labels show available land.';return;}
+ if(d.camp){after(P.setCamp(s,Number(d.camp),d.open==='true'));return;}
+ if(d.fencing){closePanel();map.landMode=false;map.placement='fence';$('placement').hidden=false;$('placeName').textContent='Draw your paddock';$('placeHint').textContent='Drag from one corner to the opposite corner, then release.';document.body.dataset.placing='true';return;}
  if(d.panel){openPanel(d.panel);return;}
  if(d.speed!==undefined){speed=Number(d.speed);hud();return;}
  if(d.worker){selected=Number(d.worker);map.selected=selected;map.focus(s.workers.find(w=>w.id===selected));hud();if(panel)renderPanel();return;}
- if(d.project){closePanel();map.placement=d.project;$('placement').hidden=false;$('placeName').textContent=P.BUILDINGS[d.project].name+' · '+P.cash(P.BUILDINGS[d.project].cost);document.body.dataset.placing='true';return;}
+ if(d.project){closePanel();map.landMode=false;$('placeHint').textContent='Tap land to mark a site. Drag to look around.';map.placement=d.project;$('placement').hidden=false;$('placeName').textContent=P.BUILDINGS[d.project].name+' · '+P.cash(P.BUILDINGS[d.project].cost);document.body.dataset.placing='true';return;}
  if(d.vehicle){const v=P.VEHICLES[d.vehicle];confirm('Buy '+v.name+'?',P.cash(v.cost)+'. '+v.description,()=>after(P.buyVehicle(s,d.vehicle)));return;}
  if(d.stock){after(P.buyStock(s,d.stock));return;}
  if(d.cancelJob){after(P.cancelJob(s,Number(d.cancelJob)));return;}
@@ -108,7 +134,6 @@ document.addEventListener('click',e=>{
  if(d.action){
  if(d.action==='loan')return confirm('A head start, with repayments','Receive $12,000 now. Total repayment $13,200: $440 per game day for 30 days. Repayments are taken from available cash; unpaid balances carry forward. No real money is involved.',()=>after(P.loan(s)));
  if(d.action==='hire')return confirm('Hire a farmhand?','$1,800 recruitment and $120 wages each game day. They work independently using your shared equipment.',()=>after(P.hire(s)));
- if(d.action==='expand')return confirm('Buy the neighbouring acreage?','$9,000 to expand from 8 to 32 acres. This is the land limit in this first playable slice.',()=>{if(after(P.expand(s)))map.fit();});
  if(d.action==='repay')return confirm('Clear your loan?',P.cash(s.debt)+' from available funds. Future repayments stop.',()=>after(P.repay(s)));
  if(d.action==='supplies')after(P.supplies(s));
  }
@@ -120,9 +145,9 @@ function hud(){
  const workers=s.workers.map(w=>w.id).join();if($('workers').dataset.ids!==workers){$('workers').innerHTML=s.workers.length>1?s.workers.map(w=>'<button data-worker="'+w.id+'" aria-label="Select '+w.name+'">'+w.name[0]+'</button>').join(''):'';$('workers').dataset.ids=workers;}
  document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('on',Number(b.dataset.speed)===speed));
  if(s.stats.built<3){$('goal').textContent='Set down roots';$('goalNote').textContent='Build three projects · '+s.stats.built+'/3 · earn $1,000.';}
- else if(!s.stats.fed){$('goal').textContent='Look after your first herd';$('goalNote').textContent='Paddock + water + shed + ute. Complete a feed run.';}
+
  else if(!s.stats.sold){$('goal').textContent='Your first livestock sale';$('goalNote').textContent='Build yards. Muster by horse or bike. Load a truck.';}
- else{$('goal').textContent='Make this place your own';$('goalNote').textContent='Grow produce, welcome campers and buy more land.';}
+ else{$('goal').textContent='Make this place your own';$('goalNote').textContent='Graze your paddocks, feed yarded stock, welcome campers and buy more land.';}
  $('saveWarning').hidden=!warning;if(warning)$('saveWarning').textContent=warning;
 }
 $('play').onclick=()=>{document.body.dataset.view='play';$('home').hidden=true;$('game').hidden=false;map.resize();map.fit();if(map.w<650){map.zoom=.75;map.cx=7.8;map.cy=9.2;}hud();document.documentElement.requestFullscreen?.().catch(()=>{});};
