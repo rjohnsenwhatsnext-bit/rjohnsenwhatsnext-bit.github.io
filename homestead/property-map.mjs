@@ -43,7 +43,7 @@ export class PropertyMap{
  const p=this.point(x,y),w=width*this.zoom,h=w*a.naturalHeight/a.naturalWidth;
  this.ctx.save();this.ctx.globalAlpha=alpha;if(flip){this.ctx.translate(p.x*2,0);this.ctx.scale(-1,1);}this.ctx.drawImage(a,p.x-w/2,p.y-h+bob,w,h);this.ctx.restore();
  }
- vehicle(kind,id,x,y){const pose=this.tracks.sample(id,x,y,this.getState().time);drawVehicle(this,kind,x,y,pose);}
+ vehicle(kind,id,x,y,heading=null,rider=true){const pose=this.tracks.sample(id,x,y,this.getState().time);if(heading!==null)pose.heading=heading;drawVehicle(this,kind,x,y,pose,rider);}
  grounded(art,x,y,width,flip=false){const p=this.point(x,y),c=this.ctx;c.save();c.fillStyle='#20312535';c.beginPath();c.ellipse(p.x,p.y,width*this.zoom*.3,width*this.zoom*.09,0,0,Math.PI*2);c.fill();c.restore();this.sprite(art,x,y,width,1,0,flip);}
  fence(x,y,w,colour='#b7a77a',h=w,segments=Infinity,gate=false){
  const c=this.ctx,pts=[[x,y],[x+w,y],[x+w,y+h],[x,y+h],[x,y]];let built=0;
@@ -109,7 +109,7 @@ export class PropertyMap{
  for(const [i,v]of s.vehicles.entries()){
  if(s.jobs.some(j=>j.vehicle===v&&j.status==='active'&&j.stage>0))continue;
  const x=4+i*1.5,y=15;
- draws.push({depth:x+y,run:()=>{if(v==='horse')this.grounded(11,x,y,40);else this.vehicle(v,'parked-'+v,x,y);}});
+ draws.push({depth:x+y,run:()=>{if(v==='horse')this.grounded(11,x,y,40);else this.vehicle(v,'parked-'+v,x,y,null,false);}});
  }
  for(const w of s.workers){
  const j=s.jobs.find(j=>j.worker===w.id&&j.status==='active'),p=this.point(w.x+.5,w.y+.5);

@@ -29,7 +29,7 @@ export function drawVehicle(map,kind,x,y,pose={heading:0,distance:0},rider=true)
  const truck=kind==='truck',camper=kind==='camper',digger=kind==='excavator',bike=kind==='bike';
  const length=truck?2.15:camper?1.7:digger?1.5:bike?.8:1.35,width=bike?.26:truck?.69:.62;
  const p=project(0,0);c.save();
- if(pose.moving&&map.getState?.().weather!=='Rain')for(let i=0;i<3;i++){
+ if(pose.moving&&map.life?.motion!==false&&map.getState?.().weather!=='Rain')for(let i=0;i<3;i++){
   const phase=(pose.distance*1.6+i/3)%1,q=project(-length/2-.15-phase*.6,(i-1)*.1);
   c.fillStyle='rgba(202,176,132,'+(.13*(1-phase))+')';c.beginPath();c.ellipse(q.x,q.y,(3+phase*5)*z,(1+phase*2)*z,0,0,Math.PI*2);c.fill();
  }

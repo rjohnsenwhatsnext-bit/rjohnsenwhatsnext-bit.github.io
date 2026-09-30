@@ -43,8 +43,7 @@ export class PropertyLife{
  if(!light.night){const x=2.5,y=15.5;draws.push({depth:x+y,run:()=>map.grounded(29,x,y,25)});}
  const phase=t%125;
  if(phase<24){const x=1.5,y=-10+phase*1.5,id='traffic-'+Math.floor(t/125);
- const pose=map.tracks.sample(id,x,y,t);pose.heading=Math.PI/2;
- draws.push({depth:x+y,run:()=>map.vehicle(Math.floor(t/125)%2?'ute':'truck',id,x,y)});}
+ draws.push({depth:x+y,run:()=>map.vehicle(Math.floor(t/125)%2?'ute':'truck',id,x,y,Math.PI/2)});}
  }
  world(map,s,time){
  const c=map.ctx,light=daylight(s),t=this.motion?s.time:0;
