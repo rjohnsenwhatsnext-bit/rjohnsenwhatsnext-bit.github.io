@@ -27,37 +27,27 @@ export class PropertyLife{
  let p=this.positions.get(a.id);
  if(!p){p={x:a.x??target.x,y:a.y??target.y};this.positions.set(a.id,p);}
  if(!this.motion){p.x=a.x??target.x;p.y=a.y??target.y;}
- else{const dx=target.x-p.x,dy=target.y-p.y,d=Math.hypot(dx,dy),step=this.dt*(busy?3.5:.38);if(d<=step){p.x=target.x;p.y=target.y;}else if(d){p.x+=dx/d*step;p.y+=dy/d*step;}}
+ else if(busy){const dx=target.x-p.x,dy=target.y-p.y,d=Math.hypot(dx,dy),step=this.dt*3.5;if(d<=step){p.x=target.x;p.y=target.y;}else if(d){p.x+=dx/d*step;p.y+=dy/d*step;}}
  return {...p,rest:target.rest&&!busy,drinking:target.drinking};
  }
  celebrate(s,text,kind='sale'){
  this.effects.push({at:s.time,text,kind});
  }
+ entities(map,s,draws){
+ const light=daylight(s),t=s.time;
+ const home=s.buildings.find(b=>b.built&&homeKinds.includes(b.kind));
+ // Resting wildlife stays planted; no rigid sprites skating around the property.
+ if(home){const x=home.x-.3,y=home.y+1.5;draws.push({depth:x+y,run:()=>map.grounded(light.night?25:24,x,y,25)});}
+ if(light.name==='Dawn'||light.name==='Sunset'){const fence=s.buildings.find(b=>b.built&&b.kind==='paddock');if(fence)for(let i=0;i<2;i++){const x=fence.x+i,y=fence.y;draws.push({depth:x+y+.01,run:()=>map.sprite(27,x,y,14,1,-8*map.zoom)});}}
+ if(light.name==='Sunset')for(let i=0;i<2;i++){const x=14+i,y=2;draws.push({depth:x+y,run:()=>map.grounded(26,x,y,32)});}
+ if(!light.night){const x=2.5,y=15.5;draws.push({depth:x+y,run:()=>map.grounded(29,x,y,25)});}
+ const phase=t%125;
+ if(phase<24){const x=1.5,y=-10+phase*1.5,id='traffic-'+Math.floor(t/125);
+ const pose=map.tracks.sample(id,x,y,t);pose.heading=Math.PI/2;
+ draws.push({depth:x+y,run:()=>map.vehicle(Math.floor(t/125)%2?'ute':'truck',id,x,y)});}
+ }
  world(map,s,time){
  const c=map.ctx,light=daylight(s),t=this.motion?s.time:0;
- // A working dog keeps close during a muster and curls up beside the home at night.
- const active=s.workers.find(w=>s.jobs.some(j=>j.worker===w.id&&j.herding&&j.status==='active'))||s.workers[0];
- const home=s.buildings.find(b=>b.built&&['caravan','cabin','cottage','queenslander','modern','stationhouse'].includes(b.kind));
- const asleep=light.night&&!s.jobs.some(j=>j.worker===active.id);
- let dog=asleep&&home?{x:home.x-.3,y:home.y+1.5}:{x:active.x-.7+Math.sin(t*1.5)*.18,y:active.y+.9};
- map.sprite(asleep?25:24,dog.x,dog.y,asleep?24:27,1,!asleep&&this.motion?Math.sin(t*9)*.7:0);
- // Wildlife stays decorative and never blocks a route or changes the economy.
- if(light.name==='Dawn'||light.name==='Sunset'){
- for(let i=0;i<5;i++){const x=3+(t*.22+i*.65)%18,y=5+i*.25;map.sprite(27,x,y,16,1,this.motion?Math.sin(t*7+i)*2:0);}
- if(light.name==='Sunset')for(let i=0;i<2;i++)map.sprite(26,14+i,2+Math.sin(t*.12+i)*.3,32);
- }else if(!light.night){
- map.sprite(28,9+Math.sin(t*.045)*6,6+Math.cos(t*.045)*5,44,.8);
- if(Math.floor(s.time/60)%3===1)map.sprite(29,2+(t*.025)%4,15.5,25);
- }
- // Passing traffic uses the public road; it is distinct from paid campsite visitors.
- const roadTime=s.time%125;
- if(this.motion&&roadTime<24){map.sprite(Math.floor(s.time/125)%2?8:9,1,-10+roadTime*1.5,Math.floor(s.time/125)%2?55:78);}
- // Small clouds of dust behind moving mounts and vehicles.
- if(this.motion)for(const w of s.workers){
- const j=s.jobs.find(j=>j.worker===w.id&&j.status==='active'&&j.vehicle&&j.stage>0&&j.path?.length);if(!j)continue;
- const p=map.point(w.x+.5,w.y+.7);
- for(let i=0;i<4;i++){const phase=(t*2+i*.25)%1;c.fillStyle='rgba(204,174,119,'+(.17*(1-phase))+')';c.beginPath();c.ellipse(p.x-i*4*map.zoom,p.y+phase*7*map.zoom,(3+phase*7)*map.zoom,(2+phase*3)*map.zoom,0,0,7);c.fill();}
- }
  // Existing rain and hot weather drive the ambience; no invented gameplay seasons.
  if(s.weather==='Rain'){c.fillStyle='#40576d22';c.fillRect(0,0,map.w,map.h);}
  if(light.warm){c.fillStyle='rgba(225,150,64,.10)';c.fillRect(0,0,map.w,map.h);}
