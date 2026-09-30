@@ -1,9 +1,12 @@
+import {daylight} from './property-life.mjs';
+import {PropertyAudio} from './property-audio.mjs';
 import * as P from './property.mjs';
 import {PropertyMap} from './property-map.mjs';
 import {initAds,adsAvailable,bannerOnScreens,showRewarded,maybeInterstitial} from './arcade-ads.js';
 const $=id=>document.getElementById(id),KEY='homestead.property.v1';
 let warning='',s,prefs={sound:false,motion:!matchMedia('(prefers-reduced-motion: reduce)').matches};
 try{const raw=localStorage.getItem(KEY);s=raw?P.validate(raw):P.fresh();prefs={...prefs,...JSON.parse(localStorage.getItem(KEY+'.settings')||'{}')};}catch(e){s=P.fresh();warning='Your property save could not be read. The original has been preserved; this session will not overwrite it.';}
+const ambience=new PropertyAudio();let displayedMoney=s.money;
 let selected=1,speed=1,panel='',selectedBuilding=null,toastTimer,adBusy=false,surveyUntil=0,played=false;
 const track=(name,props={})=>window.arcade?.track(name,{mode:'property',level:P.level(s),...props});
 function save(){if(warning)return;try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){warning='Progress cannot be saved on this device. Keep this page open.';track('save_failure',{message:'local storage unavailable'});}}
@@ -37,7 +40,7 @@ $('closePanel').onclick=closePanel;
 function showLand(id){
  const p=P.PARCELS.find(p=>p.id===id);if(!p)return;
  if(s.land.includes(id))return toast('You own '+p.name+'.');
- confirm('Buy '+p.name+'?',P.cash(p.cost)+' for 8 acres. '+(P.adjacent(s,p)?'This block joins your property.':'Buy an adjoining block first.'),()=>{if(after(P.buyLand(s,id))){map.fit();if(panel)renderPanel();}});
+ confirm('Buy '+p.name+'?',P.cash(p.cost)+' for 8 acres. '+(P.adjacent(s,p)?'This block joins your property.':'Buy an adjoining block first.'),()=>{if(after(P.buyLand(s,id))){track('land_purchased',{parcel:id,acres:s.acres});map.fit();if(panel)renderPanel();}});
 }
 function openPanel(name){panel=name;cancelPlace();$('panel').hidden=false;document.querySelectorAll('[data-panel]').forEach(b=>b.classList.toggle('on',b.dataset.panel===name));renderPanel();}
 const img=art=>art>=0?'<img src="assets/farm-'+art+'.webp" alt="">':'<span style="font-size:35px;text-align:center">▧</span>';
@@ -127,19 +130,19 @@ document.addEventListener('click',e=>{
  if(d.speed!==undefined){speed=Number(d.speed);hud();return;}
  if(d.worker){selected=Number(d.worker);map.selected=selected;map.focus(s.workers.find(w=>w.id===selected));hud();if(panel)renderPanel();return;}
  if(d.project){closePanel();map.landMode=false;$('placeHint').textContent='Tap land to mark a site. Drag to look around.';map.placement=d.project;$('placement').hidden=false;$('placeName').textContent=P.BUILDINGS[d.project].name+' · '+P.cash(P.BUILDINGS[d.project].cost);document.body.dataset.placing='true';return;}
- if(d.vehicle){const v=P.VEHICLES[d.vehicle];confirm('Buy '+v.name+'?',P.cash(v.cost)+'. '+v.description,()=>after(P.buyVehicle(s,d.vehicle)));return;}
- if(d.stock){after(P.buyStock(s,d.stock));return;}
+ if(d.vehicle){const v=P.VEHICLES[d.vehicle];confirm('Buy '+v.name+'?',P.cash(v.cost)+'. '+v.description,()=>{if(after(P.buyVehicle(s,d.vehicle)))track('vehicle_purchased',{vehicle:d.vehicle});});return;}
+ if(d.stock){if(after(P.buyStock(s,d.stock)))track('livestock_purchased',{kind:d.stock});return;}
  if(d.cancelJob){after(P.cancelJob(s,Number(d.cancelJob)));return;}
  if(d.task){if(after(P.assign(s,selected,d.task,d.paddock?{paddock:Number(d.paddock),vehicle:d.target,destination:Number(d.destination)}:d.building?Number(d.building):d.target))){toast('Job queued for '+s.workers.find(w=>w.id===selected).name+'.');}return;}
  if(d.action){
- if(d.action==='loan')return confirm('A head start, with repayments','Receive $12,000 now. Total repayment $13,200: $440 per game day for 30 days. Repayments are taken from available cash; unpaid balances carry forward. No real money is involved.',()=>after(P.loan(s)));
+ if(d.action==='loan')return confirm('A head start, with repayments','Receive $12,000 now. Total repayment $13,200: $440 per game day for 30 days. Repayments are taken from available cash; unpaid balances carry forward. No real money is involved.',()=>{if(after(P.loan(s)))track('loan_taken',{amount:12000});});
  if(d.action==='hire')return confirm('Hire a farmhand?','$1,800 recruitment and $120 wages each game day. They work independently using your shared equipment.',()=>after(P.hire(s)));
  if(d.action==='repay')return confirm('Clear your loan?',P.cash(s.debt)+' from available funds. Future repayments stop.',()=>after(P.repay(s)));
  if(d.action==='supplies')after(P.supplies(s));
  }
 });
 function hud(){
- $('money').textContent=P.cash(s.money);$('acres').textContent=s.acres+' acres · Level '+P.level(s);$('day').textContent='Day '+s.day+' · '+s.weather;
+ displayedMoney=s.money>displayedMoney?displayedMoney+(s.money-displayedMoney)*.42:s.money;if(Math.abs(displayedMoney-s.money)<1)displayedMoney=s.money;$('money').textContent=P.cash(displayedMoney);$('acres').textContent=s.acres+' acres · Level '+P.level(s);$('day').textContent='Day '+s.day+' · '+daylight(s).name+' · '+s.weather;
  const w=s.workers.find(w=>w.id===selected),jobs=s.jobs.filter(j=>j.worker===selected),j=jobs[0];
  $('workerName').textContent=w.name;$('workerStatus').textContent=j?j.stops[j.stage]?.label||'Finishing up':'Ready · select a task';$('jobCount').textContent=jobs.length;
  const workers=s.workers.map(w=>w.id).join();if($('workers').dataset.ids!==workers){$('workers').innerHTML=s.workers.length>1?s.workers.map(w=>'<button data-worker="'+w.id+'" aria-label="Select '+w.name+'">'+w.name[0]+'</button>').join(''):'';$('workers').dataset.ids=workers;}
@@ -150,21 +153,32 @@ function hud(){
  else{$('goal').textContent='Make this place your own';$('goalNote').textContent='Graze your paddocks, feed yarded stock, welcome campers and buy more land.';}
  $('saveWarning').hidden=!warning;if(warning)$('saveWarning').textContent=warning;
 }
-$('play').onclick=()=>{document.body.dataset.view='play';$('home').hidden=true;$('game').hidden=false;map.resize();map.fit();if(map.w<650){map.zoom=.75;map.cx=7.8;map.cy=9.2;}hud();document.documentElement.requestFullscreen?.().catch(()=>{});};
+$('play').onclick=()=>{ambience.enable(prefs.sound);document.body.dataset.view='play';$('home').hidden=true;$('game').hidden=false;map.resize();map.fit();if(map.w<650){map.zoom=.75;map.cx=7.8;map.cy=9.2;}hud();document.documentElement.requestFullscreen?.().catch(()=>{});};
 $('settingsBtn').onclick=()=>{$('sound').checked=prefs.sound;$('motion').checked=prefs.motion;$('survey').hidden=!adsAvailable();$('settings').showModal();};
 $('closeSettings').onclick=()=>$('settings').close();
-for(const id of ['sound','motion'])$(id).onchange=()=>{prefs[id]=$(id).checked;try{localStorage.setItem(KEY+'.settings',JSON.stringify(prefs));}catch{toast('Settings could not be saved.');}};
+for(const id of ['sound','motion'])$(id).onchange=()=>{prefs[id]=$(id).checked;if(id==='sound')ambience.enable(prefs.sound);try{localStorage.setItem(KEY+'.settings',JSON.stringify(prefs));}catch{toast('Settings could not be saved.');}};
 $('menu').onclick=async()=>{save();$('settings').close();adBusy=true;document.body.inert=true;document.body.dataset.view='ad';try{await maybeInterstitial();}catch{}finally{adBusy=false;document.body.inert=false;document.body.dataset.view='home';$('game').hidden=true;$('home').hidden=false;}};
 $('survey').onclick=async()=>{if(adBusy)return;adBusy=true;$('survey').disabled=true;document.body.inert=true;try{const r=await showRewarded();if(r.rewarded){surveyUntil=s.time+60;toast('Aerial survey active: gold marks show road frontage and low catchment.');track('survey');}}catch{toast('Ad unavailable. Your property is unchanged.');}finally{adBusy=false;$('survey').disabled=false;document.body.inert=false;}};
-document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){save();ambience.update(s,false);}});
 window.addEventListener('pagehide',save);
 let last=performance.now(),lastUI=0,lastSave=0,lastEvent=s.events[0]?.id;
 function frame(now){
  const dt=Math.min(.1,(now-last)/1000);last=now;
  const active=document.body.dataset.view==='play'&&!document.hidden&&!document.querySelector('dialog[open]')&&!adBusy;
- if(active)P.tick(s,dt*speed);
+ ambience.update(s,active&&speed>0);
+ if(active){
+ const before=s.jobs.map(j=>({id:j.id,type:j.type,building:j.building,heads:j.animalIds?.length||0})),guests=s.campGuests;
+ P.tick(s,dt*speed);
+ for(const job of before)if(!s.jobs.some(j=>j.id===job.id)){
+ if(job.type!=='walk')track(job.type==='build'?'build_completed':job.type==='sell'?'sale':job.type,{heads:job.heads,building:job.building});
+ if(job.type==='sell'){map.life.celebrate(s,s.events.find(e=>e.text.includes(' head sold'))?.text||'Livestock sold');ambience.payoff('sale');}
+ if(job.type==='muster'||job.type==='rotate'){map.life.celebrate(s,job.heads+' head safely '+(job.type==='muster'?'in the yards':'on fresh pasture'),'muster');ambience.payoff('muster');}
+ if(job.type==='harvest'){map.life.celebrate(s,'Fresh produce ready for the shop','harvest');ambience.payoff('harvest');}
+ }
+ if(s.campGuests>guests)track('camp_checkin',{guests:s.campGuests,income:s.campIncome});
+ }
  if(document.body.dataset.view==='play'){
- map.draw(prefs.motion?now:0);
+ map.draw(prefs.motion?now:0,prefs.motion);
  if(surveyUntil>s.time){for(const p of [[2,6,'ROAD FRONTAGE'],[9,12,'LOW CATCHMENT']])map.label(...p,true);}
  if(now-lastUI>300){hud();lastUI=now;}
  if(now-lastSave>3000){save();lastSave=now;}

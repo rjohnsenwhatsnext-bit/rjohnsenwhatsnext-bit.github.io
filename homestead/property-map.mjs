@@ -1,8 +1,9 @@
+import {PropertyLife} from './property-life.mjs';
 import {BUILDINGS,VEHICLES,SIZE,canPlace,ready,dims,owns,PARCELS,parcelAt,animalHome} from './property.mjs';
 export class PropertyMap{
  constructor(canvas,getState,onPick){
- this.canvas=canvas;this.ctx=canvas.getContext('2d');this.getState=getState;this.onPick=onPick;this.zoom=1;this.cx=8;this.cy=9;this.selected=1;this.placement=null;this.hover=null;this.images=[];
- for(let i=0;i<24;i++){const a=new Image();a.src='assets/farm-'+i+'.webp';this.images.push(a);}
+ this.canvas=canvas;this.ctx=canvas.getContext('2d');this.getState=getState;this.onPick=onPick;this.zoom=1;this.cx=8;this.cy=9;this.selected=1;this.placement=null;this.hover=null;this.images=[];this.life=new PropertyLife();
+ for(let i=0;i<32;i++){const a=new Image();a.src='assets/farm-'+i+'.webp';this.images.push(a);}
  this.ground=new Image();this.ground.src='assets/pasture.webp';this.ground.onload=()=>{this.grassPattern=this.ctx.createPattern(this.ground,'repeat');};
  this.resize=()=>{const r=canvas.getBoundingClientRect();this.w=r.width;this.h=r.height;const d=Math.min(devicePixelRatio,2);canvas.width=r.width*d;canvas.height=r.height*d;this.dpr=d;};
  new ResizeObserver(this.resize).observe(canvas);
@@ -54,8 +55,8 @@ export class PropertyMap{
  }
  }
  label(x,y,text,accent=false){const p=this.point(x,y),c=this.ctx;c.font='600 10px system-ui';const width=c.measureText(text).width+16;c.fillStyle=accent?'#e8c679':'#203d32df';c.beginPath();c.roundRect(p.x-width/2,p.y-18,width,21,7);c.fill();c.fillStyle=accent?'#213a2e':'#fff4da';c.textAlign='center';c.fillText(text,p.x,p.y-4);}
- draw(time=0){
- if(!this.w)return;const c=this.ctx,s=this.getState();c.setTransform(this.dpr,0,0,this.dpr,0,0);
+ draw(time=0,motion=true){
+ if(!this.w)return;const c=this.ctx,s=this.getState();this.life.update(s,motion);c.setTransform(this.dpr,0,0,this.dpr,0,0);
  const bg=c.createLinearGradient(0,0,0,this.h);bg.addColorStop(0,'#7f8f61');bg.addColorStop(1,'#a8a473');c.fillStyle=bg;c.fillRect(0,0,this.w,this.h);
  for(let y=-15;y<SIZE+2;y++)for(let x=-15;x<SIZE+2;x++){
  const hash=Math.abs(Math.sin(x*127.1+y*311.7)*43758.5453)%1;
@@ -80,7 +81,7 @@ export class PropertyMap{
  this.fence(b.x,b.y,w,'#d6bd87',h,b.fenceSegments??0,true);
  c.save();c.globalAlpha=.22;this.sprite(d.art,b.x+size/2,b.y+size/2+.5,size*56);c.restore();
  this.label(b.x+size/2,b.y+size/2,Math.round(b.progress*100)+'% · '+d.name,true);
- }else if(b.kind==='paddock'){this.rectShape(b.x,b.y,w,h,(b.pasture??100)<30?'#bd945e99':'#82ae6399');this.fence(b.x,b.y,w,'#dec69a',h,Infinity,true);}
+ }else if(b.kind==='paddock'){this.rectShape(b.x,b.y,w,h,(b.pasture??100)<30?'#bd945e99':'#82ae6399');this.fence(b.x,b.y,w,'#dec69a',h,Infinity,true);this.rectShape(b.x+w-.85,b.y+h-.7,.55,.3,s.water?'#709aa4':'#938774','#d6d3bd');}
  else if(b.kind==='garden'&&!b.planted){
  for(let n=0;n<5;n++){const a=this.point(b.x+.15+n*.32,b.y+.1),z=this.point(b.x+.15+n*.32,b.y+1.8);c.strokeStyle='#775c39';c.lineWidth=5*this.zoom;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(z.x,z.y);c.stroke();}
  }else if(b.kind==='dam'&&!b.water){const p=this.point(b.x+1.5,b.y+1.5);c.fillStyle='#9a734d';c.beginPath();c.ellipse(p.x,p.y,66*this.zoom,35*this.zoom,0,0,Math.PI*2);c.fill();c.fillStyle='#755638';c.beginPath();c.ellipse(p.x,p.y-3*this.zoom,51*this.zoom,24*this.zoom,0,0,Math.PI*2);c.fill();this.label(b.x+1.5,b.y+1.8,'Waiting for rain');}
@@ -91,11 +92,11 @@ export class PropertyMap{
  for(const a of s.animals){
  const b=a.yarded?ready(s,'yards'):s.buildings.find(b=>b.id===a.paddock);if(!b)continue;
  const sale=s.jobs.find(j=>j.type==='sell'&&j.status==='active'&&j.stage>=2&&j.animalIds.includes(a.id));if(sale)continue;
- const home=animalHome(s,a);let x=a.x??home.x,y=a.y??home.y;
+ const home=animalHome(s,a),view=this.life.animal(s,a,b,dims(b).w,dims(b).h);let x=view.x??home.x,y=view.y??home.y;
  const moving=!!a.drive;const graze=moving?0:Math.sin(time*.0003+a.id)*.06;
  x+=graze;
 
- draws.push({depth:x+y+.8,run:()=>this.sprite(a.kind==='sheep'?13:12,x,y,32,1,Math.sin(time*(moving?.014:.001)+a.id)*(moving?1.4:.4),a.drivePath?.[0]&&(a.drivePath[0].x-a.drivePath[0].y<x-y))});
+ draws.push({depth:x+y+.8,run:()=>this.sprite(view.rest?(a.kind==='sheep'?31:30):(a.kind==='sheep'?13:12),x,y,32,1,Math.sin(time*(moving?.014:.001)+a.id)*(moving?1.4:.4),a.drivePath?.[0]&&(a.drivePath[0].x-a.drivePath[0].y<x-y))});
  }
  for(const v of s.visitors||[]){draws.push({depth:v.x+v.y+1,run:()=>{this.sprite(21,v.x+.5,v.y+.5,63,1,v.status==='staying'?0:Math.sin(time*.01)*.5);if(v.status==='staying'){this.sprite(14,v.x+1,v.y+.4,20);this.label(v.x+.5,v.y-1,'Camping - paid $'+v.fee);}}});}
  for(const [i,v]of s.vehicles.entries()){
@@ -113,6 +114,7 @@ export class PropertyMap{
  }});
  }
  draws.sort((a,b)=>a.depth-b.depth).forEach(d=>d.run());
+ this.life.world(this,s,time);
  if(this.placement==='fence'&&this.fenceStart&&this.fenceEnd){const a=this.fenceStart,b=this.fenceEnd,x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(a.x-b.x)+1,h=Math.abs(a.y-b.y)+1;this.rectShape(x,y,w,h,canPlace(s,'paddock',x,y,w,h)?'#cc493855':'#ecda8b66','#fff0aa');this.label(x+w/2,y+h/2,w+' x '+h+' - $'+((w+h)*180+160),true);}
  else if(this.placement&&this.placement!=='fence'&&this.hover){const {x,y}=this.hover,d=BUILDINGS[this.placement];this.tileShape(x,y,d.size,canPlace(s,this.placement,x,y)?'#cc493855':'#ecda8b66','#fff0aa');}
  if(this.landMode)for(const p of PARCELS)this.label(p.x+7,p.y+7,s.land.includes(p.id)?p.id.toUpperCase()+' - owned':p.id.toUpperCase()+' $'+p.cost,!s.land.includes(p.id));
