@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="capacitor-core.js"></script>
+<script>window.ARCADE_ADS = {"android":{},"ios":{}}; window.ARCADE_ADS_LIVE = false; window.ARCADE_GAME = {"slug":"rocket-thread","idSuffix":"rocketthread","version":1,"release":false};</script>
+<script src="arcade-telemetry.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0d1424">
+<title>Rocket Thread</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0d1424; color: #fff; font-family: system-ui, sans-serif; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+  canvas { display: block; width: 100vw; height: 100vh; }
+  #hud { position: fixed; top: calc(env(safe-area-inset-top) + 12px); left: 0; right: 0; text-align: center; pointer-events: none; }
+  #score { font-size: 48px; font-weight: 800; }
+  #zone { font-size: 13px; letter-spacing: .2em; opacity: .7; text-transform: uppercase; }
+  #panel { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(13, 20, 36, .82); text-align: center; padding: 24px; }
+  #panel h1 { margin: 0; font-size: 40px; }
+  #panel p { margin: 0; max-width: 22rem; opacity: .85; line-height: 1.5; }
+  #panel button { font: inherit; font-size: 18px; font-weight: 700; padding: 14px 34px; border-radius: 30px; border: 0; background: #ff6a3d; color: #fff; }
+  .hidden { display: none !important; }
+  #proto { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 6px); left: 0; right: 0; text-align: center; font-size: 11px; opacity: .4; pointer-events: none; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud"><div id="score">0</div><div id="zone"></div></div>
+<div id="panel"><h1>Rocket Thread</h1><p id="msg">Hold to curve right. Let go to curve left. Thread every gap.</p><p id="best"></p><button id="go">Launch</button></div>
+<div id="proto">Mechanics prototype. Final look to come.</div>
+<script type="module" src="main.mjs"></script>
+</body>
+</html>
