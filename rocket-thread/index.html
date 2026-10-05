@@ -1,32 +1,9 @@
-<!doctype html>
-<html lang="en">
-<head>
+<!doctype html><html lang="en"><head>
 <script src="capacitor-core.js"></script>
 <script>window.ARCADE_ADS = {"android":{},"ios":{}}; window.ARCADE_ADS_LIVE = false; window.ARCADE_GAME = {"slug":"rocket-thread","idSuffix":"rocketthread","version":1,"release":false};</script>
-<script src="arcade-telemetry.js"></script>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#0d1424">
-<title>Rocket Thread</title>
-<style>
-  html, body { margin: 0; height: 100%; background: #0d1424; color: #fff; font-family: system-ui, sans-serif; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
-  canvas { display: block; width: 100vw; height: 100vh; }
-  #hud { position: fixed; top: calc(env(safe-area-inset-top) + 12px); left: 0; right: 0; text-align: center; pointer-events: none; }
-  #score { font-size: 48px; font-weight: 800; }
-  #zone { font-size: 13px; letter-spacing: .2em; opacity: .7; text-transform: uppercase; }
-  #panel { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(13, 20, 36, .82); text-align: center; padding: 24px; }
-  #panel h1 { margin: 0; font-size: 40px; }
-  #panel p { margin: 0; max-width: 22rem; opacity: .85; line-height: 1.5; }
-  #panel button { font: inherit; font-size: 18px; font-weight: 700; padding: 14px 34px; border-radius: 30px; border: 0; background: #ff6a3d; color: #fff; }
-  .hidden { display: none !important; }
-  #proto { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 6px); left: 0; right: 0; text-align: center; font-size: 11px; opacity: .4; pointer-events: none; }
-</style>
-</head>
-<body>
-<canvas id="c"></canvas>
-<div id="hud"><div id="score">0</div><div id="zone"></div></div>
-<div id="panel"><h1>Rocket Thread</h1><p id="msg">Hold to curve right. Let go to curve left. Thread every gap.</p><p id="best"></p><button id="go">Launch</button></div>
-<div id="proto">Mechanics prototype. Final look to come.</div>
-<script type="module" src="main.mjs"></script>
-</body>
-</html>
+<script src="arcade-telemetry.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080f1d"><title>Rocket Thread</title><link rel="icon" href="assets/icon.png"><link rel="stylesheet" href="arcade-endless.css"></head><body class="rocket" data-screen="home">
+<canvas id="c" tabindex="0" aria-label="Rocket Thread play area"></canvas><div id="hud" hidden><div id="mode-label">ENDLESS</div><div id="score">0</div><div id="zone"></div></div><button id="pause" aria-label="Pause game" hidden>Ⅱ</button><div id="hint"></div><div id="toast" role="status"></div>
+<section data-panel="home"><div class="content"><p class="eyebrow">Tovelly Studios · One more go</p><canvas id="hero" class="hero" width="300" height="300" aria-hidden="true"></canvas><h1>ROCKET<span>THREAD</span></h1><p class="intro">Hold to curve right. Release to curve left.<br>Find your rhythm. Thread the impossible.</p><div class="stat-row"><div><strong id="best">0</strong><small>Personal best</small></div><div><strong id="daily-best">—</strong><small>Today's best</small></div></div><div class="actions"><button id="go" class="primary">Launch <span aria-hidden="true">↗</span></button><div class="daily-wrap"><button id="daily" class="secondary" style="width:100%">Daily challenge</button><small id="daily-date"></small></div></div><button class="subtle" data-settings>Settings &amp; looks</button></div></section>
+<section data-panel="paused" hidden><div class="content"><p class="eyebrow">Take a breath</p><h2>Run paused.</h2><p class="intro">Pick up exactly where you left off.</p><div class="actions"><button id="resume" class="primary">Resume</button><button data-settings>Settings</button><button id="quit" class="subtle">End run &amp; return home</button></div></div></section>
+<section data-panel="result" hidden><div class="content"><p class="eyebrow">Gaps threaded</p><div id="result-score" class="result-num">0</div><h2 id="result-title"></h2><p id="result-detail" class="detail"></p><p id="earned" class="earned"></p><div class="progress"><progress id="unlock-progress" max="30" value="0"></progress><p id="next"></p></div><div class="actions"><button id="retry" class="primary">Again <span aria-hidden="true">↗</span></button><button id="reward" hidden>Watch ad · double sparks</button><small id="reward-note" class="detail" role="status"></small><button id="home" class="subtle">Back to home</button></div></div></section>
+<section data-panel="settings" hidden><div class="content"><p class="eyebrow">Make it yours</p><h2>Settings &amp; looks</h2><label class="setting"><span>Sound<small>Soft tones for scores and impacts</small></span><input id="sound" type="checkbox"></label><label class="setting"><span>Reduced motion<small>Less drift, trails and burst effects</small></span><input id="motion" type="checkbox"></label><div class="stat-row"><div><strong id="bank">0</strong><small>Cosmetic sparks</small></div></div><div id="looks" class="looks"></div><p class="settings-help"><b>How to play</b><br>Hold the screen or Space to curve right. Release to curve left. Every gap counts. Gold cells earn extra cosmetic sparks. New obstacles arrive as you climb.<br><br>Runs earn sparks for new looks. Looks never change the rules. Daily challenges use the same seed all day, resetting at midnight UTC. Bests are saved on this device.</p><button id="settings-back" class="primary" style="width:100%">Done</button></div></section><div id="save-note" role="status"></div><script type="module" src="main.mjs"></script></body></html>
