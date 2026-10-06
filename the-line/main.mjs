@@ -16,7 +16,8 @@ const track = (e, d = {}) => window.arcade && window.arcade.track && window.arca
 const KEY = 'theline.board.v1';
 const cv = $('c'), cx = cv.getContext('2d');
 const cache = document.createElement('canvas'), cc = cache.getContext('2d');
-const prefs=loadPrefs(localStorage,matchMedia('(prefers-reduced-motion: reduce)').matches);
+let preferenceStorage;try{preferenceStorage=localStorage;}catch{}
+const prefs=loadPrefs(preferenceStorage,matchMedia('(prefers-reduced-motion: reduce)').matches);
 const sound=makeAudio(prefs);let paused=false,adBusy=false,lockerFrom='home',focusBefore=null;
 const clearInput=()=>{steer=0;eraseNow=false;pointers.clear();};
 function savePrefs(){try{localStorage.setItem('theline.look.v1',JSON.stringify(prefs));}catch{}document.body.classList.toggle('reduced',prefs.reduced);}
