@@ -1,3 +1,4 @@
+import {mountFarmShop} from './property-shop.mjs';
 import * as F from './fields.mjs';
 import * as Stages from './stages.mjs';
 import {claimDaily} from './daily.mjs';
@@ -11,6 +12,8 @@ import {initAds,adsAvailable,bannerOnScreens,showRewarded,maybeInterstitial} fro
 const $=id=>document.getElementById(id),KEY='homestead.property.v1';
 let warning='',s,prefs={sound:false,motion:!matchMedia('(prefers-reduced-motion: reduce)').matches};
 try{const raw=localStorage.getItem(KEY);s=raw?P.validate(raw):P.fresh();prefs={...prefs,...JSON.parse(localStorage.getItem(KEY+'.settings')||'{}')};}catch(e){s=P.fresh();warning='Your property save could not be read. The original has been preserved; this session will not overwrite it.';}
+const farmShop=mountFarmShop({dialog:$('farmShop')});
+$('openShop').onclick=()=>farmShop.open();
 const ambience=new PropertyAudio();let displayedMoney=s.money;
 let selected=1,speed=1,panel='',selectedBuilding=null,toastTimer,adBusy=false,surveyUntil=0,played=false;
 const track=(name,props={})=>window.arcade?.track(name,{mode:'property',level:P.level(s),...props});
@@ -98,6 +101,7 @@ function renderPanel(){
  html+=button('Stages & daily jobs','data-panel="progress"')+button('Fields & crops','data-panel="fields"');
  html+=button('Stock farm shop with produce','data-task="shop"');
  html+=button('Surrounding land - '+s.acres+' / 72 acres','data-panel="land"');
+ html+=button('Farm store � cash & exclusives','data-shop="true"');
  html+=button('Campground bookings & visitors','data-panel="camping"');
  if(!s.repayments&&!s.debt)html+=button('View starter loan terms','data-action="loan"');
  if(s.debt)html+=button('Repay loan in full · '+P.cash(s.debt),'data-action="repay"');
@@ -132,6 +136,7 @@ function renderPanel(){
 }
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;
+ if(d.shop){farmShop.open();return;}
  if(d.clockRetry){propertyClock.sync();return;}
  if(d.dailyClaim){if(!propertyClock.dayKey)return toast('Connect to check today’s date first.');const r=claimDaily(s,propertyClock.dayKey);if(after(r))toast('Daily jobs paid · '+P.cash(r.reward));return;}
  if(d.machine){const m=F.MACHINES[d.machine];confirm('Buy '+m.name+'?',P.cash(m.cost)+' from your property funds. Available for compatible field jobs.',()=>after(F.buyMachine(s,d.machine)));return;}
