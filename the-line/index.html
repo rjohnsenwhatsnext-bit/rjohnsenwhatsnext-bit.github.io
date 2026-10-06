@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="capacitor-core.js"></script>
+<script>window.ARCADE_ADS = {"android":{},"ios":{}}; window.ARCADE_ADS_LIVE = false; window.ARCADE_GAME = {"slug":"the-line","idSuffix":"theline","version":1,"release":false};</script>
+<script src="arcade-telemetry.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#050607">
+<title>The Line</title>
+<style>
+  :root { --lime: #c6ff3d; --bg: #050607; --ink: #eef2e6; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+  canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+  #hud { position: fixed; top: calc(env(safe-area-inset-top) + 14px); left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 20px; pointer-events: none; font-variant-numeric: tabular-nums; }
+  #score { font-size: 40px; font-weight: 800; color: var(--lime); text-shadow: 0 0 18px rgba(198,255,61,.45); }
+  #best { font-size: 13px; letter-spacing: .18em; opacity: .55; text-align: right; padding-top: 10px; }
+  #gear { position: fixed; top: calc(env(safe-area-inset-top) + 64px); right: 14px; width: 40px; height: 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.04); color: var(--ink); font-size: 18px; }
+  #erase { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 26px); left: 50%; transform: translateX(-50%); width: 76px; height: 76px; border-radius: 38px; border: 2px solid var(--lime); background: rgba(198,255,61,.08); color: var(--lime); font-weight: 800; font-size: 12px; letter-spacing: .12em; box-shadow: 0 0 22px rgba(198,255,61,.25); }
+  #erase:disabled { opacity: .18; box-shadow: none; }
+  .panel { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 24px; background: radial-gradient(circle at 50% 40%, rgba(5,6,7,.55), rgba(5,6,7,.92)); }
+  .panel h1 { margin: 0; font-size: 56px; letter-spacing: .06em; color: var(--lime); text-shadow: 0 0 28px rgba(198,255,61,.5); }
+  .panel p { margin: 0; opacity: .8; max-width: 21rem; line-height: 1.5; }
+  .big { font-size: 64px; font-weight: 800; color: var(--lime); text-shadow: 0 0 24px rgba(198,255,61,.45); font-variant-numeric: tabular-nums; }
+  button.primary { font: inherit; font-size: 22px; font-weight: 800; letter-spacing: .08em; padding: 18px 56px; border: 0; border-radius: 40px; background: var(--lime); color: #071000; box-shadow: 0 0 30px rgba(198,255,61,.45); }
+  button.ghost { font: inherit; font-size: 15px; padding: 10px 22px; border-radius: 24px; border: 1px solid rgba(255,255,255,.2); background: transparent; color: var(--ink); }
+  .small { font-size: 13px; opacity: .55; }
+  .hidden { display: none !important; }
+  #proto { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 4px); left: 0; right: 0; text-align: center; font-size: 10px; opacity: .3; pointer-events: none; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud"><div id="score">0</div><div id="best">BEST 0</div></div>
+<button id="gear" aria-label="Settings">⚙</button>
+<button id="erase" aria-label="Erase old line ahead">ERASE</button>
+<section id="home" class="panel"><h1>THE LINE</h1><p>Every time you play, you make the game harder.</p><button id="play" class="primary">PLAY</button><p class="small">Hold left or right to steer. Do not touch any line.</p></section>
+<section id="over" class="panel hidden"><div id="overScore" class="big">0</div><p id="overNote"></p><button id="retry" class="primary">RETRY</button><button id="cont" class="ghost hidden">Watch an ad: continue</button><button id="twoErase" class="ghost hidden">Watch an ad: 2 erases next run</button><p id="overStats" class="small"></p></section>
+<section id="settings" class="panel hidden"><h2>Settings</h2><p id="stats" class="small"></p><button id="resetBoard" class="ghost">Reset the board</button><p class="small">Resetting deletes every line you have made: your whole maze. Your best score and totals stay.</p><button id="closeSettings" class="primary">BACK</button></section>
+<div id="proto">Mechanics prototype. Final look to come.</div>
+<script type="module" src="main.mjs"></script>
+</body>
+</html>
