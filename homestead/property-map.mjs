@@ -1,10 +1,11 @@
+import {PaintedActors} from './property-painted.mjs';
 import {drawField} from './property-field-art.mjs';
 import {MotionTracks,drawVehicle} from './property-motion.mjs';
 import {PropertyLife} from './property-life.mjs';
 import {BUILDINGS,SIZE,canPlace,ready,dims,owns,PARCELS,parcelAt,animalHome} from './property.mjs';
 export class PropertyMap{
  constructor(canvas,getState,onPick){
- this.canvas=canvas;this.ctx=canvas.getContext('2d');this.getState=getState;this.onPick=onPick;this.zoom=1;this.cx=8;this.cy=9;this.selected=1;this.placement=null;this.hover=null;this.images=[];this.life=new PropertyLife();this.tracks=new MotionTracks();
+ this.canvas=canvas;this.ctx=canvas.getContext('2d');this.getState=getState;this.onPick=onPick;this.zoom=1;this.cx=8;this.cy=9;this.selected=1;this.placement=null;this.hover=null;this.images=[];this.life=new PropertyLife();this.tracks=new MotionTracks();this.painted=new PaintedActors();
  for(let i=0;i<32;i++){const a=new Image();a.src='assets/farm-'+i+'.webp';this.images.push(a);}
  this.ground=new Image();this.ground.src='assets/pasture.webp';this.ground.onload=()=>{this.grassPattern=this.ctx.createPattern(this.ground,'repeat');};
  this.resize=()=>{const r=canvas.getBoundingClientRect();this.w=r.width;this.h=r.height;const d=Math.min(devicePixelRatio,2);canvas.width=r.width*d;canvas.height=r.height*d;this.dpr=d;};
@@ -110,12 +111,12 @@ export class PropertyMap{
  for(const v of s.visitors||[]){draws.push({depth:v.x+v.y+1,run:()=>{this.vehicle('camper','visitor-'+v.id,v.x+.5,v.y+.5);if(v.status==='staying'){this.sprite(14,v.x+1,v.y+.4,20);this.label(v.x+.5,v.y-1,'Camping - paid $'+v.fee);}}});}
  for(const [i,v]of s.vehicles.entries()){
  if(s.jobs.some(j=>j.vehicle===v&&j.status==='active'&&j.stage>0))continue;
- const x=4+i*1.5,y=15;
+ const x=3.8+(i%3)*3.2,y=14.8-Math.floor(i/3)*2.4;
  draws.push({depth:x+y,run:()=>{if(v==='horse')this.grounded(11,x,y,40);else this.vehicle(v,'parked-'+v,x,y,null,false);}});
  }
  for(const [i,v] of (s.machines||[]).filter(v=>/Tractor|Harvester|header/.test(v)).entries()){
  if(s.jobs.some(j=>j.machine===v&&j.status==='active'&&j.stage>0))continue;
- const x=4+i*1.8,y=14;draws.push({depth:x+y,run:()=>this.vehicle(v,'machine-'+v,x,y,0,false)});
+ const x=4+(i%3)*3.2,y=11.8-Math.floor(i/3)*2.4;draws.push({depth:x+y,run:()=>this.vehicle(v,'machine-'+v,x,y,0,false)});
  }
  for(const j of s.jobs.filter(j=>j.hire&&j.building&&j.status==='active'&&j.elapsed>0)){
  const b=s.buildings.find(b=>b.id===j.building&&b.kind==='field');if(!b)continue;
@@ -131,7 +132,7 @@ export class PropertyMap{
  if(j?.machine&&j.stage>0){drawVehicle(this,j.machine,w.x+.5,w.y+.5,{...pose,implement:j.implement});}
  else if(j?.type==='deliver'){drawVehicle(this,'truck',w.x+.5,w.y+.5,pose);}
  else if(j?.vehicle&&j.stage>0){if(j.vehicle==='horse')this.grounded(22,w.x+.5,w.y+.5,58,Math.cos(pose.heading)-Math.sin(pose.heading)<0);else drawVehicle(this,j.vehicle,w.x+.5,w.y+.5,pose);}
- else this.grounded(14,w.x+.5,w.y+.5,26,Math.cos(pose.heading)-Math.sin(pose.heading)<0);
+ else if(!this.painted.worker(this,w.x+.5,w.y+.5,pose))this.grounded(14,w.x+.5,w.y+.5,26,Math.cos(pose.heading)-Math.sin(pose.heading)<0);
  if(w.id===this.selected&&!j?.herding)this.label(w.x+.5,w.y-1.1,j?j.stops[j.stage]?.label||'Finishing':w.name+' · ready');
  }});
  }
