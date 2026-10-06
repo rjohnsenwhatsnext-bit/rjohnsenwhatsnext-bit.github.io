@@ -1,43 +1,9 @@
-<!doctype html>
-<html lang="en">
-<head>
+<!doctype html><html lang="en"><head>
 <script src="capacitor-core.js"></script>
 <script>window.ARCADE_ADS = {"android":{},"ios":{}}; window.ARCADE_ADS_LIVE = false; window.ARCADE_GAME = {"slug":"the-line","idSuffix":"theline","version":1,"release":false};</script>
-<script src="arcade-telemetry.js"></script>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#050607">
-<title>The Line</title>
-<style>
-  :root { --lime: #c6ff3d; --bg: #050607; --ink: #eef2e6; }
-  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
-  canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
-  #hud { position: fixed; top: calc(env(safe-area-inset-top) + 14px); left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 20px; pointer-events: none; font-variant-numeric: tabular-nums; }
-  #score { font-size: 40px; font-weight: 800; color: var(--lime); text-shadow: 0 0 18px rgba(198,255,61,.45); }
-  #best { font-size: 13px; letter-spacing: .18em; opacity: .55; text-align: right; padding-top: 10px; }
-  #gear { position: fixed; top: calc(env(safe-area-inset-top) + 64px); right: 14px; width: 40px; height: 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.04); color: var(--ink); font-size: 18px; }
-  #erase { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 26px); left: 50%; transform: translateX(-50%); width: 76px; height: 76px; border-radius: 38px; border: 2px solid var(--lime); background: rgba(198,255,61,.08); color: var(--lime); font-weight: 800; font-size: 12px; letter-spacing: .12em; box-shadow: 0 0 22px rgba(198,255,61,.25); }
-  #erase:disabled { opacity: .18; box-shadow: none; }
-  .panel { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 24px; background: radial-gradient(circle at 50% 40%, rgba(5,6,7,.55), rgba(5,6,7,.92)); }
-  .panel h1 { margin: 0; font-size: 56px; letter-spacing: .06em; color: var(--lime); text-shadow: 0 0 28px rgba(198,255,61,.5); }
-  .panel p { margin: 0; opacity: .8; max-width: 21rem; line-height: 1.5; }
-  .big { font-size: 64px; font-weight: 800; color: var(--lime); text-shadow: 0 0 24px rgba(198,255,61,.45); font-variant-numeric: tabular-nums; }
-  button.primary { font: inherit; font-size: 22px; font-weight: 800; letter-spacing: .08em; padding: 18px 56px; border: 0; border-radius: 40px; background: var(--lime); color: #071000; box-shadow: 0 0 30px rgba(198,255,61,.45); }
-  button.ghost { font: inherit; font-size: 15px; padding: 10px 22px; border-radius: 24px; border: 1px solid rgba(255,255,255,.2); background: transparent; color: var(--ink); }
-  .small { font-size: 13px; opacity: .55; }
-  .hidden { display: none !important; }
-  #proto { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 4px); left: 0; right: 0; text-align: center; font-size: 10px; opacity: .3; pointer-events: none; }
-</style>
-</head>
-<body>
-<canvas id="c"></canvas>
-<div id="hud"><div id="score">0</div><div id="best">BEST 0</div></div>
-<button id="gear" aria-label="Settings">⚙</button>
-<button id="erase" aria-label="Erase old line ahead">ERASE</button>
-<section id="home" class="panel"><h1>THE LINE</h1><p>Every time you play, you make the game harder.</p><button id="play" class="primary">PLAY</button><p class="small">Hold left or right to steer. Do not touch any line.</p></section>
-<section id="over" class="panel hidden"><div id="overScore" class="big">0</div><p id="overNote"></p><button id="retry" class="primary">RETRY</button><button id="cont" class="ghost hidden">Watch an ad: continue</button><button id="twoErase" class="ghost hidden">Watch an ad: 2 erases next run</button><p id="overStats" class="small"></p></section>
-<section id="settings" class="panel hidden"><h2>Settings</h2><p id="stats" class="small"></p><button id="resetBoard" class="ghost">Reset the board</button><p class="small">Resetting deletes every line you have made: your whole maze. Your best score and totals stay.</p><button id="closeSettings" class="primary">BACK</button></section>
-<div id="proto">Mechanics prototype. Final look to come.</div>
-<script type="module" src="main.mjs"></script>
-</body>
-</html>
+<script src="arcade-telemetry.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080c15"><title>The Line</title><link rel="icon" href="assets/icon.png"><link rel="apple-touch-icon" href="assets/icon.png"><link rel="stylesheet" href="style.css"></head><body data-screen="home">
+<canvas id="c" aria-label="The Line playing field"></canvas><div id="hud"><div><small>DISTANCE</small><div id="score">0</div></div><div id="best">BEST 0</div></div><button id="gear" aria-label="Settings and pause">Ⅱ</button><button id="erase" aria-label="Erase old line ahead">✳ <span id="eraseLabel">ERASE · 1</span></button><div id="steerHint" aria-hidden="true"><span>‹ HOLD LEFT</span><span>HOLD RIGHT ›</span></div>
+<section id="home" class="panel"><header><span>TOVELLY / ARCADE</span><span class="pill">PERSONAL MAZE</span></header><div class="home-main"><div class="kicker">● YOUR PAST IS THE OBSTACLE</div><h1>THE<br><span>LINE.</span></h1><p class="tagline">Every run leaves a mark.<br>Every mark makes it harder.</p><svg class="hero-trail" viewBox="0 0 340 135" aria-hidden="true"><defs><filter id="glow"><feGaussianBlur stdDeviation="4"/></filter></defs><path class="old" d="M-15 101H98Q124 101 124 75V44Q124 26 143 26H282Q306 26 306 48V151M-20 41H73Q89 41 89 57V132H205Q222 132 222 113V-9"/><path class="glow" d="M-10 121H47Q65 121 65 103V82Q65 63 84 63H249Q268 63 268 81V93Q268 111 285 111H333"/><path class="hot" d="M-10 121H47Q65 121 65 103V82Q65 63 84 63H249Q268 63 268 81V93Q268 111 285 111H333"/><circle cx="333" cy="111" r="6" fill="#efffc3"/></svg><div class="numbers"><div><strong id="homeBest">0</strong><small>PERSONAL BEST</small></div><div><strong id="homeLines">0</strong><small>LINES LEFT BEHIND</small></div></div><button id="play" class="primary">ENTER THE MAZE <span>↗</span></button><button id="openLocker" class="text-button">THE COLLECTION <span id="collectionCount">0 / 8</span></button><p class="control-note">Hold either side to turn. Release to go straight.<br>Avoid the walls and every solid line.</p></div><footer><span>ONE MORE RUN.</span><span>NO CLEAN SLATE.</span></footer></section>
+<section id="over" class="panel hidden" aria-labelledby="resultTitle"><div class="sheet"><div id="resultKicker" class="kicker">ANOTHER LINE LEFT BEHIND</div><h2 id="resultTitle">END OF<br>THE LINE<span>.</span></h2><div class="result-score"><span id="overScore">0</span><small>POINTS</small></div><p id="overNote"></p><p id="overStats" class="small"></p><div id="unlockNotice" class="unlock-notice hidden"></div><button id="retry" class="primary">ONE MORE RUN <span>↗</span></button><button id="cont" class="ghost hidden">Watch an ad: continue</button><button id="twoErase" class="ghost hidden">Watch an ad: 2 erases next run</button><button id="resultHome" class="text-button">BACK TO THE MAZE</button></div></section>
+<section id="settings" class="panel overlay hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="sheet"><div class="kicker">TAKE A BREATH</div><h2 id="settingsTitle">PAUSED<span>.</span></h2><p id="stats" class="small"></p><div class="toggles"><label>Sound<input id="soundToggle" type="checkbox" role="switch"></label><label>Haptics<input id="hapticToggle" type="checkbox" role="switch"></label><label>Reduced motion<input id="motionToggle" type="checkbox" role="switch"></label></div><button id="settingsLocker" class="ghost">Your collection ↗</button><button id="closeSettings" class="primary">BACK</button><button id="settingsHome" class="text-button">RETURN TO HOME</button><details><summary>Reset your maze</summary><p class="small">Remove every old line. Best score and lifetime totals stay.</p><button id="resetBoard" class="danger">RESET BOARD</button></details><p class="control-note">← / → to steer · Space to erase · Esc to pause<br>Dim ghost trails are harmless. Solid trails are not.</p></div></section>
+<section id="locker" class="panel overlay hidden" role="dialog" aria-modal="true" aria-labelledby="lockerTitle"><div class="sheet"><div class="kicker">EARNED, NEVER BOUGHT</div><h2 id="lockerTitle">MAKE<br>YOUR MARK<span>.</span></h2><p class="small">New looks. Same challenge.</p><button id="defaultLook" class="ghost">Use the original look</button><div id="cosmetics"></div><button id="closeLocker" class="primary">DONE</button></div></section><div id="saveWarning" class="hidden" role="status"></div><script type="module" src="main.mjs"></script></body></html>
