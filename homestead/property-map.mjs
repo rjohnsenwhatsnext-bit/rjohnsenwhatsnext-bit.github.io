@@ -131,7 +131,7 @@ export class PropertyMap{
  const pose=this.tracks.sample('worker-'+w.id,w.x+.5,w.y+.5,s.time);
  if(j?.machine&&j.stage>0){drawVehicle(this,j.machine,w.x+.5,w.y+.5,{...pose,implement:j.implement});}
  else if(j?.type==='deliver'){drawVehicle(this,'truck',w.x+.5,w.y+.5,pose);}
- else if(j?.vehicle&&j.stage>0){if(j.vehicle==='horse')this.grounded(22,w.x+.5,w.y+.5,58,Math.cos(pose.heading)-Math.sin(pose.heading)<0);else drawVehicle(this,j.vehicle,w.x+.5,w.y+.5,pose);}
+ else if(j?.vehicle&&j.stage>0){if(j.vehicle==='horse'){if(!this.painted.vehicle(this,'horse',w.x+.5,w.y+.5,pose))this.grounded(22,w.x+.5,w.y+.5,58,Math.cos(pose.heading)-Math.sin(pose.heading)<0);}else drawVehicle(this,j.vehicle,w.x+.5,w.y+.5,pose);}
  else if(!this.painted.worker(this,w.x+.5,w.y+.5,pose))this.grounded(14,w.x+.5,w.y+.5,26,Math.cos(pose.heading)-Math.sin(pose.heading)<0);
  if(w.id===this.selected&&!j?.herding)this.label(w.x+.5,w.y-1.1,j?j.stops[j.stage]?.label||'Finishing':w.name+' · ready');
  }});

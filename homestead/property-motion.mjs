@@ -14,7 +14,7 @@ export class MotionTracks {
 
 // Solid models projected through the map camera: the bonnet always leads.
 export function drawVehicle(map,kind,x,y,pose={heading:0,distance:0},rider=true){
- if(map.painted?.vehicle(map,kind,x,y,pose))return;
+ if(map.painted?.vehicle(map,kind,x,y,pose,rider))return;
  const c=map.ctx,z=map.zoom,angle=pose.heading,cs=Math.cos(angle),sn=Math.sin(angle);
  const project=(u,v,h=0)=>{const p=map.point(x+u*cs-v*sn,y+u*sn+v*cs);return {x:p.x,y:p.y-h*28*z};};
  const faces=[];
