@@ -23,9 +23,10 @@ export const clock = {
   async sync() {
     try {
       const sent = performance.now();
-      const r = await fetch(SERVER + '/v1/time', { cache: 'no-store' });
+      const r = await fetch(SERVER + '/v1/time', { cache: 'no-store', signal: AbortSignal.timeout(8000) });
       if (!r.ok) throw new Error('the server answered ' + r.status);
       const { now } = await r.json();
+      if (!Number.isFinite(now)) throw new Error('invalid server time');
       const back = performance.now();
       base = { server: now + (back - sent) / 2, perf: back };
       lastOffset = base.server - Date.now();
@@ -37,6 +38,7 @@ export const clock = {
       clock.checked = true;
       clock.problem = '';
     } catch (e) {
+      clock.checked = false;
       clock.problem = 'Time not checked with the server: ' + (e.message || e);
     }
     return clock.checked;

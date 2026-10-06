@@ -1,3 +1,8 @@
+import * as F from './fields.mjs';
+import * as Stages from './stages.mjs';
+import {claimDaily} from './daily.mjs';
+import {farmPanel} from './property-farm-ui.mjs';
+import {propertyTime} from './property-time.mjs';
 import {daylight} from './property-life.mjs';
 import {PropertyAudio} from './property-audio.mjs';
 import * as P from './property.mjs';
@@ -9,15 +14,15 @@ try{const raw=localStorage.getItem(KEY);s=raw?P.validate(raw):P.fresh();prefs={.
 const ambience=new PropertyAudio();let displayedMoney=s.money;
 let selected=1,speed=1,panel='',selectedBuilding=null,toastTimer,adBusy=false,surveyUntil=0,played=false;
 const track=(name,props={})=>window.arcade?.track(name,{mode:'property',level:P.level(s),...props});
-function save(){if(warning)return;try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){warning='Progress cannot be saved on this device. Keep this page open.';track('save_failure',{message:'local storage unavailable'});}}
+function save(){if(warning)return;propertyClock.stamp();try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){warning='Progress cannot be saved on this device. Keep this page open.';track('save_failure',{message:'local storage unavailable'});}}
 function toast(text){$('toast').textContent=text;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3600);}
 function sound(){if(!prefs.sound)return;try{const ctx=new (window.AudioContext||window.webkitAudioContext)(),o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=520;g.gain.value=.03;o.connect(g).connect(ctx.destination);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.15);o.start();o.stop(ctx.currentTime+.18);o.onended=()=>ctx.close();}catch{}}
-function after(r){if(!r.ok){toast(r.reason);return false;}if(!played){played=true;track('play');}sound();save();hud();if(panel)renderPanel();return true;}
+function after(r){if(!r.ok){toast(r.reason);return false;}if(!played){played=true;track('play');}sound();checkStage();save();hud();if(panel)renderPanel();return true;}
 function confirm(title,text,fn){$('confirmTitle').textContent=title;$('confirmText').textContent=text;$('confirmYes').onclick=()=>{$('confirm').close();fn();};$('confirm').showModal();}
 $('confirmNo').onclick=()=>$('confirm').close();
 const map=new PropertyMap($('world'),()=>s,pick=>{
  if(pick.land){showLand(pick.land);return;}
- if(pick.fence){const f=pick.fence;const reason=P.canPlace(s,'paddock',f.x,f.y,f.w,f.h);if(reason||f.w<2||f.h<2||f.w>10||f.h>10)return toast(reason||'Drag a paddock between 2 and 10 squares on each side.');const cost=(f.w+f.h)*180+160;confirm('Build this paddock fence?',f.w+' by '+f.h+' squares. '+P.cash(cost)+' for posts, wire and a gate. Your worker builds each section before stock can use it.',()=>{if(after(P.fencePlan(s,selected,f.x,f.y,f.w,f.h)))cancelPlace();});return;}
+ if(pick.fence){const f=pick.fence;if(fieldPath){const path=fieldPath;if(f.w<2||f.h<2||f.w>8||f.h>8)return toast('Fields must be between 2 and 8 squares per side.');const reason=P.canPlace(s,'field',f.x,f.y,f.w,f.h);if(reason)return toast(reason);confirm('Lay out this '+F.PATHS[path].name.toLowerCase()+' field?',f.w+' × '+f.h+' squares · '+P.cash(f.w*f.h*F.FIELD_SQUARE_COST)+'. Your worker clears and marks out the field.',()=>{if(after(P.assign(s,selected,'layField',{...f,path})))cancelPlace();});return;}const reason=P.canPlace(s,'paddock',f.x,f.y,f.w,f.h);if(reason||f.w<2||f.h<2||f.w>10||f.h>10)return toast(reason||'Drag a paddock between 2 and 10 squares on each side.');const cost=(f.w+f.h)*180+160;confirm('Build this paddock fence?',f.w+' by '+f.h+' squares. '+P.cash(cost)+' for posts, wire and a gate. Your worker builds each section before stock can use it.',()=>{if(after(P.fencePlan(s,selected,f.x,f.y,f.w,f.h)))cancelPlace();});return;}
  if(pick.worker){selected=pick.worker;map.selected=selected;hud();return;}
  if(pick.place){
  const reason=P.canPlace(s,pick.place,pick.x,pick.y);if(reason)return toast(reason);
@@ -29,7 +34,8 @@ const map=new PropertyMap($('world'),()=>s,pick=>{
  if(pick.building){selectedBuilding=pick.building;map.activeBuilding=pick.building;openPanel('inspect');return;}
  if(pick.ground){if(after(P.assign(s,selected,'walk',pick.ground))){closePanel();toast('Move queued.');}}
 });
-function cancelPlace(){map.placement=null;map.fenceStart=null;map.fenceEnd=null;map.landMode=false;$('placement').hidden=true;document.body.dataset.placing='false';}
+let fieldPath=null;
+function cancelPlace(){fieldPath=null;map.fieldLayout=false;map.placement=null;map.fenceStart=null;map.fenceEnd=null;map.landMode=false;$('placement').hidden=true;document.body.dataset.placing='false';}
 $('cancelPlace').onclick=cancelPlace;
 $('zoomIn').onclick=()=>map.zoom=Math.min(2.5,map.zoom*1.2);
 $('zoomOut').onclick=()=>map.zoom=Math.max(.35,map.zoom/1.2);
@@ -50,12 +56,13 @@ function renderPanel(){
  const body=$('panelBody');let title='',html='';
  if(panel==='build'){
  title='Make it your own';html='<p class="panel-note">Choose a project, then tap its position on your land. Your selected worker builds it.</p>';
+ html+=button('Fields & crops','data-panel="fields"');
  html+=button('Lay out fencing - drag a paddock','data-fencing="true"');
  html+='<p class="panel-note">Drag from one corner to the other. Posts, wire and a gate cost $90 per fence section plus $160. Your worker then builds around the perimeter.</p>';
- for(const [kind,d] of Object.entries(P.BUILDINGS))if(kind!=='paddock')html+=item(d.name,d.description,d.art,P.cash(d.cost),'data-project="'+kind+'"');
+ for(const [kind,d] of Object.entries(P.BUILDINGS))if(kind!=='paddock'&&kind!=='field')html+=item(d.name,d.description,d.art,P.cash(d.cost),'data-project="'+kind+'"');
  }
  if(panel==='vehicles'){
- title='Tools of the trade';html='<p class="panel-note">Purchased vehicles arrive at your entrance. Workers collect them automatically for suitable jobs.</p>';
+ title='Tools of the trade';html=button('Farm machinery','data-panel="machinery"')+'<p class="panel-note">Purchased vehicles arrive at your entrance. Workers collect them automatically for suitable jobs.</p>';
  for(const [kind,v] of Object.entries(P.VEHICLES))html+=item(v.name,v.description,v.art,s.vehicles.includes(kind)?'Owned':P.cash(v.cost),'data-vehicle="'+kind+'"',s.vehicles.includes(kind));
  }
  if(panel==='livestock'){
@@ -88,6 +95,7 @@ function renderPanel(){
  if(panel==='property'){
  title='Your property';html='<div class="ledger"><span>Available funds</span><b>'+P.cash(s.money)+'</b></div><div class="ledger"><span>Land / level</span><b>'+s.acres+' acres / '+P.level(s)+'</b></div><div class="ledger"><span>Produce crates</span><b>'+s.produce+'</b></div><div class="ledger"><span>Loan outstanding</span><b>'+P.cash(s.debt)+'</b></div>';
  html+='<div class="ledger"><span>Unpaid wages</span><b>'+P.cash(s.wageArrears||0)+'</b></div>';
+ html+=button('Stages & daily jobs','data-panel="progress"')+button('Fields & crops','data-panel="fields"');
  html+=button('Stock farm shop with produce','data-task="shop"');
  html+=button('Surrounding land - '+s.acres+' / 72 acres','data-panel="land"');
  html+=button('Campground bookings & visitors','data-panel="camping"');
@@ -112,16 +120,25 @@ function renderPanel(){
  const b=s.buildings.find(b=>b.id===selectedBuilding);if(!b)return closePanel();const d=P.BUILDINGS[b.kind];title=d.name;
  html='<div style="text-align:center">'+img(d.art)+'</div><p class="panel-note">'+d.description+'</p>';
  if(!b.built)html+='<div class="job"><b>Under construction</b><small>Your assigned worker is completing this project.</small></div>';
+ else if(b.kind==='field')html+=button('Manage this field','data-panel="fields"');
  else if(b.kind==='garden'){html+=button(b.planted?'Harvest vegetables':'Plant vegetables · $40 + 5 water','data-task="'+(b.planted?'harvest':'plant')+'" data-building="'+b.id+'"');html+='<p class="panel-note">'+(b.planted?(s.time>=b.ready?'Ready to harvest.':Math.ceil(b.ready-s.time)+' game seconds until ready.'):'A crop takes 55 game seconds once planted. Each harvest gives four crates.')+'</p>';}
  else if(b.kind==='shop')html+=button('Stock shop · '+s.produce+' crates','data-task="shop"');
  else if(b.kind==='paddock'||b.kind==='yards'||b.kind==='shed')html+=button('Manage livestock & feeding','data-panel="livestock"');
  else if(b.kind==='dam')html+='<p class="panel-note">Stored rainwater: '+(b.water||0)+' units. Rain arrives every third game day. Tank deliveries cover dry periods.</p>';
  else if(b.kind==='camp')html+=button('Manage bookings & visitors','data-panel="camping"');
  }
+ const farm=farmPanel(s,panel,propertyClock.dayKey);if(farm){title=farm.title;html=farm.html;}
  $('panelTitle').textContent=title;body.innerHTML=html;
 }
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;
+ if(d.clockRetry){propertyClock.sync();return;}
+ if(d.dailyClaim){if(!propertyClock.dayKey)return toast('Connect to check today’s date first.');const r=claimDaily(s,propertyClock.dayKey);if(after(r))toast('Daily jobs paid · '+P.cash(r.reward));return;}
+ if(d.machine){const m=F.MACHINES[d.machine];confirm('Buy '+m.name+'?',P.cash(m.cost)+' from your property funds. Available for compatible field jobs.',()=>after(F.buyMachine(s,d.machine)));return;}
+ if(d.fieldPath){closePanel();fieldPath=d.fieldPath;map.fieldLayout=true;map.placement='fence';$('placement').hidden=false;$('placeName').textContent='Lay out '+F.PATHS[fieldPath].name.toLowerCase();$('placeHint').textContent='Drag a rectangle, 2–8 squares per side · $150 per square.';document.body.dataset.placing='true';return;}
+ if(d.fieldFocus){const field=s.buildings.find(b=>b.id===Number(d.fieldFocus));closePanel();map.activeBuilding=field.id;map.focus({x:field.x+field.w/2,y:field.y+field.h/2});return;}
+ if(d.fieldTask){const target={field:Number(d.field),crop:d.crop},quote=F.fieldJob(s,s.workers.find(w=>w.id===selected),d.fieldTask,target);if(quote?.reason)return toast(quote.reason);confirm(quote.job.title,P.cash(quote.cost)+' from your funds. The selected worker will carry out or arrange the job.',()=>after(P.assign(s,selected,d.fieldTask,target)));return;}
+ if(d.deliver){const quote=F.deliveryJob(s,d.deliver);if(quote.reason)return toast(quote.reason);confirm('Deliver '+d.deliver+'?',P.cash(quote.cost)+' transport cost. Payment arrives after delivery.',()=>after(P.assign(s,selected,'deliver',{what:d.deliver})));return;}
  if(d.land){showLand(d.land);return;}
  if(d.landMap){closePanel();map.landMode=true;map.fit();$('placement').hidden=false;$('placeName').textContent='Tap a neighbouring block to buy';$('placeHint').textContent='Drag to look around. Gold labels show available land.';return;}
  if(d.camp){after(P.setCamp(s,Number(d.camp),d.open==='true'));return;}
@@ -142,45 +159,53 @@ document.addEventListener('click',e=>{
  }
 });
 function hud(){
- displayedMoney=s.money>displayedMoney?displayedMoney+(s.money-displayedMoney)*.42:s.money;if(Math.abs(displayedMoney-s.money)<1)displayedMoney=s.money;$('money').textContent=P.cash(displayedMoney);$('acres').textContent=s.acres+' acres · Level '+P.level(s);$('day').textContent='Day '+s.day+' · '+daylight(s).name+' · '+s.weather;
+ displayedMoney=s.money>displayedMoney?displayedMoney+(s.money-displayedMoney)*.42:s.money;if(Math.abs(displayedMoney-s.money)<1)displayedMoney=s.money;$('money').textContent=P.cash(displayedMoney);$('acres').textContent=s.acres+' acres · Level '+P.level(s);$('day').textContent='Day '+s.day+' · '+daylight(s).name+' · '+s.weather+' · '+F.seasonOf(s);
  const w=s.workers.find(w=>w.id===selected),jobs=s.jobs.filter(j=>j.worker===selected),j=jobs[0];
  $('workerName').textContent=w.name;$('workerStatus').textContent=j?j.stops[j.stage]?.label||'Finishing up':'Ready · select a task';$('jobCount').textContent=jobs.length;
  const workers=s.workers.map(w=>w.id).join();if($('workers').dataset.ids!==workers){$('workers').innerHTML=s.workers.length>1?s.workers.map(w=>'<button data-worker="'+w.id+'" aria-label="Select '+w.name+'">'+w.name[0]+'</button>').join(''):'';$('workers').dataset.ids=workers;}
  document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('on',Number(b.dataset.speed)===speed));
- if(s.stats.built<3){$('goal').textContent='Set down roots';$('goalNote').textContent='Build three projects · '+s.stats.built+'/3 · earn $1,000.';}
-
- else if(!s.stats.sold){$('goal').textContent='Your first livestock sale';$('goalNote').textContent='Build yards. Muster by horse or bike. Load a truck.';}
- else{$('goal').textContent='Make this place your own';$('goalNote').textContent='Graze your paddocks, feed yarded stock, welcome campers and buy more land.';}
+ const next=Stages.nextStage(s);$('goal').textContent=next?'Grow into a '+next.name.toLowerCase():'Your big station';$('goalNote').textContent=next?next.needs.filter(n=>!n.done).map(n=>n.text).join(' · '):'Your land. Your way.';
  $('saveWarning').hidden=!warning;if(warning)$('saveWarning').textContent=warning;
 }
-$('play').onclick=()=>{ambience.enable(prefs.sound);document.body.dataset.view='play';$('home').hidden=true;$('game').hidden=false;map.resize();map.fit();if(map.w<650){map.zoom=.75;map.cx=7.8;map.cy=9.2;}hud();document.documentElement.requestFullscreen?.().catch(()=>{});};
+$('play').onclick=()=>{if(propertyClock.busy)toast('Checking time away… your property will be ready in a moment.');ambience.enable(prefs.sound);document.body.dataset.view='play';$('home').hidden=true;$('game').hidden=false;map.resize();map.fit();if(map.w<650){map.zoom=.75;map.cx=7.8;map.cy=9.2;}hud();document.documentElement.requestFullscreen?.().catch(()=>{});};
 $('settingsBtn').onclick=()=>{$('sound').checked=prefs.sound;$('motion').checked=prefs.motion;$('survey').hidden=!adsAvailable();$('settings').showModal();};
 $('closeSettings').onclick=()=>$('settings').close();
 for(const id of ['sound','motion'])$(id).onchange=()=>{prefs[id]=$(id).checked;if(id==='sound')ambience.enable(prefs.sound);try{localStorage.setItem(KEY+'.settings',JSON.stringify(prefs));}catch{toast('Settings could not be saved.');}};
 $('menu').onclick=async()=>{save();$('settings').close();adBusy=true;document.body.inert=true;document.body.dataset.view='ad';try{await maybeInterstitial();}catch{}finally{adBusy=false;document.body.inert=false;document.body.dataset.view='home';$('game').hidden=true;$('home').hidden=false;}};
 $('survey').onclick=async()=>{if(adBusy)return;adBusy=true;$('survey').disabled=true;document.body.inert=true;try{const r=await showRewarded();if(r.rewarded){surveyUntil=s.time+60;toast('Aerial survey active: gold marks show road frontage and low catchment.');track('survey');}}catch{toast('Ad unavailable. Your property is unchanged.');}finally{adBusy=false;$('survey').disabled=false;document.body.inert=false;}};
-document.addEventListener('visibilitychange',()=>{if(document.hidden){save();ambience.update(s,false);}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){propertyClock.suspend();save();ambience.update(s,false);}else propertyClock.resume();});
 window.addEventListener('pagehide',save);
+function checkStage(){const r=Stages.reachStage(s);if(r){toast(r.stage.name+' reached · '+P.cash(r.reward));map.life.celebrate(s,r.stage.name+' · '+P.cash(r.reward));if(panel)renderPanel();}}
+const propertyClock=propertyTime(s,P.tick,report=>{
+ $('awayText').textContent=(report.capped?'Away progress capped at two game days. ':'')+report.appliedSeconds+' game seconds passed · '+report.built+' projects finished · '+report.sold+' head sold · '+P.cash(report.money)+' net funds.';
+ $('awayEvents').replaceChildren(...report.events.map(text=>{const p=document.createElement('p');p.textContent=text;return p;}));
+ $('away').showModal();
+},()=>{checkStage();save();hud();if(panel)renderPanel();});
+$('closeAway').onclick=()=>$('away').close();
+$('objective').onclick=()=>openPanel('progress');
+$('objective').tabIndex=0;$('objective').setAttribute('role','button');$('objective').setAttribute('aria-label','Open property stages and daily jobs');
+$('objective').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openPanel('progress');}};
+propertyClock.sync();
 let last=performance.now(),lastUI=0,lastSave=0,lastEvent=s.events[0]?.id;
 function frame(now){
  const dt=Math.min(.1,(now-last)/1000);last=now;
- const active=document.body.dataset.view==='play'&&!document.hidden&&!document.querySelector('dialog[open]')&&!adBusy;
+ const active=document.body.dataset.view==='play'&&!document.hidden&&!document.querySelector('dialog[open]')&&!adBusy&&!propertyClock.busy;
  ambience.update(s,active&&speed>0);
  if(active){
  const before=s.jobs.map(j=>({id:j.id,type:j.type,building:j.building,heads:j.animalIds?.length||0})),guests=s.campGuests;
- P.tick(s,dt*speed);
+ if(speed>0)propertyClock.markPlayed();P.tick(s,dt*speed);checkStage();
  for(const job of before)if(!s.jobs.some(j=>j.id===job.id)){
  if(job.type!=='walk')track(job.type==='build'?'build_completed':job.type==='sell'?'sale':job.type,{heads:job.heads,building:job.building});
  if(job.type==='sell'){map.life.celebrate(s,s.events.find(e=>e.text.includes(' head sold'))?.text||'Livestock sold');ambience.payoff('sale');}
  if(job.type==='muster'||job.type==='rotate'){map.life.celebrate(s,job.heads+' head safely '+(job.type==='muster'?'in the yards':'on fresh pasture'),'muster');ambience.payoff('muster');}
- if(job.type==='harvest'){map.life.celebrate(s,'Fresh produce ready for the shop','harvest');ambience.payoff('harvest');}
+ if(job.type==='harvest'||job.type==='harvestField'){map.life.celebrate(s,job.type==='harvestField'?'Field harvested':'Fresh produce ready for the shop','harvest');ambience.payoff('harvest');}
  }
  if(s.campGuests>guests)track('camp_checkin',{guests:s.campGuests,income:s.campIncome});
  }
  if(document.body.dataset.view==='play'){
  map.draw(prefs.motion?now:0,prefs.motion);
  if(surveyUntil>s.time){for(const p of [[2,6,'ROAD FRONTAGE'],[9,12,'LOW CATCHMENT']])map.label(...p,true);}
- if(now-lastUI>300){hud();lastUI=now;}
+ if(now-lastUI>500){hud();if(['fields','progress'].includes(panel))renderPanel();lastUI=now;}
  if(now-lastSave>3000){save();lastSave=now;}
  if(s.events[0]?.id!==lastEvent){lastEvent=s.events[0]?.id;toast(s.events[0].text);sound();if(panel)renderPanel();save();track('property_progress',{built:s.stats.built,sold:s.stats.sold});}
  }

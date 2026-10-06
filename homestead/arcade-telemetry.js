@@ -170,6 +170,12 @@
       return queue.length;
     },
     flush,
+    // A signed-in request to the games server as this player, for purchases
+    // (shell/noads.js). Registers the player first if this is a new phone.
+    async call(method, path, body) {
+      await player();
+      return call(method, path, body);
+    },
   };
   track('session_start', {});
 })();

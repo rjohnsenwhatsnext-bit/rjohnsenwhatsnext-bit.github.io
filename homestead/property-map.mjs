@@ -1,3 +1,4 @@
+import {drawField} from './property-field-art.mjs';
 import {MotionTracks,drawVehicle} from './property-motion.mjs';
 import {PropertyLife} from './property-life.mjs';
 import {BUILDINGS,SIZE,canPlace,ready,dims,owns,PARCELS,parcelAt,animalHome} from './property.mjs';
@@ -90,7 +91,8 @@ export class PropertyMap{
  this.fence(b.x,b.y,w,'#d6bd87',h,b.fenceSegments??0,true);
  c.save();c.globalAlpha=.22;this.sprite(d.art,b.x+size/2,b.y+size/2+.5,size*56);c.restore();
  this.label(b.x+size/2,b.y+size/2,Math.round(b.progress*100)+'% · '+d.name,true);
- }else if(b.kind==='paddock'){this.rectShape(b.x,b.y,w,h,(b.pasture??100)<30?'#bd945e99':'#82ae6399');this.fence(b.x,b.y,w,'#dec69a',h,Infinity,true);this.rectShape(b.x+w-.85,b.y+h-.7,.55,.3,s.water?'#709aa4':'#938774','#d6d3bd');}
+ }else if(b.kind==='field'){drawField(this,s,b,time,motion);}
+ else if(b.kind==='paddock'){this.rectShape(b.x,b.y,w,h,(b.pasture??100)<30?'#bd945e99':'#82ae6399');this.fence(b.x,b.y,w,'#dec69a',h,Infinity,true);this.rectShape(b.x+w-.85,b.y+h-.7,.55,.3,s.water?'#709aa4':'#938774','#d6d3bd');}
  else if(b.kind==='garden'&&!b.planted){
  for(let n=0;n<5;n++){const a=this.point(b.x+.15+n*.32,b.y+.1),z=this.point(b.x+.15+n*.32,b.y+1.8);c.strokeStyle='#775c39';c.lineWidth=5*this.zoom;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(z.x,z.y);c.stroke();}
  }else if(b.kind==='dam'&&!b.water){const p=this.point(b.x+1.5,b.y+1.5);c.fillStyle='#9a734d';c.beginPath();c.ellipse(p.x,p.y,66*this.zoom,35*this.zoom,0,0,Math.PI*2);c.fill();c.fillStyle='#755638';c.beginPath();c.ellipse(p.x,p.y-3*this.zoom,51*this.zoom,24*this.zoom,0,0,Math.PI*2);c.fill();this.label(b.x+1.5,b.y+1.8,'Waiting for rain');}
@@ -111,21 +113,33 @@ export class PropertyMap{
  const x=4+i*1.5,y=15;
  draws.push({depth:x+y,run:()=>{if(v==='horse')this.grounded(11,x,y,40);else this.vehicle(v,'parked-'+v,x,y,null,false);}});
  }
+ for(const [i,v] of (s.machines||[]).filter(v=>/Tractor|Harvester|header/.test(v)).entries()){
+ if(s.jobs.some(j=>j.machine===v&&j.status==='active'&&j.stage>0))continue;
+ const x=4+i*1.8,y=14;draws.push({depth:x+y,run:()=>this.vehicle(v,'machine-'+v,x,y,0,false)});
+ }
+ for(const j of s.jobs.filter(j=>j.hire&&j.building&&j.status==='active'&&j.elapsed>0)){
+ const b=s.buildings.find(b=>b.id===j.building&&b.kind==='field');if(!b)continue;
+ const fraction=Math.min(.999,j.elapsed/(j.stops[j.stage]?.work||1)),row=Math.min(b.h-1,Math.floor(fraction*b.h)),along=(fraction*b.h-row),x=b.x+.25+(row%2?1-along:along)*(b.w-.5),y=b.y+row+.5;
+ const kind=j.type==='harvestField'?(b.path==='cane'?'caneHarvester':'header'):'smallTractor';
+ draws.push({depth:x+y+1,run:()=>{this.vehicle(kind,'contractor-'+j.id,x,y,row%2?Math.PI:0);}});
+ }
  for(const w of s.workers){
  const j=s.jobs.find(j=>j.worker===w.id&&j.status==='active'),p=this.point(w.x+.5,w.y+.5);
  draws.push({depth:w.x+w.y+1,run:()=>{
  if(w.id===this.selected){c.strokeStyle='#ffdf79';c.lineWidth=2;c.fillStyle='#f9e5a433';c.beginPath();c.ellipse(p.x,p.y,20*this.zoom,10*this.zoom,0,0,Math.PI*2);c.fill();c.stroke();}
  const pose=this.tracks.sample('worker-'+w.id,w.x+.5,w.y+.5,s.time);
- if(j?.vehicle&&j.stage>0){if(j.vehicle==='horse')this.grounded(22,w.x+.5,w.y+.5,58,Math.cos(pose.heading)-Math.sin(pose.heading)<0);else drawVehicle(this,j.vehicle,w.x+.5,w.y+.5,pose);}
+ if(j?.machine&&j.stage>0){drawVehicle(this,j.machine,w.x+.5,w.y+.5,{...pose,implement:j.implement});}
+ else if(j?.type==='deliver'){drawVehicle(this,'truck',w.x+.5,w.y+.5,pose);}
+ else if(j?.vehicle&&j.stage>0){if(j.vehicle==='horse')this.grounded(22,w.x+.5,w.y+.5,58,Math.cos(pose.heading)-Math.sin(pose.heading)<0);else drawVehicle(this,j.vehicle,w.x+.5,w.y+.5,pose);}
  else this.grounded(14,w.x+.5,w.y+.5,26,Math.cos(pose.heading)-Math.sin(pose.heading)<0);
  if(w.id===this.selected&&!j?.herding)this.label(w.x+.5,w.y-1.1,j?j.stops[j.stage]?.label||'Finishing':w.name+' · ready');
  }});
  }
  this.life.entities(this,s,draws);
  draws.sort((a,b)=>a.depth-b.depth).forEach(d=>d.run());
- this.tracks.prune(new Set([...s.workers.map(w=>'worker-'+w.id),...s.animals.map(a=>'animal-'+a.id),...(s.visitors||[]).map(v=>'visitor-'+v.id),...s.vehicles.map(v=>'parked-'+v),'traffic-'+Math.floor(s.time/125)]));
+ this.tracks.prune(new Set([...s.workers.map(w=>'worker-'+w.id),...s.animals.map(a=>'animal-'+a.id),...(s.visitors||[]).map(v=>'visitor-'+v.id),...s.jobs.map(j=>'contractor-'+j.id),...s.vehicles.map(v=>'parked-'+v),...(s.machines||[]).map(v=>'machine-'+v),'traffic-'+Math.floor(s.time/125)]));
  this.life.world(this,s,time);
- if(this.placement==='fence'&&this.fenceStart&&this.fenceEnd){const a=this.fenceStart,b=this.fenceEnd,x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(a.x-b.x)+1,h=Math.abs(a.y-b.y)+1;this.rectShape(x,y,w,h,canPlace(s,'paddock',x,y,w,h)?'#cc493855':'#ecda8b66','#fff0aa');this.label(x+w/2,y+h/2,w+' x '+h+' - $'+((w+h)*180+160),true);}
+ if(this.placement==='fence'&&this.fenceStart&&this.fenceEnd){const a=this.fenceStart,b=this.fenceEnd,x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(a.x-b.x)+1,h=Math.abs(a.y-b.y)+1;this.rectShape(x,y,w,h,canPlace(s,this.fieldLayout?'field':'paddock',x,y,w,h)?'#cc493855':'#ecda8b66','#fff0aa');this.label(x+w/2,y+h/2,w+' x '+h+' - $'+(this.fieldLayout?w*h*150:(w+h)*180+160),true);}
  else if(this.placement&&this.placement!=='fence'&&this.hover){const {x,y}=this.hover,d=BUILDINGS[this.placement];this.tileShape(x,y,d.size,canPlace(s,this.placement,x,y)?'#cc493855':'#ecda8b66','#fff0aa');}
  if(this.landMode)for(const p of PARCELS)this.label(p.x+7,p.y+7,s.land.includes(p.id)?p.id.toUpperCase()+' - owned':p.id.toUpperCase()+' $'+p.cost,!s.land.includes(p.id));
  if(s.weather==='Rain'){c.strokeStyle='#d2e7de55';c.lineWidth=1;for(let i=0;i<70;i++){const x=(i*79+time*.02)%this.w,y=(i*127+time*.1)%this.h;c.beginPath();c.moveTo(x,y);c.lineTo(x-4,y+12);c.stroke();}}

@@ -1,4 +1,6 @@
 import {MIN,MAX,PARCELS,parcelAt,owns,adjacent,migrateWorld,tickVisitors} from './property-world.mjs';
+// Claude's crop and machinery engine (fields.mjs) joins here: see the lines marked "fields.mjs".
+import {fieldJob,fieldFinish,fieldsDaily,fieldsTick,migrateFields} from './fields.mjs';
 export {PARCELS,parcelAt,owns,adjacent};
 // The Homestead property prototype. Active simulation seconds only; no wall-clock rewards.
 // Separate save/contract from Claude's original crop engine in logic.mjs.
@@ -17,6 +19,7 @@ export const BUILDINGS={
  garden:{name:'Market garden',cost:650,size:2,seconds:8,art:3,description:'Plant, harvest, then sell produce through your shop.'},
  shop:{name:'Farm shop',cost:1800,size:1,seconds:10,art:4,description:'Road frontage only. Sell your harvested produce.'},
  camp:{name:'Bush campsite',cost:900,size:1,seconds:8,art:5,description:'Open a paid campsite. Visitors drive in, stay, then leave. Requires a home and water.'},
+ field:{name:'Crop field',cost:0,size:3,seconds:10,art:-1,description:'Grain, sugar cane or vegetables. Laid out by size (fields.mjs).'},
  dam:{name:'Earth dam',cost:4800,size:3,seconds:20,art:7,description:'Low ground only. Includes $1,200 excavator hire unless you own one.'}
 };
 export const VEHICLES={
@@ -32,7 +35,7 @@ export function fresh(){const s={v:1,time:0,day:1,money:22000,xp:0,acres:8,exten
 export function validate(raw){
  const s=typeof raw==='string'?JSON.parse(raw):raw;
  if(!s||s.v!==1||!Number.isFinite(s.money)||!Number.isFinite(s.time)||s.money<0||!Array.isArray(s.buildings)||!Array.isArray(s.workers)||!s.workers.length||!Array.isArray(s.jobs)||!Array.isArray(s.animals)||!Array.isArray(s.vehicles))throw Error('Unrecognised property save');
- migrateWorld(s);s.wageArrears ??= 0;
+ migrateWorld(s);migrateFields(s);s.wageArrears ??= 0;
  for(const b of s.buildings)if(b.kind==="paddock")b.pasture ??= 100;
  for(const j of s.jobs)if(j.paid===undefined){const b=s.buildings.find(b=>b.id===j.building);j.paid=j.type==='build'&&b?BUILDINGS[b.kind].cost-(b.kind==='dam'&&!j.hire?1200:0):j.type==='feed'?20:j.type==='plant'?40:j.type==='muster'?(j.vehicle==='bike'?35:5):j.type==='sell'?(j.hire?180:60):0;}
  // Retire old paddock hay runs; livestock now graze and only yards receive hay.
@@ -182,10 +185,13 @@ export function assign(s,worker,type,target){
  if(s.jobs.some(j=>j.type==='shop'))return {ok:false,reason:'A shop delivery is already queued.'};
  const a=entry(shop);job={type,title:'Stock farm shop',stops:[stop(a.x,a.y,'Stocking produce crates',5)]};
  }
+ let queued=null;
+ if(!job){const f=fieldJob(s,worker,type,target);if(f?.reason)return {ok:false,reason:f.reason};if(f){job=f.job;cost=f.cost;queued=f.onQueued;}} // fields.mjs
  if(!job)return {ok:false,reason:'Choose a task.'};
- const result=enqueue(s,worker,job,cost);if(result.ok&&type==='feed')s.hay-=2;if(result.ok&&type==='plant')s.water-=5;return result;
+ const result=enqueue(s,worker,job,cost);if(result.ok&&queued){queued();invalidateRoutes(s);}if(result.ok&&type==='feed')s.hay-=2;if(result.ok&&type==='plant')s.water-=5;return result;
 }
 function finish(s,j){
+ fieldFinish(s,j,emit); // fields.mjs
  const b=s.buildings.find(b=>b.id===j.building);
  if(j.type==='build'){b.built=true;b.progress=1;invalidateRoutes(s);s.stats.built++;s.xp+=20;if(b.kind==='tank')s.water+=80;if(b.kind==='dam')b.water=0;emit(s,BUILDINGS[b.kind].name+' completed.');}
  if(j.type==='plant'){b.planted=true;b.ready=s.time+55;emit(s,'Vegetables planted. Ready in 55 game seconds.');}
@@ -202,7 +208,7 @@ function finish(s,j){
  const milestones=[['firstbuild',s.stats.built>=3,1000,'First foundations'],['firstfeed',s.stats.fed>=1,800,'A working property'],['firstsale',s.stats.sold>=1,1500,'First livestock sale']];
  for(const [id,done,reward,name] of milestones)if(done&&!s.claimed.includes(id)){s.claimed.push(id);s.money+=reward;emit(s,name+' · earned '+cash(reward));}
 }
-export function blocked(s,x,y){return (y>=18&&y<=19&&x!==1)||s.buildings.some(b=>b.kind!=='paddock'&&x>=b.x&&y>=b.y&&x<b.x+dims(b).w&&y<b.y+dims(b).h);}
+export function blocked(s,x,y){return (y>=18&&y<=19&&x!==1)||s.buildings.some(b=>b.kind!=='paddock'&&b.kind!=='field'&&x>=b.x&&y>=b.y&&x<b.x+dims(b).w&&y<b.y+dims(b).h);}
 export function route(s,from,to){
  const start=[Math.round(from.x),Math.round(from.y)],end=[Math.round(to.x),Math.round(to.y)],key=p=>p.join(',');
  const queue=[start],seen=new Map([[key(start),null]]);let found=false;
@@ -214,6 +220,7 @@ export function tick(s,dt){
  dt=Math.min(1,Math.max(0,dt));s.time+=dt;s.day=1+Math.floor(s.time/180);
  if(s.day>s.lastDay){
  s.lastDay=s.day;s.weather=s.day%3===0?'Rain':s.day%5===0?'Hot':'Fine';
+ fieldsDaily(s,emit); // fields.mjs
  let income=0;for(const b of s.buildings){if(b.built&&b.kind==='dam'&&s.weather==='Rain'){b.water=Math.min(200,(b.water||0)+70);s.water=Math.min(300,s.water+70);}}
  const wages=(s.workers.length-1)*120+(s.wageArrears||0);
  s.money+=income;const paidWages=Math.min(s.money,wages);s.money-=paidWages;s.wageArrears=wages-paidWages;
@@ -234,6 +241,7 @@ export function tick(s,dt){
  }
  tickVisitors(s,dt,route,entry,hasHome(s),emit);
  tickHerds(s,dt);
+ fieldsTick(s); // fields.mjs
  for(const w of s.workers){
  let j=s.jobs.find(j=>j.worker===w.id);
  if(!j)continue;

@@ -20,3 +20,6 @@ dialog{border:1px solid #d2c795;border-radius:22px;width:min(420px,calc(100vw - 
 #panel{z-index:10}
 .land-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.land-grid button{padding:10px 4px;font-size:10px;min-height:74px}.land-grid small{display:block;margin-top:6px;color:#e8cc8d}.land-grid .owned{background:#c7cfac;color:#304b36;opacity:1}.land-grid .owned small{color:#304b36}
 #panel .wide,#panel .land-grid button{color:#fff3d9}#panel .land-grid .owned{color:#304b36}
+
+.farm-card{padding:16px;margin:12px 0;border:1px solid #cbb78955;border-radius:14px;background:#263e3533}.farm-card h3{margin:0 0 8px}.farm-card progress{width:100%;height:7px;accent-color:#d8b76d}.farm-card .wide{margin-top:8px;font-size:12px;white-space:normal}.milestones{padding:0;list-style:none;font-size:13px;line-height:1.8}.milestones .done{color:#8bd0a6}.daily-job{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin:14px 0;font-size:12px}.daily-job progress{flex-basis:100%}#objective{cursor:pointer}#away{max-height:80dvh;overflow:auto}#awayEvents p{font-size:13px}button:disabled{cursor:default}
+#objective{pointer-events:auto}.milestones .done{color:#326647}
