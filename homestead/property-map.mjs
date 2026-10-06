@@ -1,3 +1,4 @@
+import {drawDetail,detailLights} from './property-detail-art.mjs';
 import {PaintedActors} from './property-painted.mjs';
 import {drawField} from './property-field-art.mjs';
 import {MotionTracks,drawVehicle} from './property-motion.mjs';
@@ -30,6 +31,8 @@ export class PropertyMap{
  tile(x,y){const a=(x-this.w/2)/(28*this.zoom),b=(y-this.h*.51)/(14*this.zoom);return {x:Math.floor((a+b)/2+this.cx),y:Math.floor((b-a)/2+this.cy)};}
  pick(x,y){
  const s=this.getState();
+ const tile=this.tile(x,y),project=s.buildings.find(b=>tile.x>=b.x&&tile.y>=b.y&&tile.x<b.x+dims(b).w&&tile.y<b.y+dims(b).h);
+ if(!this.placement&&!this.landMode&&project)return this.onPick({building:project.id});
  if(!this.placement){const near=s.workers.find(w=>{const p=this.point(w.x+.5,w.y+.5);return Math.hypot(x-p.x,y-(p.y-12*this.zoom))<23;});if(near)return this.onPick({worker:near.id});}
  const t=this.tile(x,y);
  if(this.landMode)return this.onPick({land:parcelAt(t.x,t.y)?.id});
@@ -90,9 +93,10 @@ export class PropertyMap{
  this.rectShape(b.x,b.y,w,h,b.built?'#b3a17a60':'#e0c79470',b.id===this.activeBuilding?'#fff1ae':'#c6b386');
  if(!b.built){
  this.fence(b.x,b.y,w,'#d6bd87',h,b.fenceSegments??0,true);
- c.save();c.globalAlpha=.22;this.sprite(d.art,b.x+size/2,b.y+size/2+.5,size*56);c.restore();
+ if(d.decoration)drawDetail(this,b,.28);else{c.save();c.globalAlpha=.22;this.sprite(d.art,b.x+size/2,b.y+size/2+.5,size*56);c.restore();}
  this.label(b.x+size/2,b.y+size/2,Math.round(b.progress*100)+'% · '+d.name,true);
- }else if(b.kind==='field'){drawField(this,s,b,time,motion);}
+ }else if(d.decoration){drawDetail(this,b);}
+ else if(b.kind==='field'){drawField(this,s,b,time,motion);}
  else if(b.kind==='paddock'){this.rectShape(b.x,b.y,w,h,(b.pasture??100)<30?'#bd945e99':'#82ae6399');this.fence(b.x,b.y,w,'#dec69a',h,Infinity,true);this.rectShape(b.x+w-.85,b.y+h-.7,.55,.3,s.water?'#709aa4':'#938774','#d6d3bd');}
  else if(b.kind==='garden'&&!b.planted){
  for(let n=0;n<5;n++){const a=this.point(b.x+.15+n*.32,b.y+.1),z=this.point(b.x+.15+n*.32,b.y+1.8);c.strokeStyle='#775c39';c.lineWidth=5*this.zoom;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(z.x,z.y);c.stroke();}
@@ -101,6 +105,7 @@ export class PropertyMap{
  if(b.kind==='garden'&&b.planted)this.label(b.x+1,b.y+1,s.time>=b.ready?'Ready to harvest':Math.ceil(b.ready-s.time)+'s',s.time>=b.ready);
  }});
  }
+ for(const job of s.jobs.filter(j=>j.type==='relocateDecor')){const b=s.buildings.find(b=>b.id===job.building);if(b)draws.push({depth:job.x+job.y+1,run:()=>{drawDetail(this,{...b,x:job.x,y:job.y},.3);this.label(job.x+.5,job.y+.5,'Moving here');}});}
  for(const a of s.animals){
  const b=a.yarded?ready(s,'yards'):s.buildings.find(b=>b.id===a.paddock);if(!b)continue;
  const sale=s.jobs.find(j=>j.type==='sell'&&j.status==='active'&&j.stage>=2&&j.animalIds.includes(a.id));if(sale)continue;
@@ -139,7 +144,7 @@ export class PropertyMap{
  this.life.entities(this,s,draws);
  draws.sort((a,b)=>a.depth-b.depth).forEach(d=>d.run());
  this.tracks.prune(new Set([...s.workers.map(w=>'worker-'+w.id),...s.animals.map(a=>'animal-'+a.id),...(s.visitors||[]).map(v=>'visitor-'+v.id),...s.jobs.map(j=>'contractor-'+j.id),...s.vehicles.map(v=>'parked-'+v),...(s.machines||[]).map(v=>'machine-'+v),'traffic-'+Math.floor(s.time/125)]));
- this.life.world(this,s,time);
+ this.life.world(this,s,time);detailLights(this,s);
  if(this.placement==='fence'&&this.fenceStart&&this.fenceEnd){const a=this.fenceStart,b=this.fenceEnd,x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(a.x-b.x)+1,h=Math.abs(a.y-b.y)+1;this.rectShape(x,y,w,h,canPlace(s,this.fieldLayout?'field':'paddock',x,y,w,h)?'#cc493855':'#ecda8b66','#fff0aa');this.label(x+w/2,y+h/2,w+' x '+h+' - $'+(this.fieldLayout?w*h*150:(w+h)*180+160),true);}
  else if(this.placement&&this.placement!=='fence'&&this.hover){const {x,y}=this.hover,d=BUILDINGS[this.placement];this.tileShape(x,y,d.size,canPlace(s,this.placement,x,y)?'#cc493855':'#ecda8b66','#fff0aa');}
  if(this.landMode)for(const p of PARCELS)this.label(p.x+7,p.y+7,s.land.includes(p.id)?p.id.toUpperCase()+' - owned':p.id.toUpperCase()+' $'+p.cost,!s.land.includes(p.id));

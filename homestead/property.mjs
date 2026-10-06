@@ -1,3 +1,4 @@
+import {DECORATIONS} from './property-decorations.mjs';
 import {MIN,MAX,PARCELS,parcelAt,owns,adjacent,migrateWorld,tickVisitors} from './property-world.mjs';
 // Claude's crop and machinery engine (fields.mjs) joins here: see the lines marked "fields.mjs".
 import {fieldJob,fieldFinish,fieldsDaily,fieldsTick,migrateFields} from './fields.mjs';
@@ -6,6 +7,7 @@ export {PARCELS,parcelAt,owns,adjacent};
 // Separate save/contract from Claude's original crop engine in logic.mjs.
 export const SIZE=30;
 export const BUILDINGS={
+ ...DECORATIONS,
  caravan:{name:'Caravan',home:true,cost:1200,size:1,seconds:6,art:1,description:'A simple place to call home.'},
  tank:{name:'Water tank',cost:1600,size:1,seconds:8,art:2,description:'Delivered water. Supplies your first animals and garden.'},
  shed:{name:'Hay & machinery shed',cost:2400,size:2,seconds:12,art:0,description:'Stores hay and supplies. Needed for ute feeding.'},
@@ -55,10 +57,10 @@ export function canPlace(s,kind,x,y,w=BUILDINGS[kind]?.size,h=w){
  if(kind==='dam'&&y<10)return 'Dams need the low catchment ground near the creek.';
  if(y<20&&y+h>18)return 'Keep the creek clear. Build on either bank.';
  if(kind==='shop'&&x>4)return 'Place your farm shop beside the road, on the western edge.';
- if(s.buildings.some(o=>x<o.x+dims(o).w&&x+w>o.x&&y<o.y+dims(o).h&&y+h>o.y))return 'That space is already reserved.';
+ if([...s.buildings,...s.jobs.filter(j=>j.type==='relocateDecor').map(j=>({...s.buildings.find(o=>o.id===j.building),x:j.x,y:j.y}))].some(o=>x<o.x+dims(o).w&&x+w>o.x&&y<o.y+dims(o).h&&y+h>o.y))return 'That space is already reserved.';
  const inside=p=>p.x>=x&&p.y>=y&&p.x<x+w&&p.y<y+h;
  if(s.workers.some(inside)||s.jobs.some(j=>j.stops.some(inside))||(s.visitors||[]).some(v=>inside(v)||inside(v.target)))return 'Leave the worker and queued routes clear.';
- if(s.buildings.some(o=>inside({x:o.x,y:o.y+dims(o).h})))return 'Leave access below existing projects clear.';
+ if(!b.walkable&&s.buildings.some(o=>inside({x:o.x,y:o.y+dims(o).h})))return 'Leave access below existing projects clear.';
  if(blocked(s,x,y+h))return 'Leave a clear approach below this project.';
  return '';
 }
@@ -78,6 +80,25 @@ export function place(s,worker,kind,x,y){
  const b={id:s.nextId++,kind,x,y,built:false,progress:0,pasture:100};const at=entry(b);
  const r=enqueue(s,worker,{type:'build',building:b.id,vehicle:kind==='dam'?'excavator':null,hire:kind==='dam'&&!owns,title:'Build '+def.name,stops:[stop(3,15,kind==='dam'?'Collect excavator':'Collect building supplies',2),stop(at.x,at.y,kind==='dam'?'Excavating dam':'Building '+def.name,def.seconds)]},cost);
  if(r.ok){s.buildings.push(b);invalidateRoutes(s);emit(s,def.name+' marked out · '+cash(cost));}return r;
+}
+export function moveDecoration(s,worker,id,x,y){
+ const b=s.buildings.find(b=>b.id===id);
+ if(!b?.built||!BUILDINGS[b.kind]?.decoration)return {ok:false,reason:'Choose a completed property detail.'};
+ if(s.jobs.some(j=>j.building===id))return {ok:false,reason:'This item already has a job queued.'};
+ if(b.x===x&&b.y===y)return {ok:false,reason:'Choose a new location.'};
+ const reason=canPlace({...s,buildings:s.buildings.filter(o=>o.id!==id)},b.kind,x,y);if(reason)return {ok:false,reason};
+ const old=entry(b),at=entry({...b,x,y});
+ const result=enqueue(s,worker,{type:'relocateDecor',building:id,x,y,title:'Move '+BUILDINGS[b.kind].name,stops:[stop(old.x,old.y,'Collect '+BUILDINGS[b.kind].name,2),stop(at.x,at.y,'Set in place',4)]});
+ if(result.ok)invalidateRoutes(s);return result;
+}
+export function changeDecoration(s,id,action){
+ const b=s.buildings.find(b=>b.id===id);
+ if(!b?.built||!BUILDINGS[b.kind]?.decoration)return {ok:false,reason:'Choose a completed property detail.'};
+ if(s.jobs.some(j=>j.building===id))return {ok:false,reason:'Wait until this item’s job is finished.'};
+ if(action==='rotate')b.flipped=!b.flipped;
+ else if(action==='remove'){s.buildings=s.buildings.filter(o=>o.id!==id);invalidateRoutes(s);}
+ else return {ok:false,reason:'Unknown change.'};
+ return {ok:true};
 }
 export function buyVehicle(s,kind){
  const v=VEHICLES[kind];if(!v)return {ok:false,reason:'Unknown vehicle'};
@@ -138,7 +159,7 @@ export function cancelJob(s,id){
  if(!j||j.status!=='queued')return {ok:false,reason:'Only waiting jobs can be cancelled.'};
  s.money+=j.paid||0;if(j.type==='feed')s.hay+=2;if(j.type==='plant')s.water+=5;
  if(j.type==='build')s.buildings=s.buildings.filter(b=>b.id!==j.building);
- s.jobs=s.jobs.filter(o=>o.id!==id);emit(s,'Waiting job cancelled. Reserved funds and supplies returned.');return {ok:true};
+ s.jobs=s.jobs.filter(o=>o.id!==id);invalidateRoutes(s);emit(s,'Waiting job cancelled. Reserved funds and supplies returned.');return {ok:true};
 }
 export function supplies(s){
  const why=affordable(s,400);if(why)return {ok:false,reason:why};
@@ -193,7 +214,8 @@ export function assign(s,worker,type,target){
 function finish(s,j){
  fieldFinish(s,j,emit); // fields.mjs
  const b=s.buildings.find(b=>b.id===j.building);
- if(j.type==='build'){b.built=true;b.progress=1;invalidateRoutes(s);s.stats.built++;s.xp+=20;if(b.kind==='tank')s.water+=80;if(b.kind==='dam')b.water=0;emit(s,BUILDINGS[b.kind].name+' completed.');}
+ if(j.type==='relocateDecor'){b.x=j.x;b.y=j.y;invalidateRoutes(s);emit(s,BUILDINGS[b.kind].name+' moved.');}
+ if(j.type==='build'){b.built=true;b.progress=1;invalidateRoutes(s);if(BUILDINGS[b.kind].decoration)s.stats.decorated=(s.stats.decorated||0)+1;else{s.stats.built++;s.xp+=20;}if(b.kind==='tank')s.water+=80;if(b.kind==='dam')b.water=0;emit(s,BUILDINGS[b.kind].name+' completed.');}
  if(j.type==='plant'){b.planted=true;b.ready=s.time+55;emit(s,'Vegetables planted. Ready in 55 game seconds.');}
  if(j.type==='harvest'){b.planted=false;b.ready=0;s.produce+=4;s.stats.harvests++;s.xp+=15;emit(s,'Harvested 4 produce crates. Take them to the farm shop.');}
  if(j.type==='feed'){for(const a of s.animals.filter(a=>!j.animalIds||j.animalIds.includes(a.id))){a.condition=Math.min(100,a.condition+25);a.lastFedDay=s.day;}s.stats.fed++;s.xp+=15;emit(s,'Hay fed out. The herd is in better condition.');}
@@ -204,11 +226,11 @@ function finish(s,j){
  s.money+=gross-fees;s.animals=s.animals.filter(a=>!j.animalIds.includes(a.id));s.stats.sold+=sold.length;s.xp+=30;emit(s,sold.length+' head sold · '+cash(gross-fees)+' after '+cash(fees)+' selling fees.');
  }
  if(j.type==='shop'){const n=s.produce;s.produce=0;s.money+=n*145;s.xp+=15;emit(s,n+' produce crates sold · '+cash(n*145));}
- if(j.type!=='walk')s.xp+=3;
+ if(j.type!=='walk'&&j.type!=='relocateDecor'&&!BUILDINGS[b?.kind]?.decoration)s.xp+=3;
  const milestones=[['firstbuild',s.stats.built>=3,1000,'First foundations'],['firstfeed',s.stats.fed>=1,800,'A working property'],['firstsale',s.stats.sold>=1,1500,'First livestock sale']];
  for(const [id,done,reward,name] of milestones)if(done&&!s.claimed.includes(id)){s.claimed.push(id);s.money+=reward;emit(s,name+' · earned '+cash(reward));}
 }
-export function blocked(s,x,y){return (y>=18&&y<=19&&x!==1)||s.buildings.some(b=>b.kind!=='paddock'&&b.kind!=='field'&&x>=b.x&&y>=b.y&&x<b.x+dims(b).w&&y<b.y+dims(b).h);}
+export function blocked(s,x,y){return (y>=18&&y<=19&&x!==1)||s.buildings.some(b=>b.kind!=='paddock'&&b.kind!=='field'&&!BUILDINGS[b.kind].walkable&&x>=b.x&&y>=b.y&&x<b.x+dims(b).w&&y<b.y+dims(b).h);}
 export function route(s,from,to){
  const start=[Math.round(from.x),Math.round(from.y)],end=[Math.round(to.x),Math.round(to.y)],key=p=>p.join(',');
  const queue=[start],seen=new Map([[key(start),null]]);let found=false;
