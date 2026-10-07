@@ -71,6 +71,12 @@ export function adsAvailable() {
   return plugin() !== null;
 }
 
+// Whether this build has a unit of that kind at all (a store build with no
+// rewarded unit yet should not offer "watch an ad" buttons that cannot work).
+export function hasUnit(kind) {
+  return unitId(kind) !== null;
+}
+
 // Consent first (Google's UMP form, shown only where the law requires it),
 // then initialise. Resolves true when ads can be requested.
 export function initAds() {
@@ -110,6 +116,7 @@ export function initAds() {
 // Called at every game over. Shows an interstitial only when both the run
 // count and the time gap allow it. Returns what happened, for the caller.
 export async function maybeInterstitial() {
+  if (adFree) return 'ad free';
   runsSinceInterstitial += 1;
   if (runsSinceInterstitial < RUNS_BETWEEN_INTERSTITIALS()) return 'not due';
   if (Date.now() - lastInterstitialAt < MIN_MS_BETWEEN_INTERSTITIALS()) return 'too soon';
@@ -184,6 +191,15 @@ export async function showRewarded() {
 // who paid to remove ads with bannersAllowed(false).
 let bannerState = 'hidden'; // 'hidden' | 'showing' | 'shown'
 let bannerOk = true;
+// Somebody who bought Remove ads (shell/noads.js): no banners and no ads
+// between games, whatever the game itself asks for. Rewarded ads stay, because
+// the player chooses those for a reward.
+let adFree = false;
+export function setAdFree(on) {
+  adFree = Boolean(on);
+  if (adFree) hideBanner();
+}
+export const isAdFree = () => adFree;
 let bannerListener = false;
 let bannerReported = false;
 function setBannerHeight(px) {
@@ -195,7 +211,7 @@ export function bannersAllowed(ok) {
   if (!bannerOk) hideBanner();
 }
 export async function showBanner() {
-  if (!bannerOk || bannerState !== 'hidden' || !unitId('banner')) return bannerState;
+  if (adFree || !bannerOk || bannerState !== 'hidden' || !unitId('banner')) return bannerState;
   bannerState = 'showing';
   try {
     if (!(await initAds())) {

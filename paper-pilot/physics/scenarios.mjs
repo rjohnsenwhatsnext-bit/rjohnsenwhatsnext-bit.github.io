@@ -178,16 +178,25 @@ function mansion() {
   return {
     name: 'The mansion',
     brief: 'From the top of the stairs, through every room to the chaise in the conservatory. Tap fans to switch them. Ride the air.',
-    launch: { position: [0.3, 4.8, 0], speedRange: [3, 12] }, // Ryan, 28 Sep 2026: "lower the starting point down a bit" (was 5.2)
+    // Ryan, 7 Oct 2026: "you literally struggle to get throught the first door ... lower the start point".
+    // 4.8 m was above the hall doorway's 4.4 m top; 3.8 m throws through it. Was 5.2, then 4.8.
+    launch: { position: [0.3, 3.8, 0], speedRange: [3, 12] },
     wind: calm,
     // Lift comes after each doorway, to win back the height a doorway costs.
     airSources: [
+      // Ryan, 7 Oct 2026: "make the fans closer and layin down on the ground facing
+      // up so they actually do something". Floor fans sit on the flight line,
+      // one before each doorway, blowing straight up; the old desk and garden
+      // fans blew along the floor beside the route and barely touched a plane.
+      { type: 'fan', id: 'hall floor fan', position: [3.6, 0.05, 0], direction: [0, 1, 0], radius: 0.9, reach: 6, speed: 5.5 },
+      { type: 'fan', id: 'doorway floor fan', position: [7.6, 0.05, 0], direction: [0, 1, 0], radius: 0.9, reach: 6, speed: 5.5 },
       { type: 'vent', id: 'ballroom vents', box: box(11.5, 0, -1.8, 15.5, 4.5, 1.8), speed: 2.3 },
       { type: 'fan', id: 'ceiling fan', position: [17.5, 6.3, 0], direction: [0, -1, 0], radius: 0.8, reach: 5.5, speed: 3.2, spin: 0.3 },
-      { type: 'fan', id: 'desk fan', position: [19, 1.2, 0], direction: [1, 0.3, 0], radius: 0.35, reach: 8, speed: 5 },
+      { type: 'fan', id: 'ballroom floor fan', position: [20.5, 0.05, 0], direction: [0, 1, 0], radius: 0.9, reach: 6, speed: 5.5 },
       { type: 'vent', id: 'library vent', box: box(29.5, 0, -1.3, 34, 3.9, 1.3), speed: 2.4 },
       { type: 'breeze', id: 'library window', box: box(24.3, 0, -4, 36, 4.2, 4), velocity: [0, 0, 0.4], wobble: 0.4 },
-      { type: 'fan', id: 'garden fan', position: [36.6, 1.6, 0], direction: [1, 0.2, 0], radius: 0.5, reach: 10, speed: 4.2 },
+      { type: 'fan', id: 'library floor fan', position: [26.5, 0.05, 0], direction: [0, 1, 0], radius: 0.8, reach: 4.1, speed: 5 },
+      { type: 'fan', id: 'garden floor fan', position: [39.5, 0.05, 0], direction: [0, 1, 0], radius: 0.9, reach: 6, speed: 5.5 },
       { type: 'gust', id: 'garden door', direction: [0, 0, 1], speed: 1.0, width: 1.5, period: 4, box: box(36.3, 0, -4, 52, 6.4, 4) },
     ],
     solids,

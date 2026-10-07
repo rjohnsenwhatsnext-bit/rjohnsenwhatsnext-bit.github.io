@@ -297,7 +297,12 @@ export function riderSeat(pl) {
   const top = Math.max(...(near.length ? near : pl.hull).map((h) => h[1]));
   return [0, top + 0.006, 0];
 }
-export const RIDER = { mass: 0.0015, reach: 0.02, side: 0.06 };
+// Ryan, 7 Oct 2026: steer up, down, left and right by the pilot's weight. Measured:
+// a 2 cm forward reach moved a dart's height at 6 m by 0.1 m, 5 cm moves it
+// 0.35 m each way; his body drag (2 cm square) turns a dart 0.27 m by 6 m at
+// full side lean, where weight alone turned it 0.02 m. 9 cm sideways tipped a
+// wide glider over, so side stays 6 cm.
+export const RIDER = { mass: 0.0015, reach: 0.05, side: 0.06, drag: 0.0004 };
 
 export function createFlight(pl, throwSpec, scenario, { rider } = {}) {
   const { speed = 8, pitch = 5, yaw = 0, roll = 0 } = throwSpec;
@@ -323,7 +328,7 @@ export function createFlight(pl, throwSpec, scenario, { rider } = {}) {
     pitchTurned: 0,
     maxTurned: 0,
     maxHeight: pos0[1],
-    rider: rider ? { on: true, lean: [0, 0], tip: 0, lost: null, mass: rider.mass ?? RIDER.mass, reach: rider.reach ?? RIDER.reach, side: rider.side ?? RIDER.side, seat: rider.seat || riderSeat(pl) } : null,
+    rider: rider ? { on: true, lean: [0, 0], tip: 0, lost: null, mass: rider.mass ?? RIDER.mass, reach: rider.reach ?? RIDER.reach, side: rider.side ?? RIDER.side, drag: rider.drag ?? RIDER.drag, seat: rider.seat || riderSeat(pl) } : null,
   };
   const events = [];
   // Each flight has its own air, so switching a fan in one flight never
@@ -392,6 +397,25 @@ export function createFlight(pl, throwSpec, scenario, { rider } = {}) {
       moment[0] += m[0];
       moment[1] += m[1];
       moment[2] += m[2];
+      // his body catches the air too: drag at where he is leaning. Hanging out to
+      // one side swings the nose that way, the way a hang glider pilot's body
+      // does (Ryan, 7 Oct 2026: steer "up down left right by using the pilots
+      // weight"; a dart barely rolls, so weight alone could not turn it).
+      // Tucked in over the keel he catches next to nothing; the area grows as he
+      // hangs out to the side, so leaning to turn costs speed and sitting
+      // still does not (a constant drag cost a good dart 6 m and let a plain
+      // fold fly further than it).
+      const area = rd.drag * Math.abs(rd.lean[1]);
+      if (area) {
+        const d = scale(airBody, 0.5 * RHO * area * len(airBody));
+        const md = cross(r, d);
+        moment[0] += md[0];
+        moment[1] += md[1];
+        moment[2] += md[2];
+        force[0] += d[0];
+        force[1] += d[1];
+        force[2] += d[2];
+      }
       mass += rd.mass;
     }
     const Fw = add(mat3Vec(Rw, force), [0, -mass * GRAVITY, 0]);
