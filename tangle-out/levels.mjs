@@ -1,6 +1,6 @@
 // Chapter 1: Loose Ends. LEVELS[0..9]. Each board is built in reverse from its own seed, so it always clears.
 // lives / maxTaps null means no limit. A blocked tap costs a life and counts as a tap.
-export const CHAPTERS = [{ id: 1, name: 'Loose Ends' }, { id: 2, name: 'Rocks and Ice' }, { id: 3, name: 'Keys and Order' }, { id: 4, name: 'Twin Tracks' }];
+export const CHAPTERS = [{ id: 1, name: 'Loose Ends' }, { id: 2, name: 'Rocks and Ice' }, { id: 3, name: 'Keys and Order' }, { id: 4, name: 'Twin Tracks' }, { id: 5, name: 'Chain Reaction' }];
 
 export const LEVELS = [
   { id: 1, chapter: 1, name: 'First Slide', objective: 'Tap each line to slide it out', w: 4, h: 4, count: 3, minLen: 2, maxLen: 3, seed: 101, lives: null, maxTaps: null },
@@ -49,4 +49,16 @@ export const LEVELS = [
   { id: 38, chapter: 4, name: 'Crowded Twins', objective: 'Five pairs and rocks, 2 lives. Plan the order', w: 7, h: 8, count: 14, minLen: 2, maxLen: 4, linked: 5, rocks: 4, seed: 3838, lives: 2, maxTaps: null },
   { id: 39, chapter: 4, name: 'Pair Plan', objective: 'Plan the pairs: rocks, 14 taps, 2 lives and 45 seconds', w: 7, h: 9, count: 16, minLen: 2, maxLen: 4, linked: 5, rocks: 4, timeLimit: 2700, seed: 3939, lives: 2, maxTaps: 14 },
   { id: 40, chapter: 4, name: 'Twin Peaks', objective: 'Finale: six pairs, rocks and a clock. 18 taps, 2 lives, 50 seconds', w: 8, h: 9, count: 20, minLen: 2, maxLen: 5, linked: 6, rocks: 6, timeLimit: 3000, seed: 4040, lives: 2, maxTaps: 18 },
+  // Chapter 5: Chain Reaction. LEVELS[40..49]. New rule: bombs. A bomb line also pops the nearest touching line
+  // when it slides out, even a blocked one. See the top of sim.mjs. Tap budgets are never below lines plus thaws.
+  { id: 41, chapter: 5, name: 'First Fuse', objective: 'A bomb line pops a line beside it when it slides out', w: 5, h: 6, count: 6, minLen: 2, maxLen: 3, bombs: 1, seed: 4141, lives: null, maxTaps: null },
+  { id: 42, chapter: 5, name: 'Blast Radius', objective: 'Two bombs on a wider board. Watch what each one touches', w: 6, h: 6, count: 8, minLen: 2, maxLen: 4, bombs: 2, seed: 4242, lives: null, maxTaps: null },
+  { id: 43, chapter: 5, name: 'Pop the Blocker', objective: 'Use a bomb to pop a line that is stuck, 4 lives', w: 6, h: 7, count: 10, minLen: 2, maxLen: 4, bombs: 3, seed: 4343, lives: 4, maxTaps: null },
+  { id: 44, chapter: 5, name: 'Quarry Blast', objective: 'Bombs among the rocks, 3 lives', w: 7, h: 7, count: 12, minLen: 2, maxLen: 4, bombs: 3, rocks: 4, seed: 4444, lives: 3, maxTaps: null },
+  { id: 45, chapter: 5, name: 'Ice Breaker', objective: 'Thaw the bombs before they can pop anything, 3 lives', w: 6, h: 7, count: 10, minLen: 2, maxLen: 4, bombs: 3, frozen: 4, seed: 4545, lives: 3, maxTaps: null },
+  { id: 46, chapter: 5, name: 'Lit Fuse', objective: 'Bombs and a clock: clear the board in 35 seconds', w: 7, h: 7, count: 13, minLen: 2, maxLen: 4, bombs: 4, timeLimit: 2100, seed: 4646, lives: null, maxTaps: null },
+  { id: 47, chapter: 5, name: 'Count the Blasts', objective: 'Bombs with numbered lines, 3 lives', w: 7, h: 7, count: 12, minLen: 2, maxLen: 4, bombs: 3, numbered: 4, seed: 4747, lives: 3, maxTaps: null },
+  { id: 48, chapter: 5, name: 'Lock and Load', objective: 'Bombs, locks and rocks within 18 taps and 3 lives', w: 7, h: 8, count: 14, minLen: 2, maxLen: 4, bombs: 4, locked: 3, rocks: 3, seed: 4848, lives: 3, maxTaps: 18 },
+  { id: 49, chapter: 5, name: 'Demolition Plan', objective: 'Plan the chain: bombs, ice and rocks within 20 taps and 2 lives', w: 7, h: 9, count: 16, minLen: 2, maxLen: 4, bombs: 5, frozen: 3, rocks: 4, seed: 4949, lives: 2, maxTaps: 20 },
+  { id: 50, chapter: 5, name: 'Big Bang', objective: 'Finale: bombs, ice, numbers, locks and a clock. 28 taps, 2 lives, 55 seconds', w: 8, h: 9, count: 20, minLen: 2, maxLen: 5, bombs: 6, frozen: 3, numbered: 4, locked: 3, timeLimit: 3300, seed: 5050, lives: 2, maxTaps: 28 },
 ];

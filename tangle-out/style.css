@@ -53,3 +53,21 @@ body[data-chapter="4"] #level-label::before{content:'SUNSET JUNCTION';display:bl
 #twin-seal span{font:44px Georgia,serif}#twin-seal strong{font-size:10px;letter-spacing:.1em;background:#faece1;padding:4px}#twin-seal small{font-size:8px;letter-spacing:.1em}
 .twin-celebration #medal{display:none}.twin-celebration #next-goal{background:#f4e0e8;border-color:#b7869d;color:#60334c}
 @media(max-height:700px){#twin-seal{height:106px;width:150px;gap:3px}#twin-seal span{font-size:32px}body[data-chapter="4"] #arena{margin-top:6px}}
+/* Chain Reaction: paper circuits in the copper-lit Ember Works. */
+body[data-chapter="5"]{--teal:#934726;--muted:#796047;color:#48392c;background:radial-gradient(ellipse at 90% 0,#f4c77e,transparent 55%),linear-gradient(#f7ecdb,#eaddcc)}
+body[data-chapter="5"] #arena{border:2px solid #ba7946;border-radius:24px;background:linear-gradient(135deg,#e5b984 0 3%,transparent 3% 97%,#e5b984 97%),repeating-linear-gradient(90deg,#bc7c3c08 0 1px,transparent 1px 24px),#fffaf0;box-shadow:inset 0 0 0 5px #f2ddbc,0 12px 30px #86462018}
+body[data-chapter="5"] #board{padding:8px}
+body[data-chapter="5"] .journey{background:#eed9b8;color:#654125}
+body[data-chapter="5"] button.primary{box-shadow:0 5px 0 #653319}
+body[data-chapter="5"] #level-label::before{content:'EMBER WORKS';display:block;letter-spacing:.22em;font-size:8px;margin-bottom:6px;color:#955327}
+.level.chapter-5{background:#fff1da;border-color:#d9b080}.chapter-heading.chapter-5{color:#934726}
+.chapter-heading.chapter-5::before{content:'EMBER WORKS';display:block;font-size:9px;letter-spacing:.2em;margin-bottom:8px;color:#955327}
+.bomb-mark circle{fill:#ffe0a0;stroke:#613b23;stroke-width:.045}.bomb-mark path{fill:none;stroke:#934726;stroke-width:.04;stroke-linecap:round}
+.line.pop-target .thread{stroke-width:.24;stroke-dasharray:.28 .09}.line.pop-target .arrow{stroke-width:.2}
+.line.popping .thread{stroke:#cf7a20;stroke-width:.38}.line.popping .rule-marks{display:none}
+#result.bomb-celebration{--teal:#934726;--muted:#796047;color:#48392c;background:radial-gradient(ellipse at 50% 15%,#ffe3a8,transparent 60%),#f7ecdb}
+#result.bomb-celebration button.primary{box-shadow:0 5px 0 #653319}
+#bomb-seal{align-self:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;width:170px;height:146px;border:3px double #a56731;border-radius:50% 50% 24px 24px;background:repeating-conic-gradient(from 10deg,#edba6925 0deg 10deg,transparent 10deg 30deg),#fff0ca;box-shadow:0 0 0 8px #d5993520,0 8px 30px #b8732820;color:#79421e;animation:arrive .8s ease-out}
+#bomb-seal span{font:48px Georgia,serif}#bomb-seal strong{font-size:12px;letter-spacing:.16em}#bomb-seal small{font-size:8px;letter-spacing:.08em}
+.bomb-celebration #medal{display:none}.bomb-celebration #next-goal{background:#f3dfb9;border-color:#bd8549;color:#654125}
+@media(max-height:700px){#bomb-seal{height:106px;width:150px;gap:4px}#bomb-seal span{font-size:32px}body[data-chapter="5"] #arena{margin-top:6px}}

@@ -54,6 +54,16 @@
 //                   Linked lines are never also numbered, locked or frozen, so linked levels leave those fields out.
 //                   blockedBy(state, line) reports the first obstacle for the line or its partner.
 
+// Chapter 5 mechanic (optional level field, absent means off):
+//   bombs: N        N lines are bombs (line.bomb = true). When a bomb slides out it also pops one neighbour: the
+//                   lowest-id line still on the board that touches any cell of the bomb (up, down, left or right)
+//                   and is not part of a linked pair. The popped line leaves at once, wherever it points and
+//                   whatever is in its way, so a bomb can clear a line that is blocked. state.popped is the id of
+//                   the popped line (or null) after every tap, and the bomb gets line.pops = that id. Popping
+//                   only ever removes lines, so a valid order still exists. Undo puts the bomb back and then the
+//                   line it popped. Bombs save taps, so plan which bomb goes first. Bombs are never linked.
+//                   popTarget(state, line) returns the id a bomb would pop now, or -1.
+
 export const TICK = 1 / 60;
 export const FLASH_TICKS = 50;
 export const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]]; // right, down, left, up
@@ -133,6 +143,21 @@ export function lineRestriction(state, line) {
     if (next !== line.id) return { reason: 'order', by: next };
   }
   return null;
+}
+
+// Id of the line a bomb would pop if it slid now, or -1.
+export function popTarget(state, line) {
+  let best = -1;
+  for (const [cx, cy] of line.cells) {
+    for (const [dx, dy] of DIRS) {
+      const x = cx + dx, y = cy + dy;
+      if (x < 0 || y < 0 || x >= state.w || y >= state.h) continue;
+      const id = state.grid[y * state.w + x];
+      if (id === -1 || id === line.id || state.lines[id].link !== undefined) continue;
+      if (best === -1 || id < best) best = id;
+    }
+  }
+  return best;
 }
 
 export function generate(level, seed, rocks = []) {
@@ -215,8 +240,14 @@ export function newGame(level, seed = 0) {
       break;
     }
   }
+  // Bombs come from their own random stream.
+  const brand = rng((lineSeed ^ 0x165667b1) >>> 0);
+  const bombPool = lines.filter((l) => l.link === undefined).map((l) => l.id);
+  for (let n = 0; n < (level.bombs ?? 0) && bombPool.length; n++) {
+    lines[bombPool.splice(Math.floor(brand() * bombPool.length), 1)[0]].bomb = true;
+  }
   return {
-    w: level.w, h: level.h, grid, lines, tick: 0, slid: null,
+    w: level.w, h: level.h, grid, lines, tick: 0, slid: null, popped: null,
     lives: level.lives ?? null, maxTaps: level.maxTaps ?? null, timeLimit: level.timeLimit ?? null,
     rocks, rockAt, thawed: null,
     taps: 0, cleared: [], flash: null, hint: null, hintsUsed: 0, mistakes: 0,
@@ -252,6 +283,15 @@ export function step(state, input) {
       mate.out = false;
       setLine(state, mate, mate.id);
     }
+    if (line.pops !== undefined) {
+      if (state.cleared[state.cleared.length - 1] === line.pops) {
+        const popped = state.lines[state.cleared.pop()];
+        popped.out = false;
+        setLine(state, popped, popped.id);
+      }
+      delete line.pops;
+    }
+    state.popped = null;
     state.hint = null;
   } else if (input.hint) {
     const free = freeLines(state);
@@ -277,6 +317,18 @@ export function step(state, input) {
       line.out = true;
       setLine(state, line, -1);
       state.slid = [id];
+      state.popped = null;
+      if (line.bomb) {
+        const target = popTarget(state, line);
+        if (target !== -1) {
+          const hit = state.lines[target];
+          hit.out = true;
+          setLine(state, hit, -1);
+          state.cleared.push(target);
+          state.popped = target;
+          line.pops = target;
+        }
+      }
       if (line.link !== undefined) {
         const mate = state.lines[line.link];
         mate.out = true;
