@@ -139,4 +139,43 @@ export const LEVELS = [
   { id: 40, chapter: 4, name: 'Southern Cross', objective: 'streak', limit: 20, maxMistakes: 2, maxTurns: 40,
     goal: 'Clear 20 pairs in a row within 40 tries with 2 wrong pairs at most',
     faces: 12, hints: 0, shuffles: 2, undos: 2, layers: [L(12, 3), L(8, 2, 2, 1), L(4, 2, 4, 1)] },
+
+  // Chapter 5, "The Dreaming", is LEVELS[40..49]. New: the score objective. A pair is
+  // worth 10 times your current streak (up to 100), so clean runs score the most.
+  // 41 to 42: a first score target, then more to earn with hints in hand
+  { id: 41, chapter: 5, name: 'Bush Tucker', objective: 'score', limit: 400, goal: 'Score 400 points',
+    faces: 6, hints: 2, shuffles: 3, undos: 4, layers: [L(6, 3), L(2, 2, 2, 1)] },
+  { id: 42, chapter: 5, name: 'Possum Run', objective: 'score', limit: 500, goal: 'Score 500 points',
+    faces: 8, hints: 2, shuffles: 3, undos: 4, layers: [L(8, 2), L(4, 2, 2, 1)] },
+  // 43 to 45: score with wrong pair caps, a cap on tries, then a ring
+  { id: 43, chapter: 5, name: 'Frill Neck', objective: 'score', limit: 600, maxMistakes: 3,
+    goal: 'Score 600 points with 3 wrong pairs at most',
+    faces: 9, hints: 1, shuffles: 2, undos: 3, layers: [L(7, 3), L(5, 1, 1, 2)] },
+  { id: 44, chapter: 5, name: 'Red Kangaroo', objective: 'score', limit: 800, maxTurns: 20,
+    goal: 'Score 800 points in 20 tries',
+    faces: 10, hints: 1, shuffles: 2, undos: 3, layers: [L(10, 2), L(6, 2, 2, 1)] },
+  { id: 45, chapter: 5, name: 'Quoll Creek', objective: 'score', limit: 700, maxMistakes: 2,
+    goal: 'Score 700 points with 2 wrong pairs at most',
+    faces: 10, hints: 1, shuffles: 2, undos: 3,
+    layers: [L(6, 4, 0, 0, [[0, 0], [5, 0], [0, 3], [5, 3]]), L(4, 2, 1, 1)] },
+  // 46 to 48: a deep stack, a near perfect run, then score against the count of tries
+  { id: 46, chapter: 5, name: 'Stock Route', objective: 'score', limit: 1200, goal: 'Score 1200 points',
+    faces: 11, hints: 1, shuffles: 2, undos: 3, layers: [L(12, 2), L(8, 2, 2, 1), L(4, 2, 4, 2)] },
+  { id: 47, chapter: 5, name: 'Jarrah Ridge', objective: 'score', limit: 1100, maxMistakes: 1,
+    goal: 'Score 1100 points with 1 wrong pair at most',
+    faces: 11, hints: 0, shuffles: 2, undos: 2, layers: [L(9, 3), L(7, 2, 1, 1), L(3, 1, 3, 2)] },
+  { id: 48, chapter: 5, name: 'Wallaby Gully', objective: 'score', limit: 900, maxTurns: 18,
+    goal: 'Score 900 points in 18 tries',
+    faces: 10, hints: 0, shuffles: 2, undos: 2,
+    layers: [L(8, 3, 0, 0, [[3, 1], [4, 1]]), L(4, 2, 2, 1)] },
+  // 49: preparation challenge, a big score with one slip and a count of tries
+  { id: 49, chapter: 5, name: 'Spinifex Heart', objective: 'score', limit: 1800, maxMistakes: 1, maxTurns: 34,
+    goal: 'Score 1800 points in 34 tries with 1 wrong pair at most',
+    faces: 12, hints: 0, shuffles: 2, undos: 2,
+    layers: [L(10, 3), L(8, 2, 1, 1), L(6, 2, 2, 2), L(2, 1, 4, 3)] },
+  // 50: finale, a huge score on the biggest stack with almost no room to slip
+  { id: 50, chapter: 5, name: 'The Dreaming', objective: 'score', limit: 1900, maxMistakes: 2, maxTurns: 38,
+    goal: 'Score 1900 points in 38 tries with 2 wrong pairs at most',
+    faces: 12, hints: 0, shuffles: 2, undos: 2,
+    layers: [L(10, 4, 0, 0, [[0, 0], [9, 0], [0, 3], [9, 3]]), L(8, 2, 1, 1), L(4, 2, 3, 2), L(2, 1, 4, 3)] },
 ];

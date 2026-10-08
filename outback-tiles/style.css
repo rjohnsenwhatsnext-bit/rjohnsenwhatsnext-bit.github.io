@@ -59,3 +59,21 @@ body[data-chapter="4"] .finale #medal{color:#f2ce9b;text-shadow:0 0 35px #f2ce9b
 #streakGuide{padding:0 12px}#streakGuide progress{margin-top:8px;height:6px}#streakBest{font-size:10px;line-height:1.35;text-align:center;margin:3px 0 0}
 body[data-chapter="4"] #limits span{background:#302c40;border-color:#f2ce9b44}body[data-chapter="4"] #limits b{color:#f2ce9b}
 @media(max-height:700px){body[data-chapter="4"] #boardSpace{margin:6px 0}body[data-chapter="4"] #guidance{font-size:11px;margin-bottom:4px}#streakGuide progress{margin-top:5px}}
+
+/* The Dreaming: silver moonlight, cool sandstone and a quiet gorge. */
+body[data-chapter="5"]{--gold:#c2e9e5;background:linear-gradient(165deg,#111d37,#303d60 65%,#172e40)}
+body[data-chapter="5"]:before{opacity:.42;background:url('assets/dreaming.svg') center bottom/cover no-repeat}
+body[data-chapter="5"] p,body[data-chapter="5"] .hud small{color:#dce7ed}
+body[data-chapter="5"] .card{background:#14263ddd;border-color:#c2e9e544}
+body[data-chapter="5"] #tools button{background:#354c69}
+body[data-chapter="5"] #boardSpace{background:radial-gradient(ellipse,#c2e9e522,transparent 72%)}
+body[data-chapter="5"] .hud>div:last-child{min-width:110px}
+body[data-chapter="5"] #objectiveCount{font-size:22px}
+body[data-chapter="5"] #limits span{background:#192b43;border-color:#c2e9e544}
+body[data-chapter="5"] #limits b{color:#c2e9e5}
+.chapter-5{background:#1c304b}.chapter-5 .chapter-landscape{height:140px;background:url('assets/dreaming.svg') center 24%/cover}
+.chapter-5 .level{background:#304561}.chapter-5 .level small{color:#dce7ed}
+#unlockCard[data-chapter="5"]{padding-top:145px;background:linear-gradient(0deg,#1c304b 0 40%,transparent 95%),url('assets/dreaming.svg') center 25%/cover;border-color:#c2e9e588}
+body[data-chapter="5"] .finale #medal{color:#c2e9e5;text-shadow:0 0 40px #c2e9e599}
+#scoreGuide{padding:8px 10px 0}.score-line{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;color:var(--gold);font-variant-numeric:tabular-nums}.score-line span{font-size:8px;letter-spacing:1px}#scoreGuide progress{margin-top:6px;height:6px}#scoreRules{font-size:10px;line-height:1.35;text-align:center;margin:3px 0 0}
+@media(max-height:700px){body[data-chapter="5"] #boardSpace{margin:5px 0}body[data-chapter="5"] #guidance{font-size:11px;margin-bottom:4px}#scoreGuide{padding-top:5px}.score-line span{display:none}}

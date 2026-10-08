@@ -45,6 +45,18 @@
 //                      cleared before the streak is reached the run is lost with
 //                      cause 'streak'.
 //
+// Chapter 5 additions (optional, earlier levels are unchanged):
+//   objective 'score'  every pair cleared scores 10 times the current streak, with the
+//                      streak counted at most to 10 (so a pair is worth 10, 20 ... 100
+//                      points and stays at 100 on a long clean run). A wrong pair
+//                      resets the streak, so it costs the bonus, not points already
+//                      earned. The level is won the moment state.score reaches `limit`.
+//                      Undo takes back the points of the pair it returns and leaves the
+//                      streak alone. If the board is cleared with the score short the
+//                      run is lost with cause 'score'. state.score holds the total,
+//                      pairPoints(streak) the value of a pair at that streak, and
+//                      maxScore(pairs) the best possible total for that many pairs.
+//
 // Every deal is built by removing free pairs from the full layout one at a time
 // and giving each pair one face, so the layout can always be cleared in that
 // order. A shuffle deals the tiles left the same way, so it stays winnable.
@@ -140,6 +152,15 @@ function deal(s, ids) {
   throw new Error('layout could not be dealt');
 }
 
+export const pairPoints = (streak) => 10 * Math.min(streak, 10);
+
+// the best total for `pairs` pairs cleared with no wrong pair
+export function maxScore(pairs) {
+  let total = 0;
+  for (let k = 1; k <= pairs; k++) total += pairPoints(k);
+  return total;
+}
+
 export function newGame(level, seed = 1) {
   const tiles = layoutTiles(level);
   if (tiles.length % 2) throw new Error(`level ${level.id} has an odd number of tiles`);
@@ -149,6 +170,7 @@ export function newGame(level, seed = 1) {
     tiles, picked: null, hint: null, history: [],
     pairsTotal: tiles.length / 2, pairsLeft: tiles.length / 2, pairsCleared: 0,
     turns: 0, mistakes: 0, tick: 0, streak: 0, bestStreak: 0,
+    score: 0, points: [],
     undosLeft: level.undos ?? 0, shufflesLeft: level.shuffles ?? 0, hintsLeft: level.hints ?? 0,
     gold: level.gold ?? 0,
     maxMistakes: level.maxMistakes ?? null, maxTurns: level.maxTurns ?? null,
@@ -166,6 +188,7 @@ export function cause(s) {
   if (s.maxMistakes !== null && s.mistakes > s.maxMistakes) return 'mistakes';
   if (s.maxTurns !== null && s.turns >= s.maxTurns) return 'turns';
   if (s.objective === 'streak' && s.pairsLeft === 0) return 'streak';
+  if (s.objective === 'score' && s.pairsLeft === 0) return 'score';
   if (matchesAvailable(s) === 0 && s.shufflesLeft === 0) return 'stuck';
   return null;
 }
@@ -176,6 +199,7 @@ const isWon = (s) => {
   if (s.objective === 'target') return s.pairsCleared >= s.limit;
   if (s.objective === 'gold') return goldLeft(s) === 0;
   if (s.objective === 'streak') return s.bestStreak >= s.limit;
+  if (s.objective === 'score') return s.score >= s.limit;
   return s.pairsLeft === 0;
 };
 
@@ -200,7 +224,10 @@ function pick(s, id) {
     s.pairsLeft--;
     s.streak++;
     if (s.streak > s.bestStreak) s.bestStreak = s.streak;
-    s.events.push({ type: 'match', a, b: id, face: t.face });
+    const pts = pairPoints(s.streak);
+    s.score += pts;
+    s.points.push(pts);
+    s.events.push({ type: 'match', a, b: id, face: t.face, points: pts });
   } else {
     s.mistakes++;
     s.streak = 0;
@@ -213,6 +240,7 @@ function undo(s) {
   const [a, b] = s.history.pop();
   s.tiles[a].alive = s.tiles[b].alive = true;
   s.undosLeft--;
+  s.score -= s.points.pop();
   s.pairsCleared--;
   s.pairsLeft++;
   s.picked = null;
@@ -224,6 +252,7 @@ function shuffle(s) {
   if (s.shufflesLeft <= 0) { s.events.push({ type: 'refused', what: 'shuffle' }); return; }
   s.shufflesLeft--;
   deal(s, s.tiles.filter((t) => t.alive).map((t) => t.id));
+  s.points = [];
   s.history = []; // undo would bring back tiles with faces from before the redeal
   s.picked = null;
   s.hint = null;
