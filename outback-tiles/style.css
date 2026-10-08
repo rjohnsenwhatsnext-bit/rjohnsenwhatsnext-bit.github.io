@@ -44,3 +44,18 @@ body[data-chapter="3"] #tools button{background:#315b66}
 #chapterGuide{font-size:10px;text-align:center;line-height:1.35;margin:5px 4px 0}
 body[data-chapter="3"] .finale #medal{color:#b9e5d5;text-shadow:0 0 30px #8bdbcf66}
 @media(max-height:700px){#limits{margin-top:5px}#limits span{padding:3px 10px}body[data-chapter="3"] #boardSpace{margin:6px 0}body[data-chapter="3"] #guidance{font-size:11px;margin-bottom:4px}}
+
+/* The Long Paddock: warm grasslands beneath a violet evening sky. */
+body[data-chapter="4"]{--gold:#f2ce9b;background:linear-gradient(165deg,#292b48,#503e51 65%,#34353c)}
+body[data-chapter="4"]:before{opacity:.38;background:url('assets/long-paddock.svg') center bottom/cover no-repeat}
+body[data-chapter="4"] p,body[data-chapter="4"] .hud small{color:#eadfdb}
+body[data-chapter="4"] .card{background:#292b43dd;border-color:#f2ce9b44}
+body[data-chapter="4"] #tools button{background:#594758}
+body[data-chapter="4"] #boardSpace{background:radial-gradient(ellipse,#e4b77f22,transparent 72%)}
+.chapter-4{background:#343146}.chapter-4 .chapter-landscape{height:120px;background:url('assets/long-paddock.svg') center 52%/cover}
+.chapter-4 .level{background:#514252}.chapter-4 .level small{color:#eadfdb}
+#unlockCard[data-chapter="4"]{padding-top:140px;background:linear-gradient(0deg,#343146 0 40%,transparent 95%),url('assets/long-paddock.svg') center 32%/cover;border-color:#f2ce9b88}
+body[data-chapter="4"] .finale #medal{color:#f2ce9b;text-shadow:0 0 35px #f2ce9b77}
+#streakGuide{padding:0 12px}#streakGuide progress{margin-top:8px;height:6px}#streakBest{font-size:10px;line-height:1.35;text-align:center;margin:3px 0 0}
+body[data-chapter="4"] #limits span{background:#302c40;border-color:#f2ce9b44}body[data-chapter="4"] #limits b{color:#f2ce9b}
+@media(max-height:700px){body[data-chapter="4"] #boardSpace{margin:6px 0}body[data-chapter="4"] #guidance{font-size:11px;margin-bottom:4px}#streakGuide progress{margin-top:5px}}

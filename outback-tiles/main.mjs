@@ -13,8 +13,8 @@ try {
 } catch { storageWarning(); }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch { storageWarning(); } }
 let screen = 'home', settingsFrom = 'home', state = null, index = 0, busy = false, audio, toastTimer;
-const chapterName = l => ['The Bush Track', 'The Red Centre', 'The Wet Season'][l.chapter - 1];
-const chapterReward = l => ['Boab Crown', 'Red Centre Gold', 'Thunderhead Crest'][l.chapter - 1];
+const chapterName = l => ['The Bush Track', 'The Red Centre', 'The Wet Season', 'The Long Paddock'][l.chapter - 1];
+const chapterReward = l => ['Boab Crown', 'Red Centre Gold', 'Thunderhead Crest', 'Southern Cross'][l.chapter - 1];
 function theme(l) { document.body.dataset.chapter = l.chapter; }
 const names = ['Gum leaf', 'Wattle', 'Waratah', 'Sun', 'Waterhole', 'Boomerang', 'Mountain', 'Grass tree', 'Seed pod', 'Southern stars', 'Banksia', 'Boab'];
 const drawings = [
@@ -55,7 +55,7 @@ function menu() {
   $('journeyName').textContent = chapterName(next);
   const rewards = $('earnedRewards');
   rewards.replaceChildren();
-  for (const [id, title] of [[10, 'Boab Crown'], [20, 'Red Centre Gold'], [30, 'Thunderhead Crest']]) {
+  for (const [id, title] of [[10, 'Boab Crown'], [20, 'Red Centre Gold'], [30, 'Thunderhead Crest'], [40, 'Southern Cross']]) {
     if (!saved.cleared.includes(id)) continue;
     const badge = document.createElement('span');
     badge.className = 'earned-reward';
@@ -63,14 +63,14 @@ function menu() {
     rewards.append(badge);
   }
   rewards.hidden = !rewards.childElementCount;
-  $('nextGoal').textContent = count === LEVELS.length ? 'All three chapter rewards earned. Your whole trail is yours to replay.' : `Next: ${next.name}. ${next.goal}.`;
-  $('continue').textContent = state && S.status(state) === 'playing' ? 'Resume your stack' : count === LEVELS.length ? 'Return to Thunderhead' : `Play level ${next.id}`;
+  $('nextGoal').textContent = count === LEVELS.length ? 'All four chapter rewards earned. Your whole trail is yours to replay.' : `Next: ${next.name}. ${next.goal}.`;
+  $('continue').textContent = state && S.status(state) === 'playing' ? 'Resume your stack' : count === LEVELS.length ? 'Return to Southern Cross' : `Play level ${next.id}`;
   $('levelList').replaceChildren();
   for (const chapter of [...new Set(LEVELS.map(l => l.chapter))]) {
     const levels = LEVELS.filter(l => l.chapter === chapter), complete = levels.filter(l => saved.cleared.includes(l.id)).length;
     const group = document.createElement('section'); group.className = `chapter chapter-${chapter}`;
     const open = unlocked(LEVELS.indexOf(levels[0]));
-    group.innerHTML = `<div class="chapter-landscape" aria-hidden="true"></div><p class="eyebrow">CHAPTER ${chapter} / ${complete} OF ${levels.length} CLEARED</p><h3>${chapterName(levels[0])}</h3><p class="chapter-description">${chapter === 1 ? 'Follow the trail to earn your Boab Crown.' : chapter === 2 ? open ? 'Gold in the red earth. Earn your Red Centre Gold.' : 'Clear Boab Crown, level 10, to unlock the red earth.' : open ? 'Rain over the billabong. Balance your goal with limited wrong pairs and tries to earn the Thunderhead Crest.' : 'Clear Uluru Gold, level 20, to unlock The Wet Season.'}</p>`;
+    group.innerHTML = `<div class="chapter-landscape" aria-hidden="true"></div><p class="eyebrow">CHAPTER ${chapter} / ${complete} OF ${levels.length} CLEARED</p><h3>${chapterName(levels[0])}</h3><p class="chapter-description">${chapter === 1 ? 'Follow the trail to earn your Boab Crown.' : chapter === 2 ? open ? 'Gold in the red earth. Earn your Red Centre Gold.' : 'Clear Boab Crown, level 10, to unlock the red earth.' : chapter === 4 ? open ? 'Follow the dusk sky. Build runs of matching pairs to earn your Southern Cross.' : 'Clear Thunderhead, level 30, to unlock The Long Paddock.' : open ? 'Rain over the billabong. Balance your goal with limited wrong pairs and tries to earn the Thunderhead Crest.' : 'Clear Uluru Gold, level 20, to unlock The Wet Season.'}</p>`;
     for (const l of levels) {
       const i = LEVELS.indexOf(l), cleared = saved.cleared.includes(l.id), b = document.createElement('button');
       b.className = 'level'; b.disabled = !unlocked(i);
@@ -93,14 +93,18 @@ function render() {
     $('goldFaces').innerHTML = Array.from({ length: state.gold }, (_, n) => `<span class="gold-example" role="img" aria-label="Gold ${names[n]}">${face(n)}<span aria-hidden="true">&#9670;</span></span>`).join('');
   }
   $('left').textContent = state.pairsLeft; $('available').textContent = pairs; $('availableBox').classList.toggle('warning', pairs <= 1);
-  $('objectiveCount').textContent = l.objective === 'gold' ? S.goldLeft(state) : l.objective === 'turns' ? Math.max(0, l.limit - state.turns) : l.objective === 'mistakes' ? `${state.mistakes}/${l.limit}` : state.pairsCleared;
-  $('objectiveLabel').textContent = l.objective === 'gold' ? 'GOLD TILES LEFT' : l.objective === 'turns' ? 'TRIES LEFT' : l.objective === 'mistakes' ? 'WRONG PAIRS' : 'CLEARED';
+  $('objectiveCount').textContent = l.objective === 'streak' ? `${state.streak}/${l.limit}` : l.objective === 'gold' ? S.goldLeft(state) : l.objective === 'turns' ? Math.max(0, l.limit - state.turns) : l.objective === 'mistakes' ? `${state.mistakes}/${l.limit}` : state.pairsCleared;
+  $('objectiveLabel').textContent = l.objective === 'streak' ? 'PAIRS IN A ROW' : l.objective === 'gold' ? 'GOLD TILES LEFT' : l.objective === 'turns' ? 'TRIES LEFT' : l.objective === 'mistakes' ? 'WRONG PAIRS' : 'CLEARED';
   const caps = [];
   if (state.maxMistakes != null) caps.push({ label: 'Wrong pairs left', left: Math.max(0, state.maxMistakes - state.mistakes) });
   if (state.maxTurns != null) caps.push({ label: 'Tries left', left: Math.max(0, state.maxTurns - state.turns) });
   $('limits').hidden = !caps.length;
   $('limits').innerHTML = caps.map(cap => `<span class="${cap.left <= 1 ? 'tight' : ''}">${cap.label} <b>${cap.left}</b></span>`).join('');
-  $('chapterGuide').hidden = l.chapter !== 3;
+  $('chapterGuide').hidden = l.chapter < 3;
+  $('streakGuide').hidden = l.objective !== 'streak';
+  $('streakProgress').max = l.limit || 1;
+  $('streakProgress').value = state.streak;
+  $('streakBest').textContent = `Best run: ${state.bestStreak}. A wrong pair resets your run to zero. Undo keeps your run.`;
   $('chapterGuide').textContent = state.maxMistakes != null && state.maxMistakes === state.mistakes
     ? 'No wrong pairs left. Your next wrong pair ends this stack.'
     : 'Meet the goal within every limit. Undo does not refund tries or wrong pairs.';
@@ -116,20 +120,20 @@ function render() {
   for (const kind of ['undo', 'hint', 'shuffle']) { const n = state[`${kind === 'undo' ? 'undos' : kind === 'hint' ? 'hints' : 'shuffles'}Left`]; $(kind).textContent = `${kind[0].toUpperCase() + kind.slice(1)} ${n ? '· ' + n : rewardAvailable() ? '· Ad' : '· 0'}`; $(kind).disabled = busy || (!n && !rewardAvailable()) || (kind === 'undo' && !state.history.length); }
 }
 function burst() { if (saved.reduced) return; const layer = $('sparkles'); layer.replaceChildren(); for (let i = 0; i < 16; i++) { const p = document.createElement('i'); p.style.cssText = `--dx:${Math.cos(i * 2.4) * 120}px;--dy:${Math.sin(i * 2.4) * 100}px;--r:${i * 47}deg`; layer.append(p); } }
-function send(input) { if (busy || screen !== 'play') return; S.step(state, input); render(); const event = state.events[0]; if (event?.type === 'match') { tone(); burst(); } if (event?.type === 'mismatch') tell('Different faces. Try another pair.'); if (event?.type === 'blocked') tell('That tile needs an open side and nothing on top.'); if (S.status(state) !== 'playing') finish(); }
+function send(input) { if (busy || screen !== 'play') return; S.step(state, input); render(); const event = state.events[0]; if (event?.type === 'match') { tone(); burst(); } if (event?.type === 'mismatch') tell(state.objective === 'streak' ? 'Different faces. Run reset to zero. Your cleared pairs stay cleared.' : 'Different faces. Try another pair.'); if (event?.type === 'blocked') tell('That tile needs an open side and nothing on top.'); if (S.status(state) !== 'playing') finish(); }
 async function finish() {
   const won = S.status(state) === 'won', l = LEVELS[index];
   if (won) { if (!saved.cleared.includes(l.id)) saved.cleared.push(l.id); save(); tone(true); }
   const finale = l.id % 10 === 0, next = LEVELS[index + 1];
   $('resultKicker').textContent = won ? finale ? `${chapterReward(l).toUpperCase()} EARNED` : chapterName(l).toUpperCase() : 'A DIFFERENT ROUTE NEXT TIME';
-  $('resultTitle').textContent = won ? finale ? 'Chapter complete!' : l.objective === 'gold' ? 'All gold found!' : 'Beautifully paired.' : 'Stack stopped.';
-  $('resultDetail').textContent = won ? `${l.name} complete.${l.objective === 'gold' ? ' Every gold tile is cleared. Plain tiles can stay.' : ''}` : ({ stuck: 'No matching free pairs remain.', turns: 'You have used every try.', mistakes: 'Too many wrong pairs this time.' }[S.cause(state)]);
-  $('resultStats').textContent = `${state.pairsCleared} pairs cleared / ${state.turns} tries / ${state.mistakes} wrong pairs`;
-  $('resultNext').textContent = won ? next ? `${finale ? `Chapter ${next.chapter} unlocked: ${chapterName(next)}! ` : ''}Next: ${next.name}. ${next.goal}.` : 'All 30 stops cleared. Three chapter rewards are yours. Return tomorrow for a fresh deal. More chapters are not available yet.' : 'Every new deal has a clearing route. Look for pairs that free the tiles below.';
+  $('resultTitle').textContent = won ? finale ? 'Chapter complete!' : l.objective === 'streak' ? 'What a run!' : l.objective === 'gold' ? 'All gold found!' : 'Beautifully paired.' : 'Stack stopped.';
+  $('resultDetail').textContent = won ? `${l.name} complete.${l.objective === 'gold' ? ' Every gold tile is cleared. Plain tiles can stay.' : ''}` : ({ stuck: 'No matching free pairs remain.', turns: 'You have used every try.', mistakes: 'Too many wrong pairs this time.', streak: 'The stack is clear, but your run fell short. Match the required pairs in a row to win.' }[S.cause(state)]);
+  $('resultStats').textContent = `${state.pairsCleared} pairs cleared / ${state.turns} tries / ${state.mistakes} wrong pairs${l.objective === 'streak' ? ` / best run ${state.bestStreak} of ${l.limit}` : ''}`;
+  $('resultNext').textContent = won ? next ? `${finale ? `Chapter ${next.chapter} unlocked: ${chapterName(next)}! ` : ''}Next: ${next.name}. ${next.goal}.` : 'All 40 stops cleared. Four chapter rewards are yours. Return tomorrow for a fresh deal. More chapters are not available yet.' : 'Every new deal has a clearing route. Look for pairs that free the tiles below.';
   $('unlockCard').hidden = !(won && finale);
   $('unlockCard').dataset.chapter = next && finale ? next.chapter : l.chapter;
-  $('unlockCard').innerHTML = `<span class="eyebrow">${next ? 'NEW COUNTRY TO EXPLORE' : 'CHAPTER REWARD'}</span><h3>${next ? chapterName(next) : chapterReward(l)}</h3><p>${next ? next.chapter === 2 ? 'Ten new stops. Find the gold-marked pairs, with starting hints to help you.' : 'Ten rain-soaked stops. Meet your goal while watching wrong pairs and tries. Your Thunderhead Crest awaits.' : 'From Fresh Tracks to Thunderhead. The Wet Season is complete and all three chapters are yours to replay.'}</p>`;
-  $('next').hidden = !won; $('next').textContent = next ? finale ? `Enter ${chapterName(next)}` : 'On to the next stop' : 'Explore all three chapters';
+  $('unlockCard').innerHTML = `<span class="eyebrow">${next ? 'NEW COUNTRY TO EXPLORE' : 'CHAPTER REWARD'}</span><h3>${next ? chapterName(next) : chapterReward(l)}</h3><p>${next ? next.chapter === 2 ? 'Ten new stops. Find the gold-marked pairs, with starting hints to help you.' : next.chapter === 4 ? 'Ten stops beneath the evening sky. Match pairs in a row, without a wrong pair breaking your run. Earn your Southern Cross.' : 'Ten rain-soaked stops. Meet your goal while watching wrong pairs and tries. Your Thunderhead Crest awaits.' : 'From Hot Run to Southern Cross. The Long Paddock is complete and all four chapters are yours to replay.'}</p>`;
+  $('next').hidden = !won; $('next').textContent = next ? finale ? `Enter ${chapterName(next)}` : 'On to the next stop' : 'Explore all four chapters';
   $('rescue').hidden = won || S.cause(state) !== 'stuck' || !rewardAvailable();
   $('medal').textContent = won ? finale ? '\u265b' : '\u2726' : '\u21bb';
   $('result').classList.toggle('finale', won && finale);

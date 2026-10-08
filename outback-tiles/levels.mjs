@@ -100,4 +100,43 @@ export const LEVELS = [
     goal: 'Clear the storm in 31 tries with 2 wrong pairs at most',
     faces: 12, hints: 0, shuffles: 2, undos: 2,
     layers: [L(10, 4, 0, 0, [[0, 0], [9, 0], [0, 3], [9, 3]]), L(6, 3, 2, 1), L(4, 1, 3, 2)] },
+
+  // Chapter 4, "The Long Paddock", is LEVELS[30..39]. New: the streak objective, pairs
+  // cleared in a row with no wrong pair between them (a slip resets the run).
+  // 31 to 32: a first streak, then a longer one with room to slip
+  { id: 31, chapter: 4, name: 'Hot Run', objective: 'streak', limit: 5, goal: 'Clear 5 pairs in a row',
+    faces: 6, hints: 2, shuffles: 3, undos: 4, layers: [L(6, 2), L(4, 1, 2, 1)] },
+  { id: 32, chapter: 4, name: 'Bore Hole', objective: 'streak', limit: 7, maxMistakes: 4,
+    goal: 'Clear 7 pairs in a row with 4 wrong pairs at most',
+    faces: 8, hints: 2, shuffles: 3, undos: 4, layers: [L(8, 2), L(4, 2, 2)] },
+  // 33 to 35: a streak against the clock of tries, a clean sweep, then a long run
+  { id: 33, chapter: 4, name: 'Cattle Grid', objective: 'streak', limit: 8, maxTurns: 20,
+    goal: 'Clear 8 pairs in a row within 20 tries',
+    faces: 9, hints: 1, shuffles: 2, undos: 3,
+    layers: [L(7, 4, 0, 0, [[3, 1], [3, 2]]), L(2, 1, 2, 3)] },
+  { id: 34, chapter: 4, name: 'Ghost Gum', objective: 'clear', limit: 0, maxMistakes: 1, maxTurns: 18,
+    goal: 'Clear the stack in 18 tries with 1 wrong pair at most',
+    faces: 9, hints: 1, shuffles: 2, undos: 3, layers: [L(9, 2), L(5, 2, 2, 1)] },
+  { id: 35, chapter: 4, name: 'Long Paddock', objective: 'streak', limit: 10, maxMistakes: 3,
+    goal: 'Clear 10 pairs in a row with 3 wrong pairs at most',
+    faces: 10, hints: 1, shuffles: 2, undos: 3, layers: [L(12, 2), L(6, 2, 3, 1)] },
+  // 36 to 38: gold and a target with tight caps, then a big streak
+  { id: 36, chapter: 4, name: 'Roo Crossing', objective: 'gold', gold: 3, limit: 0, maxMistakes: 1, maxTurns: 15,
+    goal: 'Clear every gold tile in 15 tries with 1 wrong pair at most',
+    faces: 10, hints: 1, shuffles: 2, undos: 3,
+    layers: [L(8, 3, 0, 0, [[0, 1], [7, 1]]), L(4, 2, 2, 1)] },
+  { id: 37, chapter: 4, name: 'Wool Shed', objective: 'target', limit: 16, maxMistakes: 1,
+    goal: 'Clear 16 pairs with 1 wrong pair at most',
+    faces: 11, hints: 0, shuffles: 2, undos: 2, layers: [L(10, 3), L(6, 2, 2, 1)] },
+  { id: 38, chapter: 4, name: 'Dust Devil', objective: 'streak', limit: 12, maxMistakes: 2,
+    goal: 'Clear 12 pairs in a row with 2 wrong pairs at most',
+    faces: 11, hints: 0, shuffles: 2, undos: 2, layers: [L(8, 4), L(6, 2, 1, 2), L(2, 2, 3, 1)] },
+  // 39: preparation challenge, a tight count of tries on a deep stack
+  { id: 39, chapter: 4, name: 'Cane Fire', objective: 'turns', limit: 30, maxMistakes: 1,
+    goal: 'Clear the stack in 30 tries with 1 wrong pair at most',
+    faces: 12, hints: 0, shuffles: 2, undos: 2, layers: [L(10, 2), L(8, 2, 2), L(6, 2, 4)] },
+  // 40: finale, a long streak with almost no room to slip
+  { id: 40, chapter: 4, name: 'Southern Cross', objective: 'streak', limit: 20, maxMistakes: 2, maxTurns: 40,
+    goal: 'Clear 20 pairs in a row within 40 tries with 2 wrong pairs at most',
+    faces: 12, hints: 0, shuffles: 2, undos: 2, layers: [L(12, 3), L(8, 2, 2, 1), L(4, 2, 4, 1)] },
 ];

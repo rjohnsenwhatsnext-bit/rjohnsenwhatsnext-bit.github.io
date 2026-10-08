@@ -36,6 +36,15 @@
 //                      state.maxTurns holds it, or null.
 //   A win always beats a cap: the winning pair is never counted against you.
 //
+// Chapter 4 additions (optional, earlier levels are unchanged):
+//   objective 'streak' the level is won the moment `limit` pairs have been cleared
+//                      in a row with no wrong pair between them. A wrong pair resets
+//                      the streak to 0 (the pairs already cleared stay cleared). Undo
+//                      leaves the streak alone. state.streak is the current run,
+//                      state.bestStreak the longest run this game. If the board is
+//                      cleared before the streak is reached the run is lost with
+//                      cause 'streak'.
+//
 // Every deal is built by removing free pairs from the full layout one at a time
 // and giving each pair one face, so the layout can always be cleared in that
 // order. A shuffle deals the tiles left the same way, so it stays winnable.
@@ -139,7 +148,7 @@ export function newGame(level, seed = 1) {
     objective: level.objective, limit: level.limit || 0, faces: level.faces,
     tiles, picked: null, hint: null, history: [],
     pairsTotal: tiles.length / 2, pairsLeft: tiles.length / 2, pairsCleared: 0,
-    turns: 0, mistakes: 0, tick: 0,
+    turns: 0, mistakes: 0, tick: 0, streak: 0, bestStreak: 0,
     undosLeft: level.undos ?? 0, shufflesLeft: level.shuffles ?? 0, hintsLeft: level.hints ?? 0,
     gold: level.gold ?? 0,
     maxMistakes: level.maxMistakes ?? null, maxTurns: level.maxTurns ?? null,
@@ -156,6 +165,7 @@ export function cause(s) {
   if (s.objective === 'turns' && s.turns >= s.limit) return 'turns';
   if (s.maxMistakes !== null && s.mistakes > s.maxMistakes) return 'mistakes';
   if (s.maxTurns !== null && s.turns >= s.maxTurns) return 'turns';
+  if (s.objective === 'streak' && s.pairsLeft === 0) return 'streak';
   if (matchesAvailable(s) === 0 && s.shufflesLeft === 0) return 'stuck';
   return null;
 }
@@ -165,6 +175,7 @@ export const goldLeft = (s) => s.tiles.filter((t) => t.alive && t.face < s.gold)
 const isWon = (s) => {
   if (s.objective === 'target') return s.pairsCleared >= s.limit;
   if (s.objective === 'gold') return goldLeft(s) === 0;
+  if (s.objective === 'streak') return s.bestStreak >= s.limit;
   return s.pairsLeft === 0;
 };
 
@@ -187,9 +198,12 @@ function pick(s, id) {
     s.history.push([a, id]);
     s.pairsCleared++;
     s.pairsLeft--;
+    s.streak++;
+    if (s.streak > s.bestStreak) s.bestStreak = s.streak;
     s.events.push({ type: 'match', a, b: id, face: t.face });
   } else {
     s.mistakes++;
+    s.streak = 0;
     s.events.push({ type: 'mismatch', a, b: id });
   }
 }
