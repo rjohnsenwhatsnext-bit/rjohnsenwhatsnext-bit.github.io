@@ -1,6 +1,6 @@
 // Chapter 1: Loose Ends. LEVELS[0..9]. Each board is built in reverse from its own seed, so it always clears.
 // lives / maxTaps null means no limit. A blocked tap costs a life and counts as a tap.
-export const CHAPTERS = [{ id: 1, name: 'Loose Ends' }];
+export const CHAPTERS = [{ id: 1, name: 'Loose Ends' }, { id: 2, name: 'Rocks and Ice' }];
 
 export const LEVELS = [
   { id: 1, chapter: 1, name: 'First Slide', objective: 'Tap each line to slide it out', w: 4, h: 4, count: 3, minLen: 2, maxLen: 3, seed: 101, lives: null, maxTaps: null },
@@ -13,4 +13,16 @@ export const LEVELS = [
   { id: 8, chapter: 1, name: 'Tap Budget', objective: 'Clear within 16 taps', w: 7, h: 8, count: 14, minLen: 2, maxLen: 5, seed: 808, lives: 4, maxTaps: 16 },
   { id: 9, chapter: 1, name: 'No Slips', objective: 'Clear a dense board with 1 life, so plan every tap', w: 7, h: 9, count: 18, minLen: 2, maxLen: 5, seed: 909, lives: 1, maxTaps: null },
   { id: 10, chapter: 1, name: 'Big Untangle', objective: 'Finale: clear the biggest board within 26 taps and 2 lives', w: 8, h: 9, count: 22, minLen: 2, maxLen: 6, seed: 1010, lives: 2, maxTaps: 26 },
+  // Chapter 2: Rocks and Ice. LEVELS[10..19]. New rules: rocks (never move, always block), frozen lines
+  // (first tap thaws, second slides), timeLimit (ticks, 60 a second). See the top of sim.mjs.
+  { id: 11, chapter: 2, name: 'Rock Garden', objective: 'Rocks never move. Slide the lines that miss them', w: 5, h: 6, count: 5, minLen: 2, maxLen: 3, rocks: 2, seed: 1111, lives: null, maxTaps: null },
+  { id: 12, chapter: 2, name: 'Stonewalled', objective: 'Clear a board scattered with rocks', w: 6, h: 6, count: 7, minLen: 2, maxLen: 4, rocks: 5, seed: 1212, lives: null, maxTaps: null },
+  { id: 13, chapter: 2, name: 'First Frost', objective: 'Frozen lines need two taps: one to thaw, one to slide', w: 5, h: 6, count: 6, minLen: 2, maxLen: 3, frozen: 2, seed: 1313, lives: null, maxTaps: null },
+  { id: 14, chapter: 2, name: 'Deep Freeze', objective: 'Thaw and clear a board of ice with 4 lives', w: 6, h: 7, count: 9, minLen: 2, maxLen: 4, frozen: 5, seed: 1414, lives: 4, maxTaps: null },
+  { id: 15, chapter: 2, name: 'Frozen Ground', objective: 'Rocks and ice together, 3 lives', w: 6, h: 7, count: 9, minLen: 2, maxLen: 4, rocks: 4, frozen: 3, seed: 1515, lives: 3, maxTaps: null },
+  { id: 16, chapter: 2, name: 'Quarry Run', objective: 'Wind through a rocky quarry with 3 lives', w: 7, h: 7, count: 12, minLen: 2, maxLen: 4, rocks: 6, seed: 1616, lives: 3, maxTaps: null },
+  { id: 17, chapter: 2, name: 'Cold Snap', objective: 'Clear icy lines within 17 taps, thawing included', w: 7, h: 7, count: 11, minLen: 2, maxLen: 4, frozen: 5, seed: 1717, lives: 3, maxTaps: 17 },
+  { id: 18, chapter: 2, name: 'Beat the Clock', objective: 'Clear the rocky board in 30 seconds', w: 6, h: 7, count: 10, minLen: 2, maxLen: 4, rocks: 3, timeLimit: 1800, seed: 1818, lives: null, maxTaps: null },
+  { id: 19, chapter: 2, name: 'Thaw Plan', objective: 'Plan the thaws: rocks and ice within 21 taps and 3 lives', w: 7, h: 8, count: 14, minLen: 2, maxLen: 4, rocks: 5, frozen: 5, seed: 1919, lives: 3, maxTaps: 21 },
+  { id: 20, chapter: 2, name: 'Glacier Pass', objective: 'Finale: rocks, ice and a clock. 27 taps, 2 lives, 50 seconds', w: 8, h: 9, count: 18, minLen: 2, maxLen: 5, rocks: 8, frozen: 7, timeLimit: 3000, seed: 2020, lives: 2, maxTaps: 27 },
 ];

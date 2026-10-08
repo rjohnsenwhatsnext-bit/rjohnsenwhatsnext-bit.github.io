@@ -14,6 +14,20 @@
 // its last segment goes (a single cell line points where level data says, from the generator).
 // Boards are built in reverse: each new line is only placed if its path out is clear of
 // every line already placed, so clearing lines in the reverse order always works.
+//
+// Chapter 2 mechanics (all optional level fields, absent means off):
+//   rocks: N        N fixed rocks (state.rocks = [[x, y]], state.rockAt[y * w + x]). A rock is never
+//                   cleared and blocks any line whose path crosses it. Boards are still built so every
+//                   line's path avoids the rocks. A tap on a rock does nothing. blockedBy(state, line)
+//                   returns {line, rock} for what is in the way (line id or -1, rock [x, y] or null),
+//                   or null when clear. blockerOf still reports only the nearest line.
+//                   A blocked tap sets state.flash = {line, blocker, rock, ttl}: rock is the [x, y] of
+//                   the rock when a rock is nearer than any line (blocker is then -1), otherwise null.
+//   frozen: N       N lines start frozen (line.frozen = true). The first tap on a frozen line whose path
+//                   is clear thaws it: it counts as a tap, costs no life, sets state.thawed to its id,
+//                   and the line stays put. The next tap slides it out. A frozen line that is blocked
+//                   flashes as a normal blocked tap. Undo does not refreeze a line.
+//   timeLimit: T    ticks (60 per second) before the level is lost, counted from the first tick.
 
 export const TICK = 1 / 60;
 export const FLASH_TICKS = 50;
@@ -48,12 +62,38 @@ export function blockerOf(state, line) {
   return -1;
 }
 
-export function generate(level, seed) {
+// Rock cells for a level, from their own random stream so lines are unaffected when rocks are 0.
+export function placeRocks(level, seed) {
+  const { w, h, rocks = 0 } = level;
+  const rand = rng((seed ^ 0x9e3779b9) >>> 0);
+  const out = [];
+  const seen = new Set();
+  for (let attempt = 0; attempt < rocks * 40 && out.length < rocks; attempt++) {
+    const x = Math.floor(rand() * w), y = Math.floor(rand() * h);
+    if (seen.has(y * w + x)) continue;
+    seen.add(y * w + x);
+    out.push([x, y]);
+  }
+  return out;
+}
+
+// What is in the way of a line: {line, rock} or null when its path is clear.
+export function blockedBy(state, line) {
+  for (const [x, y] of ray(state, line)) {
+    const i = y * state.w + x;
+    if (state.rockAt && state.rockAt[i]) return { line: -1, rock: [x, y] };
+    if (state.grid[i] !== -1) return { line: state.grid[i], rock: null };
+  }
+  return null;
+}
+
+export function generate(level, seed, rocks = []) {
   const { w, h, count, minLen = 2, maxLen = 5 } = level;
   const rand = rng(seed);
   const grid = new Array(w * h).fill(-1);
+  const rockSet = new Set(rocks.map(([x, y]) => y * w + x));
   const lines = [];
-  const free = (x, y) => x >= 0 && y >= 0 && x < w && y < h && grid[y * w + x] === -1;
+  const free = (x, y) => x >= 0 && y >= 0 && x < w && y < h && grid[y * w + x] === -1 && !rockSet.has(y * w + x);
   for (let attempt = 0; attempt < count * 80 && lines.length < count; attempt++) {
     const sx = Math.floor(rand() * w), sy = Math.floor(rand() * h);
     if (!free(sx, sy)) continue;
@@ -75,7 +115,7 @@ export function generate(level, seed) {
     if (cells.length < minLen) continue;
     const line = { id: lines.length, cells, dir, out: false };
     // The path out must be clear of every placed line and of this line's own body.
-    const clear = ray({ w, h }, line).every(([x, y]) => grid[y * w + x] === -1 && !taken.has(y * w + x));
+    const clear = ray({ w, h }, line).every(([x, y]) => grid[y * w + x] === -1 && !rockSet.has(y * w + x) && !taken.has(y * w + x));
     if (!clear) continue;
     for (const [x, y] of cells) grid[y * w + x] = line.id;
     lines.push(line);
@@ -85,24 +125,37 @@ export function generate(level, seed) {
 
 // level: {w, h, count, minLen, maxLen, seed, lives (null = unlimited), maxTaps (null = unlimited)}
 export function newGame(level, seed = 0) {
-  const lines = generate(level, (level.seed + seed * 7919) >>> 0);
+  const lineSeed = (level.seed + seed * 7919) >>> 0;
+  const rocks = placeRocks(level, lineSeed);
+  const lines = generate(level, lineSeed, rocks);
   const grid = new Array(level.w * level.h).fill(-1);
   for (const l of lines) for (const [x, y] of l.cells) grid[y * level.w + x] = l.id;
+  const rockAt = new Array(level.w * level.h).fill(false);
+  for (const [x, y] of rocks) rockAt[y * level.w + x] = true;
+  // Frozen lines are picked from their own random stream.
+  const frand = rng((lineSeed ^ 0x85ebca6b) >>> 0);
+  let toFreeze = Math.min(level.frozen ?? 0, lines.length);
+  for (let guard = 0; toFreeze > 0 && guard < lines.length * 40; guard++) {
+    const l = lines[Math.floor(frand() * lines.length)];
+    if (!l.frozen) { l.frozen = true; toFreeze--; }
+  }
   return {
     w: level.w, h: level.h, grid, lines, tick: 0,
-    lives: level.lives ?? null, maxTaps: level.maxTaps ?? null,
+    lives: level.lives ?? null, maxTaps: level.maxTaps ?? null, timeLimit: level.timeLimit ?? null,
+    rocks, rockAt, thawed: null,
     taps: 0, cleared: [], flash: null, hint: null, hintsUsed: 0, mistakes: 0,
   };
 }
 
 export function freeLines(state) {
-  return state.lines.filter((l) => !l.out && blockerOf(state, l) === -1);
+  return state.lines.filter((l) => !l.out && blockedBy(state, l) === null);
 }
 
 export function status(state) {
   if (state.lines.every((l) => l.out)) return 'won';
   if (state.lives !== null && state.lives <= 0) return 'lost';
   if (state.maxTaps !== null && state.taps >= state.maxTaps) return 'lost';
+  if (state.timeLimit != null && state.tick >= state.timeLimit) return 'lost';
   return 'playing';
 }
 
@@ -129,8 +182,12 @@ export function step(state, input) {
     if (id === -1) return state;
     const line = state.lines[id];
     state.taps++;
-    const by = blockerOf(state, line);
-    if (by === -1) {
+    const by = blockedBy(state, line);
+    if (by === null && line.frozen) {
+      line.frozen = false;
+      state.thawed = id;
+      state.hint = null;
+    } else if (by === null) {
       line.out = true;
       setLine(state, line, -1);
       state.cleared.push(id);
@@ -139,7 +196,7 @@ export function step(state, input) {
     } else {
       state.mistakes++;
       if (state.lives !== null) state.lives--;
-      state.flash = { line: id, blocker: by, ttl: FLASH_TICKS };
+      state.flash = { line: id, blocker: by.line, rock: by.rock, ttl: FLASH_TICKS };
     }
   }
   return state;
