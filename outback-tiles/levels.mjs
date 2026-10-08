@@ -58,4 +58,46 @@ export const LEVELS = [
   // 20: finale
   { id: 20, chapter: 2, name: 'Uluru Gold', objective: 'gold', gold: 6, limit: 0, goal: 'Clear every gold tile',
     faces: 12, hints: 1, shuffles: 2, undos: 2, layers: [L(12, 2), L(10, 2, 2, 1), L(8, 2, 4, 1)] },
+
+  // Chapter 3, "The Wet Season", is LEVELS[20..29]. New: maxMistakes and maxTurns caps
+  // that sit on top of any objective, so one goal can come with a second rule.
+  // 21 to 22: a cap on wrong pairs, first with gold, then with a pair target
+  { id: 21, chapter: 3, name: 'Fresh Tracks', objective: 'gold', gold: 2, limit: 0, maxMistakes: 3,
+    goal: 'Clear every gold tile with 3 wrong pairs at most',
+    faces: 7, hints: 2, shuffles: 3, undos: 4, layers: [L(6, 3), L(2, 3, 4)] },
+  { id: 22, chapter: 3, name: 'Mulga Rows', objective: 'target', limit: 10, maxMistakes: 3,
+    goal: 'Clear 10 pairs with 3 wrong pairs at most',
+    faces: 8, hints: 1, shuffles: 3, undos: 4, layers: [L(8, 3), L(4, 1, 2, 2)] },
+  // 23 to 25: tries plus wrong pairs, a tiered mound, then a wide target
+  { id: 23, chapter: 3, name: 'Tight Corner', objective: 'turns', limit: 18, maxMistakes: 2,
+    goal: 'Clear the stack in 18 tries with 2 wrong pairs at most',
+    faces: 9, hints: 1, shuffles: 2, undos: 3,
+    layers: [L(7, 4, 0, 0, [[0, 0], [6, 0], [0, 3], [6, 3]]), L(3, 2, 2, 2)] },
+  { id: 24, chapter: 3, name: 'Termite Mound', objective: 'gold', gold: 3, limit: 0, maxMistakes: 2,
+    goal: 'Clear every gold tile with 2 wrong pairs at most',
+    faces: 9, hints: 1, shuffles: 2, undos: 3, layers: [L(8, 2), L(6, 2, 1), L(2, 1, 3, 1)] },
+  { id: 25, chapter: 3, name: 'Wet Season', objective: 'target', limit: 14, maxMistakes: 2,
+    goal: 'Clear 14 pairs with 2 wrong pairs at most',
+    faces: 10, hints: 0, shuffles: 2, undos: 3,
+    layers: [L(10, 3, 0, 0, [[0, 0], [9, 0], [0, 2], [9, 2]]), L(6, 2, 2, 1)] },
+  // 26 to 28: all three caps meet gold, tries and a short target
+  { id: 26, chapter: 3, name: 'Creek Crossing', objective: 'gold', gold: 4, limit: 0, maxMistakes: 2,
+    goal: 'Clear every gold tile with 2 wrong pairs at most',
+    faces: 10, hints: 1, shuffles: 2, undos: 3, layers: [L(6, 5, 0, 0, [[2, 2], [3, 2]]), L(4, 1, 2, 3)] },
+  { id: 27, chapter: 3, name: 'Dingo Gap', objective: 'turns', limit: 22, maxMistakes: 1,
+    goal: 'Clear the stack in 22 tries with 1 wrong pair at most',
+    faces: 10, hints: 1, shuffles: 2, undos: 2, layers: [L(9, 2), L(7, 2, 1), L(3, 2, 3)] },
+  { id: 28, chapter: 3, name: 'Quiet Billabong', objective: 'target', limit: 12, maxTurns: 14,
+    goal: 'Clear 12 pairs in 14 tries',
+    faces: 10, hints: 0, shuffles: 2, undos: 2,
+    layers: [L(8, 4, 0, 0, [[3, 1], [4, 1], [3, 2], [4, 2]]), L(4, 2, 2, 1)] },
+  // 29: preparation challenge, gold with a single slip allowed
+  { id: 29, chapter: 3, name: 'Stringybark Stand', objective: 'gold', gold: 5, limit: 0, maxMistakes: 1,
+    goal: 'Clear every gold tile with 1 wrong pair at most',
+    faces: 11, hints: 0, shuffles: 2, undos: 2, layers: [L(10, 3), L(8, 2, 2, 1), L(6, 1, 3, 2)] },
+  // 30: finale, clear everything with almost no room to slip
+  { id: 30, chapter: 3, name: 'Thunderhead', objective: 'clear', limit: 0, maxMistakes: 2, maxTurns: 31,
+    goal: 'Clear the storm in 31 tries with 2 wrong pairs at most',
+    faces: 12, hints: 0, shuffles: 2, undos: 2,
+    layers: [L(10, 4, 0, 0, [[0, 0], [9, 0], [0, 3], [9, 3]]), L(6, 3, 2, 1), L(4, 1, 3, 2)] },
 ];

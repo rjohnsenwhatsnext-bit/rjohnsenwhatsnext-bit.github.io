@@ -13,7 +13,8 @@ try {
 } catch { storageWarning(); }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch { storageWarning(); } }
 let screen = 'home', settingsFrom = 'home', state = null, index = 0, busy = false, audio, toastTimer;
-const chapterName = l => l.chapter === 2 ? 'The Red Centre' : 'The Bush Track';
+const chapterName = l => ['The Bush Track', 'The Red Centre', 'The Wet Season'][l.chapter - 1];
+const chapterReward = l => ['Boab Crown', 'Red Centre Gold', 'Thunderhead Crest'][l.chapter - 1];
 function theme(l) { document.body.dataset.chapter = l.chapter; }
 const names = ['Gum leaf', 'Wattle', 'Waratah', 'Sun', 'Waterhole', 'Boomerang', 'Mountain', 'Grass tree', 'Seed pod', 'Southern stars', 'Banksia', 'Boab'];
 const drawings = [
@@ -54,7 +55,7 @@ function menu() {
   $('journeyName').textContent = chapterName(next);
   const rewards = $('earnedRewards');
   rewards.replaceChildren();
-  for (const [id, title] of [[10, 'Boab Crown'], [20, 'Red Centre Gold']]) {
+  for (const [id, title] of [[10, 'Boab Crown'], [20, 'Red Centre Gold'], [30, 'Thunderhead Crest']]) {
     if (!saved.cleared.includes(id)) continue;
     const badge = document.createElement('span');
     badge.className = 'earned-reward';
@@ -62,14 +63,14 @@ function menu() {
     rewards.append(badge);
   }
   rewards.hidden = !rewards.childElementCount;
-  $('nextGoal').textContent = count === LEVELS.length ? 'Boab Crown and Red Centre Gold earned. Both chapters are yours to replay.' : `Next: ${next.name}. ${next.goal}.`;
-  $('continue').textContent = state && S.status(state) === 'playing' ? 'Resume your stack' : count === LEVELS.length ? 'Return to Uluru Gold' : `Play level ${next.id}`;
+  $('nextGoal').textContent = count === LEVELS.length ? 'All three chapter rewards earned. Your whole trail is yours to replay.' : `Next: ${next.name}. ${next.goal}.`;
+  $('continue').textContent = state && S.status(state) === 'playing' ? 'Resume your stack' : count === LEVELS.length ? 'Return to Thunderhead' : `Play level ${next.id}`;
   $('levelList').replaceChildren();
-  for (const chapter of [1, 2]) {
+  for (const chapter of [...new Set(LEVELS.map(l => l.chapter))]) {
     const levels = LEVELS.filter(l => l.chapter === chapter), complete = levels.filter(l => saved.cleared.includes(l.id)).length;
     const group = document.createElement('section'); group.className = `chapter chapter-${chapter}`;
     const open = unlocked(LEVELS.indexOf(levels[0]));
-    group.innerHTML = `<div class="chapter-landscape" aria-hidden="true"></div><p class="eyebrow">CHAPTER ${chapter} / ${complete} OF ${levels.length} CLEARED</p><h3>${chapterName(levels[0])}</h3><p class="chapter-description">${chapter === 1 ? 'Follow the trail to earn your Boab Crown.' : open ? 'Gold in the red earth. Earn your Red Centre Gold.' : 'Clear Boab Crown, level 10, to unlock the red earth.'}</p>`;
+    group.innerHTML = `<div class="chapter-landscape" aria-hidden="true"></div><p class="eyebrow">CHAPTER ${chapter} / ${complete} OF ${levels.length} CLEARED</p><h3>${chapterName(levels[0])}</h3><p class="chapter-description">${chapter === 1 ? 'Follow the trail to earn your Boab Crown.' : chapter === 2 ? open ? 'Gold in the red earth. Earn your Red Centre Gold.' : 'Clear Boab Crown, level 10, to unlock the red earth.' : open ? 'Rain over the billabong. Balance your goal with limited wrong pairs and tries to earn the Thunderhead Crest.' : 'Clear Uluru Gold, level 20, to unlock The Wet Season.'}</p>`;
     for (const l of levels) {
       const i = LEVELS.indexOf(l), cleared = saved.cleared.includes(l.id), b = document.createElement('button');
       b.className = 'level'; b.disabled = !unlocked(i);
@@ -94,6 +95,15 @@ function render() {
   $('left').textContent = state.pairsLeft; $('available').textContent = pairs; $('availableBox').classList.toggle('warning', pairs <= 1);
   $('objectiveCount').textContent = l.objective === 'gold' ? S.goldLeft(state) : l.objective === 'turns' ? Math.max(0, l.limit - state.turns) : l.objective === 'mistakes' ? `${state.mistakes}/${l.limit}` : state.pairsCleared;
   $('objectiveLabel').textContent = l.objective === 'gold' ? 'GOLD TILES LEFT' : l.objective === 'turns' ? 'TRIES LEFT' : l.objective === 'mistakes' ? 'WRONG PAIRS' : 'CLEARED';
+  const caps = [];
+  if (state.maxMistakes != null) caps.push({ label: 'Wrong pairs left', left: Math.max(0, state.maxMistakes - state.mistakes) });
+  if (state.maxTurns != null) caps.push({ label: 'Tries left', left: Math.max(0, state.maxTurns - state.turns) });
+  $('limits').hidden = !caps.length;
+  $('limits').innerHTML = caps.map(cap => `<span class="${cap.left <= 1 ? 'tight' : ''}">${cap.label} <b>${cap.left}</b></span>`).join('');
+  $('chapterGuide').hidden = l.chapter !== 3;
+  $('chapterGuide').textContent = state.maxMistakes != null && state.maxMistakes === state.mistakes
+    ? 'No wrong pairs left. Your next wrong pair ends this stack.'
+    : 'Meet the goal within every limit. Undo does not refund tries or wrong pairs.';
   $('guidance').textContent = pairs === 0 ? 'No free pairs. Shuffle to open a new route.' : pairs === 1 ? 'One free pair left. Look at what it will uncover.' : l.objective === 'gold' ? 'Match identical gold-marked faces. Plain tiles can stay; clear them to reach gold.' : index < 3 ? 'Free means nothing on top and one side open.' : 'Choose a pair that opens up the stack.';
   const space = $('boardSpace'), board = $('board');
   const maxX = Math.max(...state.tiles.map(t => t.x + 2)), maxY = Math.max(...state.tiles.map(t => t.y + 2)), maxZ = Math.max(...state.tiles.map(t => t.z));
@@ -111,14 +121,15 @@ async function finish() {
   const won = S.status(state) === 'won', l = LEVELS[index];
   if (won) { if (!saved.cleared.includes(l.id)) saved.cleared.push(l.id); save(); tone(true); }
   const finale = l.id % 10 === 0, next = LEVELS[index + 1];
-  $('resultKicker').textContent = won ? finale ? l.chapter === 1 ? 'BOAB CROWN EARNED' : 'RED CENTRE GOLD EARNED' : chapterName(l).toUpperCase() : 'A DIFFERENT ROUTE NEXT TIME';
+  $('resultKicker').textContent = won ? finale ? `${chapterReward(l).toUpperCase()} EARNED` : chapterName(l).toUpperCase() : 'A DIFFERENT ROUTE NEXT TIME';
   $('resultTitle').textContent = won ? finale ? 'Chapter complete!' : l.objective === 'gold' ? 'All gold found!' : 'Beautifully paired.' : 'Stack stopped.';
   $('resultDetail').textContent = won ? `${l.name} complete.${l.objective === 'gold' ? ' Every gold tile is cleared. Plain tiles can stay.' : ''}` : ({ stuck: 'No matching free pairs remain.', turns: 'You have used every try.', mistakes: 'Too many wrong pairs this time.' }[S.cause(state)]);
   $('resultStats').textContent = `${state.pairsCleared} pairs cleared / ${state.turns} tries / ${state.mistakes} wrong pairs`;
-  $('resultNext').textContent = won ? next ? `${finale ? 'Chapter 2 unlocked: The Red Centre! ' : ''}Next: ${next.name}. ${next.goal}.` : 'All 20 stops cleared. Both chapter rewards are yours. Return tomorrow for a fresh deal. More chapters are not available yet.' : 'Every new deal has a clearing route. Look for pairs that free the tiles below.';
+  $('resultNext').textContent = won ? next ? `${finale ? `Chapter ${next.chapter} unlocked: ${chapterName(next)}! ` : ''}Next: ${next.name}. ${next.goal}.` : 'All 30 stops cleared. Three chapter rewards are yours. Return tomorrow for a fresh deal. More chapters are not available yet.' : 'Every new deal has a clearing route. Look for pairs that free the tiles below.';
   $('unlockCard').hidden = !(won && finale);
-  $('unlockCard').innerHTML = `<span class="eyebrow">${l.chapter === 1 ? 'NEW COUNTRY TO EXPLORE' : 'CHAPTER REWARD'}</span><h3>${l.chapter === 1 ? 'The Red Centre' : 'Red Centre Gold'}</h3><p>${l.chapter === 1 ? 'Ten new stops. Find the gold-marked pairs, with starting hints to help you.' : 'From First Nugget to Uluru Gold. Both chapters are yours to replay.'}</p>`;
-  $('next').hidden = !won; $('next').textContent = next ? finale ? 'Enter The Red Centre' : 'On to the next stop' : 'Explore both chapters';
+  $('unlockCard').dataset.chapter = next && finale ? next.chapter : l.chapter;
+  $('unlockCard').innerHTML = `<span class="eyebrow">${next ? 'NEW COUNTRY TO EXPLORE' : 'CHAPTER REWARD'}</span><h3>${next ? chapterName(next) : chapterReward(l)}</h3><p>${next ? next.chapter === 2 ? 'Ten new stops. Find the gold-marked pairs, with starting hints to help you.' : 'Ten rain-soaked stops. Meet your goal while watching wrong pairs and tries. Your Thunderhead Crest awaits.' : 'From Fresh Tracks to Thunderhead. The Wet Season is complete and all three chapters are yours to replay.'}</p>`;
+  $('next').hidden = !won; $('next').textContent = next ? finale ? `Enter ${chapterName(next)}` : 'On to the next stop' : 'Explore all three chapters';
   $('rescue').hidden = won || S.cause(state) !== 'stuck' || !rewardAvailable();
   $('medal').textContent = won ? finale ? '\u265b' : '\u2726' : '\u21bb';
   $('result').classList.toggle('finale', won && finale);

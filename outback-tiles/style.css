@@ -27,3 +27,20 @@ body[data-chapter="2"] .hud small{color:#ead5c2}
 #goldFaces{display:flex;gap:5px}.gold-example{position:relative;display:block;width:28px;height:33px;border:1px solid #ffde80;border-radius:5px;background:#f5d58d}.gold-example svg{width:100%;height:100%}.gold-example>span{position:absolute;right:0;top:0;font-size:8px;color:#674315}
 .chapter .next-level{border-color:var(--gold);box-shadow:inset 3px 0 var(--gold)}
 @media(max-height:700px){#goldGuide{margin-top:6px}.gold-example{width:24px;height:28px}}
+
+/* The Wet Season: storm clouds, paperbark silhouettes and a silver billabong. */
+body[data-chapter="3"]{--gold:#b9e5d5;background:radial-gradient(ellipse at 80% 0%,#7699ad55,transparent 55%),linear-gradient(165deg,#253952,#173f48 65%,#142e35)}
+body[data-chapter="3"]:before{opacity:.32;background:url('assets/wet-season.svg') center bottom/cover no-repeat}
+body[data-chapter="3"] p,body[data-chapter="3"] .hud small{color:#d2e5e3}
+body[data-chapter="3"] .card{background:#162e40d9;border-color:#a6d8d34d}
+body[data-chapter="3"] #boardSpace{background:radial-gradient(ellipse,#a0e0cf25,transparent 72%)}
+body[data-chapter="3"] #tools button{background:#315b66}
+.chapter-3{background:#203e4d}.chapter-3 .chapter-landscape{height:120px;background:url('assets/wet-season.svg') center 62%/cover}
+.chapter-3 .level{background:#2b515c}.chapter-3 .level small{color:#d2e5e3}
+#unlockCard[data-chapter="3"]{padding-top:120px;background:linear-gradient(0deg,#203e4d 0 45%,transparent 95%),url('assets/wet-season.svg') center 55%/cover;border-color:#a6d8d380}
+#limits{display:flex;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap;font-size:12px;font-variant-numeric:tabular-nums}
+#limits span{display:flex;align-items:center;gap:10px;padding:5px 12px;border:1px solid #a6d8d34d;border-radius:20px;background:#152c3a}
+#limits b{font-size:17px;color:#b9e5d5}#limits .tight{border-color:#ffd09a}#limits .tight b{color:#ffd09a}
+#chapterGuide{font-size:10px;text-align:center;line-height:1.35;margin:5px 4px 0}
+body[data-chapter="3"] .finale #medal{color:#b9e5d5;text-shadow:0 0 30px #8bdbcf66}
+@media(max-height:700px){#limits{margin-top:5px}#limits span{padding:3px 10px}body[data-chapter="3"] #boardSpace{margin:6px 0}body[data-chapter="3"] #guidance{font-size:11px;margin-bottom:4px}}

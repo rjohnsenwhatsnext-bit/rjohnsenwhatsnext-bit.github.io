@@ -1,0 +1,9 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 800" fill="none">
+<defs><linearGradient id="sky" x2="0" y2="800" gradientUnits="userSpaceOnUse"><stop stop-color="#202f4d"/><stop offset=".55" stop-color="#577e86"/><stop offset="1" stop-color="#122e34"/></linearGradient><linearGradient id="water" x2="0" y2="260"><stop stop-color="#79b8b3"/><stop offset="1" stop-color="#254c58"/></linearGradient></defs>
+<path fill="url(#sky)" d="M0 0h640v800H0z"/>
+<g fill="#c0d7d6" opacity=".15"><ellipse cx="120" cy="200" rx="210" ry="72"/><ellipse cx="470" cy="145" rx="220" ry="90"/><ellipse cx="330" cy="225" rx="180" ry="70"/></g>
+<path fill="#315e64" d="M0 450q110-100 210-32t200-25 230 8v399H0z"/><path fill="#203f46" d="M0 514q170-100 310 0t330-55v341H0z"/>
+<path fill="url(#water)" d="M360 480q-190 65-72 116t-100 78-40 126h390q-160-103-102-141t-75-74 50-105z"/>
+<g stroke="#bbdcd3" opacity=".35" stroke-linecap="round"><path d="M315 551h88m-102 12h57m-77 98h106m-161 67h172m-93 20h140"/><path d="m65 295-15 40m120-66-15 40m120-15-15 40m120-72-15 40m120 4-15 40m120-69-15 40"/></g>
+<g fill="#122f33"><path d="M0 800V610l28-86-8 108 44-71-30 131 58-59-40 167zm640 0V547l-26-80 8 147-58-62 45 127-71-49 34 170z"/><path d="m74 503 17-141 9 1-8 140zm466-43-18-154 11-2 22 160z"/><ellipse cx="90" cy="365" rx="71" ry="31"/><ellipse cx="525" cy="307" rx="89" ry="36"/></g>
+</svg>

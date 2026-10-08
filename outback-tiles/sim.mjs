@@ -27,6 +27,15 @@
 //                      the gold tiles still in play.
 //   level.hints        hints the player starts with (default 0)
 //
+// Chapter 3 additions (optional, earlier levels are unchanged):
+//   level.maxMistakes  on any objective, the run is lost once wrong pairs pass
+//                      this number (cause 'mistakes'). state.maxMistakes holds it,
+//                      or null when the level has no such cap.
+//   level.maxTurns     on any objective, the run is lost once this many pair
+//                      attempts are used without a win (cause 'turns').
+//                      state.maxTurns holds it, or null.
+//   A win always beats a cap: the winning pair is never counted against you.
+//
 // Every deal is built by removing free pairs from the full layout one at a time
 // and giving each pair one face, so the layout can always be cleared in that
 // order. A shuffle deals the tiles left the same way, so it stays winnable.
@@ -133,6 +142,7 @@ export function newGame(level, seed = 1) {
     turns: 0, mistakes: 0, tick: 0,
     undosLeft: level.undos ?? 0, shufflesLeft: level.shuffles ?? 0, hintsLeft: level.hints ?? 0,
     gold: level.gold ?? 0,
+    maxMistakes: level.maxMistakes ?? null, maxTurns: level.maxTurns ?? null,
     events: [],
   };
   deal(s, tiles.map((t) => t.id));
@@ -144,6 +154,8 @@ export function cause(s) {
   if (isWon(s)) return null;
   if (s.objective === 'mistakes' && s.mistakes > s.limit) return 'mistakes';
   if (s.objective === 'turns' && s.turns >= s.limit) return 'turns';
+  if (s.maxMistakes !== null && s.mistakes > s.maxMistakes) return 'mistakes';
+  if (s.maxTurns !== null && s.turns >= s.maxTurns) return 'turns';
   if (matchesAvailable(s) === 0 && s.shufflesLeft === 0) return 'stuck';
   return null;
 }
