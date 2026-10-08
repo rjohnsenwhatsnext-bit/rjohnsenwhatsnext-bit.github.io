@@ -4,7 +4,7 @@ import { initAds, maybeInterstitial, showRewarded, adsAvailable, hasUnit, banner
 import { mountRemoveAds } from './arcade-noads.js';
 
 const $ = id => document.getElementById(id);
-const levels = LEVELS.slice(0, 30), KEY = 'tangleout.progress.v1';
+const levels = LEVELS.slice(0, 40), KEY = 'tangleout.progress.v1';
 let saved = { completed: [], sound: true, reduced: matchMedia('(prefers-reduced-motion: reduce)').matches };
 function storageWarning() { $('save-warning').hidden = false; $('save-warning').textContent = 'Progress could not be saved or loaded. Keep this tab open to keep your progress.'; }
 try {
@@ -50,7 +50,7 @@ function chapter() { return CHAPTERS.find(c => c.id === levels[index].chapter); 
 function updateHome() {
   $('home-progress').textContent = `${saved.completed.length} / ${levels.length} cleared on this device`;
   $('campaign').max = levels.length; $('campaign').value = saved.completed.length;
-  $('home-chapter').textContent = saved.completed.includes(20) ? 'Keys and Order unlocked' : saved.completed.includes(10) ? 'Rocks and Ice unlocked' : 'Your untangling journey';
+  $('home-chapter').textContent = saved.completed.includes(30) ? 'Twin Tracks unlocked' : saved.completed.includes(20) ? 'Keys and Order unlocked' : saved.completed.includes(10) ? 'Rocks and Ice unlocked' : 'Your untangling journey';
   $('badges').textContent = CHAPTERS.filter(c => levels.filter(l => l.chapter === c.id).every(l => saved.completed.includes(l.id))).map(c => `${c.name} badge earned`).join(' \u00b7 ') || 'Clear each chapter to earn its badge.';
   $('play').textContent = state && status(state) === 'playing' ? 'Resume puzzle \u2197' : saved.completed.length === levels.length ? 'Play again \u2197' : `Play level ${levels[nextIndex()].id} \u2197`;
 }
@@ -80,15 +80,18 @@ function start(i) {
   index = i; state = newGame(levels[i], 0); finishAt = 0;
   document.body.dataset.chapter = levels[i].chapter;
   $('mechanic-key').hidden = levels[i].chapter === 1;
-  $('mechanic-key').textContent = [levels[i].numbered ? 'Circles: clear in number order' : '', levels[i].locked ? 'Match each lock to its key letter' : '', state.rocks.length ? 'Rock: stays put' : '', state.lines.some(l => l.frozen) ? 'Ice: clear path, then tap twice' : '', state.timeLimit != null ? 'Clock runs during play' : ''].filter(Boolean).join(' \u00b7 ');
+  $('mechanic-key').textContent = [levels[i].linked ? 'Matching letters: tap either twin, both paths must be clear' : '', levels[i].numbered ? 'Circles: clear in number order' : '', levels[i].locked ? 'Match each lock to its key letter' : '', state.rocks.length ? 'Rock: stays put' : '', state.lines.some(l => l.frozen) ? 'Ice: clear path, then tap twice' : '', state.timeLimit != null ? 'Clock runs during play' : ''].filter(Boolean).join(' \u00b7 ');
   $('level-label').textContent = `${chapter().name.toUpperCase()} / ${String(levels[i].id).padStart(2, '0')}`;
   $('level-name').textContent = levels[i].name; $('play-note').textContent = levels[i].objective;
   $('hint').hidden = !(adsAvailable() && hasUnit('rewarded'));
+  $('hint').textContent = levels[i].linked ? 'Watch ad: reveal 1 clear line or pair' : 'Watch ad: reveal 1 clear line';
+  $('undo-note').textContent = levels[i].linked ? 'Undo restores your last slide, including both twins. Taps and lives stay used.' : 'Undo restores your last slide. Taps and lives stay used.';
   show('play'); renderBoard(); updateHUD();
 }
 const NS = 'http://www.w3.org/2000/svg';
 function svg(tag, attrs) { const el = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v); return el; }
 function keyLetter(id) { return String.fromCharCode(65 + id); }
+function pairLabel(line) { return String.fromCharCode(65 + state.lines.filter(l => l.link !== undefined && l.id < l.link).findIndex(l => l.id === Math.min(line.id, line.link))); }
 function ruleMarks(g, line) {
   g.querySelector('.rule-marks')?.remove();
   const marks = svg('g', { class: 'rule-marks', 'aria-hidden': 'true' });
@@ -100,6 +103,7 @@ function ruleMarks(g, line) {
     badge.append(svg('rect', { x: -.29, y: -.16, width: .58, height: .32, rx: kind === 'number' ? .16 : .05 }));
     const t = svg('text', { x: 0, y: .015 }); t.textContent = text; badge.append(t); marks.append(badge);
   }
+  if (line.link !== undefined) label(pairLabel(line), y, 'pair');
   if (line.num !== undefined) label(String(line.num), y, 'number');
   if (locked) label(keyLetter(line.keyId), y - .32, 'lock');
   if (isKey) label(keyLetter(line.id), y + .32, 'key');
@@ -107,7 +111,7 @@ function ruleMarks(g, line) {
   if (isKey) marks.append(svg('path', { class: 'key-stem', d: `M ${x+.29} ${y+.32} h .15 m -.03 0 v .08` }));
   g.classList.toggle('locked', locked);
   g.classList.toggle('next-number', orderNext(state) === line.id);
-  g.setAttribute('aria-label', `Line ${line.id + 1}, points ${['right', 'down', 'left', 'up'][line.dir]}.${line.num !== undefined ? ` Number ${line.num}.` : ''}${locked ? ` Locked: clear key ${keyLetter(line.keyId)} first.` : ''}${isKey ? ` Key ${keyLetter(line.id)}.` : ''}${line.frozen ? ' Frozen: clear path, then tap to thaw.' : ''}`);
+  g.setAttribute('aria-label', `Line ${line.id + 1}, points ${['right', 'down', 'left', 'up'][line.dir]}.${line.link !== undefined ? ` Twin ${pairLabel(line)}, paired with line ${line.link + 1}. Both paths must be clear.` : ''}${line.num !== undefined ? ` Number ${line.num}.` : ''}${locked ? ` Locked: clear key ${keyLetter(line.keyId)} first.` : ''}${isKey ? ` Key ${keyLetter(line.id)}.` : ''}${line.frozen ? ' Frozen: clear path, then tap to thaw.' : ''}`);
   g.append(marks);
 }
 function renderBoard() {
@@ -124,7 +128,7 @@ function renderBoard() {
     const points = line.cells.map(p => p.join(',')).join(' ');
     const [hx, hy] = line.cells.at(-1), [dx, dy] = DIRS[line.dir];
     const bodyPoints = line.cells.length === 1 ? `${hx - dx * .24},${hy - dy * .24} ${hx},${hy}` : points;
-    g.style.color = palette[line.id % palette.length];
+    g.style.color = palette[(line.link === undefined ? line.id : Math.min(line.id, line.link)) % palette.length];
     g.append(svg('polyline', { points: bodyPoints, class: 'hit' }));
     if (line.frozen) g.append(svg('polyline', { points: bodyPoints, class: 'ice-shell' }));
     g.append(svg('polyline', { points: bodyPoints, class: 'thread' }));
@@ -133,6 +137,7 @@ function renderBoard() {
       g.append(svg('path', { d: `M ${tx-.14} ${ty} h .28 M ${tx} ${ty-.14} v .28 M ${tx-.1} ${ty-.1} l .2 .2 M ${tx-.1} ${ty+.1} l .2 -.2`, class: 'snowflake' }));
     }
     g.append(svg('polyline', { points: `${hx - dx * .2 + dy * .17},${hy - dy * .2 - dx * .17} ${hx + dx * .07},${hy + dy * .07} ${hx - dx * .2 - dy * .17},${hy - dy * .2 + dx * .17}`, class: 'arrow' }));
+    g.onfocus = () => decorate(); g.onblur = () => decorate();
     g.onclick = () => act({ tap: { x: hx, y: hy } });
     g.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act({ tap: { x: hx, y: hy } }); } };
     board.append(g);
@@ -146,12 +151,15 @@ function decorate() {
     if (!state.lines[id].out) ruleMarks(el, state.lines[id]);
     el.classList.toggle('blocker', state.flash?.blocker === id);
     el.classList.toggle('blocked', state.flash?.line === id);
-    el.classList.toggle('hinted', state.hint === id);
+    el.classList.toggle('hinted', state.hint === id || (state.hint != null && state.lines[state.hint].link === id));
+    el.classList.toggle('pair-blocked', state.flash != null && state.lines[state.flash.line].link === id);
+    el.classList.toggle('pair-focus', state.lines[id].link !== undefined && state.lines[id].link === Number(document.activeElement?.dataset.line));
   }
 }
 function updateHUD() {
   const left = state.lines.filter(l => !l.out).length;
-  $('remaining').textContent = `${left} ${left === 1 ? 'line' : 'lines'} left`;
+  const pairs = state.lines.filter(l => !l.out && l.link !== undefined && l.id < l.link).length;
+  $('remaining').textContent = `${left} ${left === 1 ? 'line' : 'lines'} left${pairs ? ` (${pairs} ${pairs === 1 ? 'pair' : 'pairs'})` : ''}`;
   const next = orderNext(state);
   $('order-status').hidden = !levels[index].numbered;
   $('order-status').textContent = next < 0 ? 'Number sequence complete' : `Next number: ${state.lines[next].num}`;
@@ -168,19 +176,24 @@ function act(input) {
   const previous = state.cleared.length;
   const frozen = state.lines.find(l => l.frozen && input.tap && l.cells.some(([x,y]) => x === input.tap.x && y === input.tap.y));
   step(state, input);
-  if (input.undo) { renderBoard(); $('play-note').textContent = 'Line restored. Taps and lives stay the same.'; }
+  if (input.undo) { renderBoard(); $('play-note').textContent = previous - state.cleared.length === 2 ? 'Both twins restored. Taps and lives stay the same.' : 'Line restored. Taps and lives stay the same.'; }
   else if (state.cleared.length > previous) {
-    const id = state.cleared.at(-1), line = state.lines[id], el = $('board').querySelector(`[data-line="${id}"]`);
+    const slid = state.slid || [state.cleared.at(-1)];
+    for (const id of slid) {
+    const line = state.lines[id], el = $('board').querySelector(`[data-line="${id}"]`);
     if (el) { el.removeAttribute('tabindex'); el.setAttribute('aria-hidden', 'true'); el.style.pointerEvents = 'none'; const [dx, dy] = DIRS[line.dir];
       if (!saved.reduced) el.animate([{ transform: 'translate(0,0)', opacity: 1 }, { transform: `translate(${dx * (state.w + 2)}px,${dy * (state.h + 2)}px)`, opacity: 0 }], { duration: 320, easing: 'ease-in', fill: 'forwards' }).onfinish = () => el.remove();
       else el.remove();
     }
-    tone('clear'); const opened = state.lines.filter(l => !l.out && l.keyId === id).length; $('play-note').textContent = opened ? `Key ${keyLetter(id)} cleared. ${opened} ${opened === 1 ? 'lock opens' : 'locks open'}!` : 'A little more room.';
+    }
+    const id = state.cleared.at(-1);
+    tone('clear'); const opened = state.lines.filter(l => !l.out && l.keyId === id).length; $('play-note').textContent = opened ? `Key ${keyLetter(id)} cleared. ${opened} ${opened === 1 ? 'lock opens' : 'locks open'}!` : slid.length === 2 ? 'Two tracks, one tap. Both twins are clear!' : 'A little more room.';
   } else if (frozen && !frozen.frozen) {
     renderBoard(); tone('clear'); $('play-note').textContent = 'Ice cracked! Tap that line again to slide it out.';
     const thawed = $('board').querySelector(`[data-line="${frozen.id}"]`); thawed?.classList.add('thawed'); thawed?.focus({ preventScroll: true });
   } else if (input.tap && state.flash) { tone('blocked'); $('play-note').textContent = state.flash.reason === 'order' ? `Clear number ${state.lines[state.flash.blocker].num} first. Look for the striped coral line.` : state.flash.reason === 'lock' ? `Clear key ${keyLetter(state.flash.blocker)} to open this lock. Look for the striped coral line.` : state.flash.rock ? 'The coral rock is in the way. Rocks stay put.' : `Line ${state.flash.blocker + 1} is in the way. Look for the striped coral line.`; }
-  else if (input.hint) $('play-note').textContent = `The outlined line ${state.hint + 1} has a clear way out.`;
+  else if (input.hint) $('play-note').textContent = state.hint == null ? 'No clear line found.' : state.lines[state.hint].link !== undefined ? `Twin ${pairLabel(state.lines[state.hint])} is outlined. Tap either partner to slide both out.` : `The outlined line ${state.hint + 1} has a clear way out.`;
+  if (input.tap && state.flash && state.lines[state.flash.line].link !== undefined) $('play-note').textContent = `Twin ${pairLabel(state.lines[state.flash.line])} is stuck. Both paths must be clear. ${state.flash.rock ? 'The striped coral rock blocks a path.' : 'Clear the striped coral line first.'}`;
   decorate(); updateHUD();
   if (status(state) !== 'playing') finishAt = performance.now() + (saved.reduced ? 0 : 550);
 }
@@ -188,14 +201,18 @@ async function finish() {
   finishAt = 0; const won = status(state) === 'won', finale = won && (index === levels.length - 1 || levels[index + 1].chapter !== levels[index].chapter), nextChapter = finale && index + 1 < levels.length;
   if (won && !saved.completed.includes(levels[index].id)) { saved.completed.push(levels[index].id); save(); }
   $('result-kicker').textContent = won ? finale ? `${chapter().name.toUpperCase()} / COMPLETE` : `LEVEL ${levels[index].id} / CLEAR` : 'A NEW ANGLE';
-  $('result-title').textContent = won ? finale ? nextChapter ? 'A new trail opens.' : 'The vault is open.' : 'Room to breathe.' : 'Still tangled.';
+  $('result-title').textContent = won ? finale ? nextChapter ? 'A new trail opens.' : 'Together, all clear.' : 'Room to breathe.' : 'Still tangled.';
   $('result-detail').textContent = won ? `${state.lines.length} lines cleared · ${state.taps} taps · ${state.mistakes} mistakes` : `${state.timeLimit != null && state.tick >= state.timeLimit ? 'Time is up.' : state.lives === 0 ? 'No lives left.' : 'No taps left.'} Follow each arrow to the edge before you tap.`;
   $('medal').textContent = won ? finale ? '✺' : '✦' : '↶';
   $('medal').className = won ? 'earned' : '';
-  $('next-goal').textContent = won ? finale ? `${chapter().name} badge earned. ${nextChapter ? `Chapter ${levels[index + 1].chapter} unlocked: ${CHAPTERS.find(c => c.id === levels[index + 1].chapter).name}. ${levels[index + 1].chapter === 3 ? 'Enter the brass vault. Follow the numbers and match keys to locks.' : 'Head into the alpine quarry, where stone stays put and frozen lines need thawing.'}` : 'All 30 available levels cleared. Three chapter badges are yours. Return to a favourite and aim for zero mistakes.'}` : `Next: ${levels[index + 1].name}. ${levels[index + 1].objective}.` : 'Try the same board again. Every line has a way out when you find the right order.';
+  $('next-goal').textContent = won ? finale ? `${chapter().name} badge earned. ${nextChapter ? `Chapter ${levels[index + 1].chapter} unlocked: ${CHAPTERS.find(c => c.id === levels[index + 1].chapter).name}. ${levels[index + 1].chapter === 4 ? 'Welcome to Sunset Junction. Matching twins leave together when both tracks are clear.' : levels[index + 1].chapter === 3 ? 'Enter the brass vault. Follow the numbers and match keys to locks.' : 'Head into the alpine quarry, where stone stays put and frozen lines need thawing.'}` : 'All 40 available levels cleared. Four chapter badges are yours. Chapter 5 is still to come. Return to a favourite and aim for zero mistakes.'}` : `Next: ${levels[index + 1].name}. ${levels[index + 1].objective}.` : 'Try the same board again. Every line has a way out when you find the right order.';
   $('result').classList.toggle('chapter-celebration', finale);
   $('result').classList.toggle('vault-unlock', !!nextChapter && levels[index + 1].chapter === 3);
   $('vault-seal').hidden = !(finale && (levels[index].chapter === 3 || (nextChapter && levels[index + 1].chapter === 3))); 
+  const twinCelebration = finale && (levels[index].chapter === 4 || (nextChapter && levels[index + 1].chapter === 4));
+  $('twin-seal').hidden = !twinCelebration;
+  $('result').classList.toggle('twin-celebration', twinCelebration);
+  if (twinCelebration) $('vault-seal').hidden = true;
   $('next').textContent = won ? index === levels.length - 1 ? 'Choose a level \u2197' : nextChapter ? `Enter ${CHAPTERS.find(c => c.id === levels[index + 1].chapter).name} \u2197` : `Level ${levels[index + 1].id} \u2197` : 'Try again \u2197';
   $('replay').hidden = !won; $('confetti').replaceChildren();
   if (won && !saved.reduced) for (let i = 0; i < (finale ? 40 : 20); i++) { const p = document.createElement('i'); p.style.cssText = `--x:${(i * 37) % 100}%;--delay:${i % 7 * .06}s;--turn:${i * 41}deg;background:${palette[i % 4]}`; $('confetti').append(p); }

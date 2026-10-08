@@ -34,3 +34,22 @@ body[data-chapter="3"] button.primary{box-shadow:0 5px 0 #493920}
 #vault-seal span{font-size:43px;font-family:Georgia,serif;color:#65471e}#vault-seal small{font-size:8px;font-weight:800;letter-spacing:.12em;color:#65471e;background:#f7ebcb;padding:5px}
 #result:has(#vault-seal:not([hidden])) #medal{display:none}.vault-unlock #next-goal{background:#f3e3bd;border-color:#b79b64;color:#514127}
 @media(max-height:700px){#vault-seal{width:92px;height:92px}#vault-seal span{font-size:32px}#mechanic-key{margin-top:5px;font-size:9px}#order-status{margin-top:3px}body[data-chapter="3"] #arena{margin-top:6px}}
+/* Twin Tracks: paper routes through Sunset Junction. */
+body[data-chapter="4"]{--teal:#7b425b;--muted:#735e69;color:#443344;background:radial-gradient(ellipse at 85% 0,#f4cba9,transparent 55%),linear-gradient(#f4e5df,#e8dfec)}
+body[data-chapter="4"] #arena{border:1px solid #b693a7;border-radius:24px;background:linear-gradient(150deg,transparent 87%,#dbc7d4 87%),linear-gradient(30deg,#e8d4cb 10%,transparent 10%),#fff9f2;box-shadow:inset 0 0 0 5px #eee0e5,0 12px 30px #713b5514}
+body[data-chapter="4"] #board{padding:8px}
+body[data-chapter="4"] .journey{background:#ecdae3;color:#593b50}
+body[data-chapter="4"] button.primary{box-shadow:0 5px 0 #52283e}
+body[data-chapter="4"] #level-label::before{content:'SUNSET JUNCTION';display:block;letter-spacing:.22em;font-size:8px;margin-bottom:6px;color:#8b5363}
+.level.chapter-4{background:#fff0e8;border-color:#d9b8c8}.chapter-heading.chapter-4{color:#7b425b}
+.chapter-heading.chapter-4::before{content:'SUNSET JUNCTION';display:block;font-size:9px;letter-spacing:.2em;margin-bottom:8px;color:#8b5363}
+.rule-badge.pair rect{fill:#fff3d5;stroke-width:.055;rx:.07}.rule-badge.pair text{fill:#473143;font-size:.23px}
+.line.pair-focus .thread{stroke-width:.22}.line.pair-focus .pair rect,.line.hinted .pair rect{fill:#cdece3;stroke-width:.08}
+.line.pair-blocked .pair rect,.line.blocked .pair rect{fill:#f5d1c8;stroke:#a13929;stroke-width:.075}
+.line.pair-blocked .thread{stroke-width:.21;stroke-dasharray:.3 .1}
+#result.twin-celebration{background:radial-gradient(ellipse at 85% 0,#f4cba9,transparent 55%),linear-gradient(#f4e5df,#e8dfec);color:#443344;--teal:#7b425b;--muted:#735e69}
+#result.twin-celebration button.primary{box-shadow:0 5px 0 #52283e}
+#twin-seal{position:relative;align-self:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;width:170px;height:136px;border:3px double #975c76;border-radius:60px 60px 20px 20px;background:radial-gradient(circle at 50% 25%,#ffe7aa 0 27%,transparent 28%),repeating-linear-gradient(90deg,transparent 0 17px,#9e728122 17px 20px),#eed5d7;box-shadow:0 0 0 7px #b0738e12;animation:arrive .8s ease-out;color:#60334c}
+#twin-seal span{font:44px Georgia,serif}#twin-seal strong{font-size:10px;letter-spacing:.1em;background:#faece1;padding:4px}#twin-seal small{font-size:8px;letter-spacing:.1em}
+.twin-celebration #medal{display:none}.twin-celebration #next-goal{background:#f4e0e8;border-color:#b7869d;color:#60334c}
+@media(max-height:700px){#twin-seal{height:106px;width:150px;gap:3px}#twin-seal span{font-size:32px}body[data-chapter="4"] #arena{margin-top:6px}}

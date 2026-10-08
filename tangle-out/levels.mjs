@@ -1,6 +1,6 @@
 // Chapter 1: Loose Ends. LEVELS[0..9]. Each board is built in reverse from its own seed, so it always clears.
 // lives / maxTaps null means no limit. A blocked tap costs a life and counts as a tap.
-export const CHAPTERS = [{ id: 1, name: 'Loose Ends' }, { id: 2, name: 'Rocks and Ice' }, { id: 3, name: 'Keys and Order' }];
+export const CHAPTERS = [{ id: 1, name: 'Loose Ends' }, { id: 2, name: 'Rocks and Ice' }, { id: 3, name: 'Keys and Order' }, { id: 4, name: 'Twin Tracks' }];
 
 export const LEVELS = [
   { id: 1, chapter: 1, name: 'First Slide', objective: 'Tap each line to slide it out', w: 4, h: 4, count: 3, minLen: 2, maxLen: 3, seed: 101, lives: null, maxTaps: null },
@@ -37,4 +37,16 @@ export const LEVELS = [
   { id: 28, chapter: 3, name: 'Count Down', objective: 'Follow the numbers in 40 seconds', w: 7, h: 7, count: 12, minLen: 2, maxLen: 4, numbered: 5, rocks: 3, timeLimit: 2400, seed: 2828, lives: null, maxTaps: null },
   { id: 29, chapter: 3, name: 'Vault Plan', objective: 'Numbers, locks and ice within 19 taps and 2 lives', w: 7, h: 8, count: 14, minLen: 2, maxLen: 4, numbered: 4, locked: 4, frozen: 3, seed: 2929, lives: 2, maxTaps: 19 },
   { id: 30, chapter: 3, name: 'Master Lock', objective: 'Finale: numbers, locks, ice, rocks and a clock. 24 taps, 2 lives, 50 seconds', w: 8, h: 9, count: 18, minLen: 2, maxLen: 5, numbered: 6, locked: 5, frozen: 4, rocks: 5, timeLimit: 3000, seed: 3030, lives: 2, maxTaps: 24 },
+  // Chapter 4: Twin Tracks. LEVELS[30..39]. New rule: linked pairs, two lines that slide out together on one tap
+  // and only when both paths are clear. See the top of sim.mjs.
+  { id: 31, chapter: 4, name: 'Twin Pair', objective: 'Linked lines slide out together with one tap', w: 5, h: 6, count: 6, minLen: 2, maxLen: 3, linked: 1, seed: 3131, lives: null, maxTaps: null },
+  { id: 32, chapter: 4, name: 'Two Pairs', objective: 'Both lines of a pair need a clear path', w: 6, h: 6, count: 8, minLen: 2, maxLen: 4, linked: 2, seed: 3232, lives: null, maxTaps: null },
+  { id: 33, chapter: 4, name: 'Tag Team', objective: 'Three linked pairs on a taller board, 4 lives', w: 6, h: 7, count: 9, minLen: 2, maxLen: 4, linked: 3, seed: 3333, lives: 4, maxTaps: null },
+  { id: 34, chapter: 4, name: 'Stone Twins', objective: 'Linked pairs among the rocks, 3 lives', w: 6, h: 7, count: 10, minLen: 2, maxLen: 4, linked: 2, rocks: 3, seed: 3434, lives: 3, maxTaps: null },
+  { id: 35, chapter: 4, name: 'Double Trouble', objective: 'Find the partner that is stuck, 3 lives', w: 7, h: 7, count: 12, minLen: 2, maxLen: 4, linked: 3, rocks: 4, seed: 3535, lives: 3, maxTaps: null },
+  { id: 36, chapter: 4, name: 'Quick Pairs', objective: 'Slide the pairs in 40 seconds', w: 7, h: 7, count: 12, minLen: 1, maxLen: 3, linked: 3, timeLimit: 2400, seed: 3636, lives: null, maxTaps: null },
+  { id: 37, chapter: 4, name: 'Pair Budget', objective: 'Clear linked lines within 14 taps and 3 lives', w: 7, h: 8, count: 14, minLen: 2, maxLen: 4, linked: 4, seed: 3737, lives: 3, maxTaps: 14 },
+  { id: 38, chapter: 4, name: 'Crowded Twins', objective: 'Five pairs and rocks, 2 lives. Plan the order', w: 7, h: 8, count: 14, minLen: 2, maxLen: 4, linked: 5, rocks: 4, seed: 3838, lives: 2, maxTaps: null },
+  { id: 39, chapter: 4, name: 'Pair Plan', objective: 'Plan the pairs: rocks, 14 taps, 2 lives and 45 seconds', w: 7, h: 9, count: 16, minLen: 2, maxLen: 4, linked: 5, rocks: 4, timeLimit: 2700, seed: 3939, lives: 2, maxTaps: 14 },
+  { id: 40, chapter: 4, name: 'Twin Peaks', objective: 'Finale: six pairs, rocks and a clock. 18 taps, 2 lives, 50 seconds', w: 8, h: 9, count: 20, minLen: 2, maxLen: 5, linked: 6, rocks: 6, timeLimit: 3000, seed: 4040, lives: 2, maxTaps: 18 },
 ];

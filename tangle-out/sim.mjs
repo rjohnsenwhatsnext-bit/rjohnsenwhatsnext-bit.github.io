@@ -43,6 +43,17 @@
 //                   A physical block always wins over these, and flash.reason is then absent.
 //   lineRestriction(state, line) returns null or {reason, by} for these two rules. freeLines respects them.
 
+// Chapter 4 mechanic (optional level field, absent means off):
+//   linked: N       N pairs of linked lines (line.link = id of its partner, on both). A pair slides out
+//                   together on one tap, but only when BOTH lines have a clear path. Each line ignores its
+//                   partner's body when checking its own path. If either line is blocked the tap is a normal
+//                   blocked tap: the tapped line flashes and so does whatever blocks it (or blocks the partner),
+//                   and a life is lost. A pair is always the line with id i and the line with id i + 1, so when
+//                   every later line is out both are free and a valid order always exists. A tap that slides a
+//                   pair sets state.slid = [ids] (one id for an ordinary line). Undo puts the pair back together.
+//                   Linked lines are never also numbered, locked or frozen, so linked levels leave those fields out.
+//                   blockedBy(state, line) reports the first obstacle for the line or its partner.
+
 export const TICK = 1 / 60;
 export const FLASH_TICKS = 50;
 export const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]]; // right, down, left, up
@@ -92,13 +103,19 @@ export function placeRocks(level, seed) {
 }
 
 // What is in the way of a line: {line, rock} or null when its path is clear.
-export function blockedBy(state, line) {
+function rayBlock(state, line, ignore) {
   for (const [x, y] of ray(state, line)) {
     const i = y * state.w + x;
     if (state.rockAt && state.rockAt[i]) return { line: -1, rock: [x, y] };
-    if (state.grid[i] !== -1) return { line: state.grid[i], rock: null };
+    if (state.grid[i] !== -1 && state.grid[i] !== ignore) return { line: state.grid[i], rock: null };
   }
   return null;
+}
+
+export function blockedBy(state, line) {
+  const link = line.link;
+  if (link === undefined) return rayBlock(state, line, -2);
+  return rayBlock(state, line, link) || (state.lines[link].out ? null : rayBlock(state, state.lines[link], line.id));
 }
 
 // Id of the numbered line whose turn it is, or -1 when none are left.
@@ -183,8 +200,23 @@ export function newGame(level, seed = 0) {
   for (const id of pick(level.locked ?? 0, lines.slice(0, -1).map((l) => l.id))) {
     lines[id].keyId = id + 1 + Math.floor(orand() * (lines.length - 1 - id));
   }
+  // Linked pairs (id i with id i + 1) come from their own random stream.
+  const lrand = rng((lineSeed ^ 0x27d4eb2f) >>> 0);
+  const used = new Set();
+  const starts = lines.slice(0, -1).map((l) => l.id);
+  for (let n = 0; n < (level.linked ?? 0) && starts.length; n++) {
+    for (let guard = 0; guard < starts.length * 4; guard++) {
+      const i = starts[Math.floor(lrand() * starts.length)];
+      if (used.has(i) || used.has(i + 1)) continue;
+      used.add(i);
+      used.add(i + 1);
+      lines[i].link = i + 1;
+      lines[i + 1].link = i;
+      break;
+    }
+  }
   return {
-    w: level.w, h: level.h, grid, lines, tick: 0,
+    w: level.w, h: level.h, grid, lines, tick: 0, slid: null,
     lives: level.lives ?? null, maxTaps: level.maxTaps ?? null, timeLimit: level.timeLimit ?? null,
     rocks, rockAt, thawed: null,
     taps: 0, cleared: [], flash: null, hint: null, hintsUsed: 0, mistakes: 0,
@@ -215,6 +247,11 @@ export function step(state, input) {
     const line = state.lines[state.cleared.pop()];
     line.out = false;
     setLine(state, line, line.id);
+    if (line.link !== undefined && state.cleared[state.cleared.length - 1] === line.link) {
+      const mate = state.lines[state.cleared.pop()];
+      mate.out = false;
+      setLine(state, mate, mate.id);
+    }
     state.hint = null;
   } else if (input.hint) {
     const free = freeLines(state);
@@ -239,6 +276,14 @@ export function step(state, input) {
     } else if (by === null) {
       line.out = true;
       setLine(state, line, -1);
+      state.slid = [id];
+      if (line.link !== undefined) {
+        const mate = state.lines[line.link];
+        mate.out = true;
+        setLine(state, mate, -1);
+        state.cleared.push(mate.id);
+        state.slid.push(mate.id);
+      }
       state.cleared.push(id);
       state.hint = null;
       state.flash = null;
