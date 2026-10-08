@@ -29,6 +29,20 @@
 //                   flashes as a normal blocked tap. Undo does not refreeze a line.
 //   timeLimit: T    ticks (60 per second) before the level is lost, counted from the first tick.
 
+// Chapter 3 mechanics (optional level fields, absent means off):
+//   numbered: N     N lines carry a number 1..N (line.num) and must be cleared in number order. Numbers
+//                   follow the reverse build order, so a valid order always exists. Tapping a numbered line
+//                   whose path is clear but whose turn has not come is a mistake (costs a life, counts as a
+//                   tap). orderNext(state) is the id of the numbered line whose turn it is, or -1.
+//   locked: N       N lines start locked (line.keyId = id of its key line). A locked line cannot be tapped
+//                   until its key line has slid out (undoing the key locks it again). Keys always come later
+//                   in the build, so they can always be cleared first. A tap on a locked line with a clear
+//                   path is a mistake.
+//                   Both rules set state.flash = {line, blocker, rock: null, ttl, reason}: reason is 'order'
+//                   or 'lock' and blocker is the line the player should clear first (next number or the key).
+//                   A physical block always wins over these, and flash.reason is then absent.
+//   lineRestriction(state, line) returns null or {reason, by} for these two rules. freeLines respects them.
+
 export const TICK = 1 / 60;
 export const FLASH_TICKS = 50;
 export const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]]; // right, down, left, up
@@ -87,6 +101,23 @@ export function blockedBy(state, line) {
   return null;
 }
 
+// Id of the numbered line whose turn it is, or -1 when none are left.
+export function orderNext(state) {
+  let best = null;
+  for (const l of state.lines) if (l.num !== undefined && !l.out && (best === null || l.num < best.num)) best = l;
+  return best ? best.id : -1;
+}
+
+// Why a line with a clear path still cannot slide: {reason: 'lock'|'order', by} or null.
+export function lineRestriction(state, line) {
+  if (line.keyId !== undefined && !state.lines[line.keyId].out) return { reason: 'lock', by: line.keyId };
+  if (line.num !== undefined) {
+    const next = orderNext(state);
+    if (next !== line.id) return { reason: 'order', by: next };
+  }
+  return null;
+}
+
 export function generate(level, seed, rocks = []) {
   const { w, h, count, minLen = 2, maxLen = 5 } = level;
   const rand = rng(seed);
@@ -139,6 +170,19 @@ export function newGame(level, seed = 0) {
     const l = lines[Math.floor(frand() * lines.length)];
     if (!l.frozen) { l.frozen = true; toFreeze--; }
   }
+  // Numbers and locks come from their own random stream. Later-built lines clear first, so numbers rise as
+  // ids fall and every key has a higher id than the line it locks.
+  const orand = rng((lineSeed ^ 0xc2b2ae35) >>> 0);
+  const pick = (n, pool) => {
+    const left = pool.slice(), out = [];
+    while (out.length < n && left.length) out.push(left.splice(Math.floor(orand() * left.length), 1)[0]);
+    return out;
+  };
+  const numbered = pick(level.numbered ?? 0, lines.map((l) => l.id)).sort((a, b) => b - a);
+  numbered.forEach((id, i) => { lines[id].num = i + 1; });
+  for (const id of pick(level.locked ?? 0, lines.slice(0, -1).map((l) => l.id))) {
+    lines[id].keyId = id + 1 + Math.floor(orand() * (lines.length - 1 - id));
+  }
   return {
     w: level.w, h: level.h, grid, lines, tick: 0,
     lives: level.lives ?? null, maxTaps: level.maxTaps ?? null, timeLimit: level.timeLimit ?? null,
@@ -148,7 +192,7 @@ export function newGame(level, seed = 0) {
 }
 
 export function freeLines(state) {
-  return state.lines.filter((l) => !l.out && blockedBy(state, l) === null);
+  return state.lines.filter((l) => !l.out && blockedBy(state, l) === null && lineRestriction(state, l) === null);
 }
 
 export function status(state) {
@@ -183,7 +227,12 @@ export function step(state, input) {
     const line = state.lines[id];
     state.taps++;
     const by = blockedBy(state, line);
-    if (by === null && line.frozen) {
+    const why = by === null ? lineRestriction(state, line) : null;
+    if (why) {
+      state.mistakes++;
+      if (state.lives !== null) state.lives--;
+      state.flash = { line: id, blocker: why.by, rock: null, ttl: FLASH_TICKS, reason: why.reason };
+    } else if (by === null && line.frozen) {
       line.frozen = false;
       state.thawed = id;
       state.hint = null;

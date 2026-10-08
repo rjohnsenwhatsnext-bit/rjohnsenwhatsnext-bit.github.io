@@ -18,3 +18,19 @@ body[data-chapter="2"] button.primary{box-shadow:0 5px 0 #194658}
 .chapter-celebration #medal{background:radial-gradient(circle,#d5e9e7 0,transparent 69%);text-shadow:0 5px 0 #fff}.chapter-celebration #next-goal{border:1px solid #a6c6ce}
 @keyframes thaw{from{stroke:#71c5e1;stroke-width:.32}to{stroke-width:.13}}
 @media(max-width:360px){.page{padding-left:18px;padding-right:18px}.hud{font-size:11px}.play-header h2{font-size:23px}#result-title{font-size:42px}}
+/* Keys and Order: warm paper puzzles inside a brass vault. */
+body[data-chapter="3"]{--teal:#655033;--muted:#75654f;background:radial-gradient(ellipse at 90% 0,#ead6a8,transparent 58%),#f4eddf;color:#403b32}
+body[data-chapter="3"] #arena{border:2px solid #b79b64;border-radius:24px;background:radial-gradient(circle at 12px 12px,#a98a52 0 2px,transparent 3px),radial-gradient(circle at calc(100% - 12px) calc(100% - 12px),#a98a52 0 2px,transparent 3px),repeating-linear-gradient(135deg,#c4a6730a 0 2px,transparent 2px 14px),#fffbef;box-shadow:inset 0 0 0 5px #e9dabb,0 12px 30px #70502012}
+body[data-chapter="3"] #board{padding:8px}
+body[data-chapter="3"] .journey{background:#e9dbbe;color:#514127}
+body[data-chapter="3"] button.primary{box-shadow:0 5px 0 #493920}
+.level.chapter-3{background:#fbf2de;border-color:#d6bd86}.chapter-heading.chapter-3{color:#785728}
+.chapter-heading.chapter-3::before{content:'THE BRASS VAULT';display:block;font-size:9px;letter-spacing:.2em;margin-bottom:8px;color:#826333}
+.rule-marks{pointer-events:none}.rule-badge rect{fill:#fffaf0;stroke:currentColor;stroke-width:.035}.rule-badge text{fill:#263e3d;font:bold .24px Arial,Helvetica,sans-serif;text-anchor:middle;dominant-baseline:middle}
+.rule-badge.lock rect{fill:#ead6a8;stroke:#705126}.rule-badge.key rect{fill:#dceee5;stroke:#176b69}.lock-shackle{fill:none;stroke:#705126;stroke-width:.045}.key-stem{fill:none;stroke:#176b69;stroke-width:.05;stroke-linecap:round}
+.next-number .number rect{stroke-width:.07;fill:#e0eee7}.line.blocker .rule-badge rect{stroke:#c03e29;stroke-width:.065}.line.blocker .rule-badge text{fill:#982b1c}
+#order-status{font-size:11px;font-weight:700;text-align:center;color:#655033;margin:5px 0 0;min-height:15px}
+#vault-seal{width:124px;height:124px;border:3px double #a78240;border-radius:50%;align-self:center;display:flex;flex-direction:column;align-items:center;justify-content:center;background:repeating-conic-gradient(#ead6a8 0deg 8deg,#f7ebcb 8deg 16deg);box-shadow:0 0 0 7px #ac874319,0 8px 24px #69502418;animation:arrive .8s ease-out}
+#vault-seal span{font-size:43px;font-family:Georgia,serif;color:#65471e}#vault-seal small{font-size:8px;font-weight:800;letter-spacing:.12em;color:#65471e;background:#f7ebcb;padding:5px}
+#result:has(#vault-seal:not([hidden])) #medal{display:none}.vault-unlock #next-goal{background:#f3e3bd;border-color:#b79b64;color:#514127}
+@media(max-height:700px){#vault-seal{width:92px;height:92px}#vault-seal span{font-size:32px}#mechanic-key{margin-top:5px;font-size:9px}#order-status{margin-top:3px}body[data-chapter="3"] #arena{margin-top:6px}}

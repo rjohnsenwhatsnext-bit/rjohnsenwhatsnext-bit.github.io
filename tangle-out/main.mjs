@@ -1,10 +1,10 @@
-import { newGame, step, status, TICK, DIRS } from './sim.mjs';
+import { newGame, step, status, TICK, DIRS, orderNext } from './sim.mjs';
 import { LEVELS, CHAPTERS } from './levels.mjs';
 import { initAds, maybeInterstitial, showRewarded, adsAvailable, hasUnit, bannerOnScreens } from './arcade-ads.js';
 import { mountRemoveAds } from './arcade-noads.js';
 
 const $ = id => document.getElementById(id);
-const levels = LEVELS.slice(0, 20), KEY = 'tangleout.progress.v1';
+const levels = LEVELS.slice(0, 30), KEY = 'tangleout.progress.v1';
 let saved = { completed: [], sound: true, reduced: matchMedia('(prefers-reduced-motion: reduce)').matches };
 function storageWarning() { $('save-warning').hidden = false; $('save-warning').textContent = 'Progress could not be saved or loaded. Keep this tab open to keep your progress.'; }
 try {
@@ -50,7 +50,7 @@ function chapter() { return CHAPTERS.find(c => c.id === levels[index].chapter); 
 function updateHome() {
   $('home-progress').textContent = `${saved.completed.length} / ${levels.length} cleared on this device`;
   $('campaign').max = levels.length; $('campaign').value = saved.completed.length;
-  $('home-chapter').textContent = saved.completed.includes(10) ? 'Rocks and Ice unlocked' : 'Your untangling journey';
+  $('home-chapter').textContent = saved.completed.includes(20) ? 'Keys and Order unlocked' : saved.completed.includes(10) ? 'Rocks and Ice unlocked' : 'Your untangling journey';
   $('badges').textContent = CHAPTERS.filter(c => levels.filter(l => l.chapter === c.id).every(l => saved.completed.includes(l.id))).map(c => `${c.name} badge earned`).join(' \u00b7 ') || 'Clear each chapter to earn its badge.';
   $('play').textContent = state && status(state) === 'playing' ? 'Resume puzzle \u2197' : saved.completed.length === levels.length ? 'Play again \u2197' : `Play level ${levels[nextIndex()].id} \u2197`;
 }
@@ -63,7 +63,7 @@ function renderLevels() {
       const done = levels.filter(l => l.chapter === level.chapter && saved.completed.includes(l.id)).length;
       heading.textContent = `${String(level.chapter).padStart(2, '0')} \u00b7 ${CHAPTERS.find(c => c.id === level.chapter).name}`;
       const detail = document.createElement('small');
-      detail.textContent = `${done} / 10 cleared \u00b7 ${done === 10 ? 'Badge earned' : unlocked(i) ? 'Open to explore' : 'Clear level 10 to unlock'}`;
+      detail.textContent = `${done} / 10 cleared \u00b7 ${done === 10 ? 'Badge earned' : unlocked(i) ? 'Open to explore' : `Clear level ${levels[i - 1]?.id} to unlock`}`;
       heading.append(detail); $('level-list').append(heading);
     }
     const b = document.createElement('button'); b.className = `level chapter-${level.chapter}`; b.disabled = !unlocked(i);
@@ -79,8 +79,8 @@ function start(i) {
   if (document.documentElement.requestFullscreen && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
   index = i; state = newGame(levels[i], 0); finishAt = 0;
   document.body.dataset.chapter = levels[i].chapter;
-  $('mechanic-key').hidden = levels[i].chapter !== 2;
-  $('mechanic-key').textContent = [state.rocks.length ? 'Rock: stays put' : '', state.lines.some(l => l.frozen) ? 'Ice: clear path, then tap twice' : '', state.timeLimit != null ? 'Clock runs during play' : ''].filter(Boolean).join(' \u00b7 ');
+  $('mechanic-key').hidden = levels[i].chapter === 1;
+  $('mechanic-key').textContent = [levels[i].numbered ? 'Circles: clear in number order' : '', levels[i].locked ? 'Match each lock to its key letter' : '', state.rocks.length ? 'Rock: stays put' : '', state.lines.some(l => l.frozen) ? 'Ice: clear path, then tap twice' : '', state.timeLimit != null ? 'Clock runs during play' : ''].filter(Boolean).join(' \u00b7 ');
   $('level-label').textContent = `${chapter().name.toUpperCase()} / ${String(levels[i].id).padStart(2, '0')}`;
   $('level-name').textContent = levels[i].name; $('play-note').textContent = levels[i].objective;
   $('hint').hidden = !(adsAvailable() && hasUnit('rewarded'));
@@ -88,6 +88,28 @@ function start(i) {
 }
 const NS = 'http://www.w3.org/2000/svg';
 function svg(tag, attrs) { const el = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v); return el; }
+function keyLetter(id) { return String.fromCharCode(65 + id); }
+function ruleMarks(g, line) {
+  g.querySelector('.rule-marks')?.remove();
+  const marks = svg('g', { class: 'rule-marks', 'aria-hidden': 'true' });
+  const [x, y] = line.cells[0];
+  const locked = line.keyId !== undefined && !state.lines[line.keyId].out;
+  const isKey = state.lines.some(l => !l.out && l.keyId === line.id);
+  function label(text, cy, kind) {
+    const badge = svg('g', { class: `rule-badge ${kind}`, transform: `translate(${x},${cy})` });
+    badge.append(svg('rect', { x: -.29, y: -.16, width: .58, height: .32, rx: kind === 'number' ? .16 : .05 }));
+    const t = svg('text', { x: 0, y: .015 }); t.textContent = text; badge.append(t); marks.append(badge);
+  }
+  if (line.num !== undefined) label(String(line.num), y, 'number');
+  if (locked) label(keyLetter(line.keyId), y - .32, 'lock');
+  if (isKey) label(keyLetter(line.id), y + .32, 'key');
+  if (locked) marks.append(svg('path', { class: 'lock-shackle', d: `M ${x-.12} ${y-.47} v -.06 a .12 .12 0 0 1 .24 0 v .06` }));
+  if (isKey) marks.append(svg('path', { class: 'key-stem', d: `M ${x+.29} ${y+.32} h .15 m -.03 0 v .08` }));
+  g.classList.toggle('locked', locked);
+  g.classList.toggle('next-number', orderNext(state) === line.id);
+  g.setAttribute('aria-label', `Line ${line.id + 1}, points ${['right', 'down', 'left', 'up'][line.dir]}.${line.num !== undefined ? ` Number ${line.num}.` : ''}${locked ? ` Locked: clear key ${keyLetter(line.keyId)} first.` : ''}${isKey ? ` Key ${keyLetter(line.id)}.` : ''}${line.frozen ? ' Frozen: clear path, then tap to thaw.' : ''}`);
+  g.append(marks);
+}
 function renderBoard() {
   const board = $('board'); board.replaceChildren(); board.setAttribute('viewBox', `-0.65 -0.65 ${state.w + .3} ${state.h + .3}`);
   for (let y = 0; y < state.h; y++) for (let x = 0; x < state.w; x++) board.append(svg('circle', { cx: x, cy: y, r: .025, fill: '#d6cebe' }));
@@ -121,6 +143,7 @@ function decorate() {
   for (const rock of $('board').querySelectorAll('.rock')) rock.classList.toggle('blocker', rock.dataset.rock === state.flash?.rock?.join(','));
   for (const el of $('board').querySelectorAll('.line')) {
     const id = Number(el.dataset.line);
+    if (!state.lines[id].out) ruleMarks(el, state.lines[id]);
     el.classList.toggle('blocker', state.flash?.blocker === id);
     el.classList.toggle('blocked', state.flash?.line === id);
     el.classList.toggle('hinted', state.hint === id);
@@ -129,6 +152,9 @@ function decorate() {
 function updateHUD() {
   const left = state.lines.filter(l => !l.out).length;
   $('remaining').textContent = `${left} ${left === 1 ? 'line' : 'lines'} left`;
+  const next = orderNext(state);
+  $('order-status').hidden = !levels[index].numbered;
+  $('order-status').textContent = next < 0 ? 'Number sequence complete' : `Next number: ${state.lines[next].num}`;
   $('limits').textContent = [state.lives === null ? '' : `${state.lives} ${state.lives === 1 ? 'life' : 'lives'}`, state.maxTaps === null ? '' : `${state.maxTaps - state.taps} taps left`].filter(Boolean).join(' · ');
   $('clock').hidden = state.timeLimit == null;
   $('clock').textContent = state.timeLimit == null ? '' : `${Math.max(0, Math.ceil((state.timeLimit - state.tick) / 60))}s`;
@@ -149,11 +175,11 @@ function act(input) {
       if (!saved.reduced) el.animate([{ transform: 'translate(0,0)', opacity: 1 }, { transform: `translate(${dx * (state.w + 2)}px,${dy * (state.h + 2)}px)`, opacity: 0 }], { duration: 320, easing: 'ease-in', fill: 'forwards' }).onfinish = () => el.remove();
       else el.remove();
     }
-    tone('clear'); $('play-note').textContent = 'A little more room.';
+    tone('clear'); const opened = state.lines.filter(l => !l.out && l.keyId === id).length; $('play-note').textContent = opened ? `Key ${keyLetter(id)} cleared. ${opened} ${opened === 1 ? 'lock opens' : 'locks open'}!` : 'A little more room.';
   } else if (frozen && !frozen.frozen) {
     renderBoard(); tone('clear'); $('play-note').textContent = 'Ice cracked! Tap that line again to slide it out.';
     const thawed = $('board').querySelector(`[data-line="${frozen.id}"]`); thawed?.classList.add('thawed'); thawed?.focus({ preventScroll: true });
-  } else if (input.tap && state.flash) { tone('blocked'); $('play-note').textContent = state.flash.rock ? 'The coral rock is in the way. Rocks stay put.' : `Line ${state.flash.blocker + 1} is in the way. Look for the striped coral line.`; }
+  } else if (input.tap && state.flash) { tone('blocked'); $('play-note').textContent = state.flash.reason === 'order' ? `Clear number ${state.lines[state.flash.blocker].num} first. Look for the striped coral line.` : state.flash.reason === 'lock' ? `Clear key ${keyLetter(state.flash.blocker)} to open this lock. Look for the striped coral line.` : state.flash.rock ? 'The coral rock is in the way. Rocks stay put.' : `Line ${state.flash.blocker + 1} is in the way. Look for the striped coral line.`; }
   else if (input.hint) $('play-note').textContent = `The outlined line ${state.hint + 1} has a clear way out.`;
   decorate(); updateHUD();
   if (status(state) !== 'playing') finishAt = performance.now() + (saved.reduced ? 0 : 550);
@@ -162,13 +188,15 @@ async function finish() {
   finishAt = 0; const won = status(state) === 'won', finale = won && (index === levels.length - 1 || levels[index + 1].chapter !== levels[index].chapter), nextChapter = finale && index + 1 < levels.length;
   if (won && !saved.completed.includes(levels[index].id)) { saved.completed.push(levels[index].id); save(); }
   $('result-kicker').textContent = won ? finale ? `${chapter().name.toUpperCase()} / COMPLETE` : `LEVEL ${levels[index].id} / CLEAR` : 'A NEW ANGLE';
-  $('result-title').textContent = won ? finale ? nextChapter ? 'A new trail opens.' : 'Glacier conquered.' : 'Room to breathe.' : 'Still tangled.';
-  $('result-detail').textContent = won ? `${state.lines.length} lines cleared · ${state.taps} taps · ${state.mistakes} blocked` : `${state.timeLimit != null && state.tick >= state.timeLimit ? 'Time is up.' : state.lives === 0 ? 'No lives left.' : 'No taps left.'} Follow each arrow to the edge before you tap.`;
+  $('result-title').textContent = won ? finale ? nextChapter ? 'A new trail opens.' : 'The vault is open.' : 'Room to breathe.' : 'Still tangled.';
+  $('result-detail').textContent = won ? `${state.lines.length} lines cleared · ${state.taps} taps · ${state.mistakes} mistakes` : `${state.timeLimit != null && state.tick >= state.timeLimit ? 'Time is up.' : state.lives === 0 ? 'No lives left.' : 'No taps left.'} Follow each arrow to the edge before you tap.`;
   $('medal').textContent = won ? finale ? '✺' : '✦' : '↶';
   $('medal').className = won ? 'earned' : '';
-  $('next-goal').textContent = won ? finale ? `${chapter().name} badge earned. ${nextChapter ? 'Chapter 2 unlocked: Rocks and Ice. Head into the alpine quarry, where stone stays put and frozen lines need thawing.' : 'All 20 levels cleared. Both chapter badges are yours. Return to a favourite and aim for zero blocked taps.'}` : `Next: ${levels[index + 1].name}. ${levels[index + 1].objective}.` : 'Try the same board again. Every line has a way out when you find the right order.';
+  $('next-goal').textContent = won ? finale ? `${chapter().name} badge earned. ${nextChapter ? `Chapter ${levels[index + 1].chapter} unlocked: ${CHAPTERS.find(c => c.id === levels[index + 1].chapter).name}. ${levels[index + 1].chapter === 3 ? 'Enter the brass vault. Follow the numbers and match keys to locks.' : 'Head into the alpine quarry, where stone stays put and frozen lines need thawing.'}` : 'All 30 available levels cleared. Three chapter badges are yours. Return to a favourite and aim for zero mistakes.'}` : `Next: ${levels[index + 1].name}. ${levels[index + 1].objective}.` : 'Try the same board again. Every line has a way out when you find the right order.';
   $('result').classList.toggle('chapter-celebration', finale);
-  $('next').textContent = won ? index === levels.length - 1 ? 'Choose a level \u2197' : nextChapter ? 'Enter Rocks and Ice \u2197' : `Level ${levels[index + 1].id} \u2197` : 'Try again \u2197';
+  $('result').classList.toggle('vault-unlock', !!nextChapter && levels[index + 1].chapter === 3);
+  $('vault-seal').hidden = !(finale && (levels[index].chapter === 3 || (nextChapter && levels[index + 1].chapter === 3))); 
+  $('next').textContent = won ? index === levels.length - 1 ? 'Choose a level \u2197' : nextChapter ? `Enter ${CHAPTERS.find(c => c.id === levels[index + 1].chapter).name} \u2197` : `Level ${levels[index + 1].id} \u2197` : 'Try again \u2197';
   $('replay').hidden = !won; $('confetti').replaceChildren();
   if (won && !saved.reduced) for (let i = 0; i < (finale ? 40 : 20); i++) { const p = document.createElement('i'); p.style.cssText = `--x:${(i * 37) % 100}%;--delay:${i % 7 * .06}s;--turn:${i * 41}deg;background:${palette[i % 4]}`; $('confetti').append(p); }
   tone(won ? 'win' : 'blocked'); show('result');
