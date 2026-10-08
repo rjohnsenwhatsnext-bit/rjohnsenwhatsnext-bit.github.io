@@ -9,10 +9,12 @@ let saved = { cleared: [], sound: true, reduced: matchMedia('(prefers-reduced-mo
 function storageWarning() { $('saveWarning').hidden = false; $('saveWarning').textContent = 'Progress could not be saved or read. Keep this tab open to keep your progress.'; }
 try {
   const value = JSON.parse(localStorage.getItem(KEY) || 'null');
-  if (value) saved = { cleared: Array.isArray(value.cleared) ? value.cleared.filter(n => Number.isInteger(n) && n >= 1 && n <= 10) : [], sound: value.sound !== false, reduced: typeof value.reduced === 'boolean' ? value.reduced : saved.reduced };
+  if (value) saved = { cleared: Array.isArray(value.cleared) ? value.cleared.filter(n => Number.isInteger(n) && n >= 1 && n <= LEVELS.length) : [], sound: value.sound !== false, reduced: typeof value.reduced === 'boolean' ? value.reduced : saved.reduced };
 } catch { storageWarning(); }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch { storageWarning(); } }
 let screen = 'home', settingsFrom = 'home', state = null, index = 0, busy = false, audio, toastTimer;
+const chapterName = l => l.chapter === 2 ? 'The Red Centre' : 'The Bush Track';
+function theme(l) { document.body.dataset.chapter = l.chapter; }
 const names = ['Gum leaf', 'Wattle', 'Waratah', 'Sun', 'Waterhole', 'Boomerang', 'Mountain', 'Grass tree', 'Seed pod', 'Southern stars', 'Banksia', 'Boab'];
 const drawings = [
  '<path d="M21 51Q45 35 43 9Q17 16 21 51Z" fill="#457664"/><path d="M21 51L38 20"/>',
@@ -35,56 +37,91 @@ function tone(win = false) {
   try { audio ||= new (window.AudioContext || window.webkitAudioContext)(); audio.resume().catch(() => {}); const o = audio.createOscillator(), g = audio.createGain(); o.connect(g); g.connect(audio.destination); o.type = 'sine'; o.frequency.setValueAtTime(win ? 660 : 440, audio.currentTime); o.frequency.exponentialRampToValueAtTime(win ? 990 : 660, audio.currentTime + .12); g.gain.setValueAtTime(.07, audio.currentTime); g.gain.exponentialRampToValueAtTime(.001, audio.currentTime + .25); o.start(); o.stop(audio.currentTime + .26); } catch { /* Audio support is optional. */ }
 }
 function unlocked(i) { return i === 0 || saved.cleared.includes(LEVELS[i - 1].id); }
-function nextIndex() { const i = LEVELS.findIndex(l => !saved.cleared.includes(l.id)); return i < 0 ? 9 : i; }
+function nextIndex() { const i = LEVELS.findIndex(l => !saved.cleared.includes(l.id)); return i < 0 ? LEVELS.length - 1 : i; }
 function show(name) {
   if (busy) return;
   if (name === 'settings') settingsFrom = screen;
   screen = name; document.body.dataset.screen = name;
   document.querySelectorAll('.page').forEach(p => p.hidden = p.id !== name);
   if (name === 'home' || name === 'levels') menu();
-  if (name === 'play') requestAnimationFrame(render);
+  if (name === 'play') { theme(LEVELS[index]); requestAnimationFrame(render); }
   $(name).querySelector('button')?.focus({ preventScroll: true });
 }
 function menu() {
   const count = new Set(saved.cleared).size, next = LEVELS[nextIndex()];
-  $('progressText').textContent = `${count} / 10`; $('campaign').value = count;
-  $('nextGoal').textContent = count === 10 ? 'Boab Crown earned. The whole track is yours to replay.' : `Next: ${next.name}. ${next.goal}.`;
-  $('continue').textContent = state && S.status(state) === 'playing' ? 'Resume your stack' : count === 10 ? 'Return to the crown' : `Play level ${next.id}`;
+  theme(next);
+  $('progressText').textContent = `${count} / ${LEVELS.length}`; $('campaign').max = LEVELS.length; $('campaign').value = count;
+  $('journeyName').textContent = chapterName(next);
+  const rewards = $('earnedRewards');
+  rewards.replaceChildren();
+  for (const [id, title] of [[10, 'Boab Crown'], [20, 'Red Centre Gold']]) {
+    if (!saved.cleared.includes(id)) continue;
+    const badge = document.createElement('span');
+    badge.className = 'earned-reward';
+    badge.textContent = `${title} earned`;
+    rewards.append(badge);
+  }
+  rewards.hidden = !rewards.childElementCount;
+  $('nextGoal').textContent = count === LEVELS.length ? 'Boab Crown and Red Centre Gold earned. Both chapters are yours to replay.' : `Next: ${next.name}. ${next.goal}.`;
+  $('continue').textContent = state && S.status(state) === 'playing' ? 'Resume your stack' : count === LEVELS.length ? 'Return to Uluru Gold' : `Play level ${next.id}`;
   $('levelList').replaceChildren();
-  LEVELS.forEach((l, i) => { const b = document.createElement('button'); b.className = 'level'; b.disabled = !unlocked(i); b.innerHTML = `<span class="level-number">${saved.cleared.includes(l.id) ? '✓' : l.id}</span><span><b>${l.name}</b><small>${l.goal}</small></span><span>${b.disabled ? 'Locked' : '›'}</span>`; b.onclick = () => start(i); $('levelList').append(b); });
+  for (const chapter of [1, 2]) {
+    const levels = LEVELS.filter(l => l.chapter === chapter), complete = levels.filter(l => saved.cleared.includes(l.id)).length;
+    const group = document.createElement('section'); group.className = `chapter chapter-${chapter}`;
+    const open = unlocked(LEVELS.indexOf(levels[0]));
+    group.innerHTML = `<div class="chapter-landscape" aria-hidden="true"></div><p class="eyebrow">CHAPTER ${chapter} / ${complete} OF ${levels.length} CLEARED</p><h3>${chapterName(levels[0])}</h3><p class="chapter-description">${chapter === 1 ? 'Follow the trail to earn your Boab Crown.' : open ? 'Gold in the red earth. Earn your Red Centre Gold.' : 'Clear Boab Crown, level 10, to unlock the red earth.'}</p>`;
+    for (const l of levels) {
+      const i = LEVELS.indexOf(l), cleared = saved.cleared.includes(l.id), b = document.createElement('button');
+      b.className = 'level'; b.disabled = !unlocked(i);
+      if (i === nextIndex() && !cleared) { b.classList.add('next-level'); b.setAttribute('aria-current', 'step'); }
+      b.innerHTML = `<span class="level-number">${l.id}</span><span><b>${l.name}</b><small>${l.goal}${l.hints ? ` / ${l.hints} starting hints` : ''}</small></span><span>${cleared ? 'Cleared' : b.disabled ? 'Locked' : 'Next'}</span>`;
+      b.onclick = () => start(i); group.append(b);
+    }
+    $('levelList').append(group);
+  }
 }
 function start(i) { if (busy || !unlocked(i)) return; index = i; try { state = S.newGame(LEVELS[i], Date.now() >>> 0); } catch { tell('This stack could not be dealt. Choose another level or try again.'); return; } show('play'); render(); }
 function render() {
   if (!state) return;
   const l = LEVELS[index], free = new Set(S.freeTiles(state)), pairs = S.matchesAvailable(state);
-  $('levelNumber').textContent = `THE BUSH TRACK / ${l.id} OF 10`; $('levelName').textContent = l.name; $('goal').textContent = l.goal;
+  $('levelNumber').textContent = `${chapterName(l).toUpperCase()} / ${l.id} OF ${LEVELS.length}`; $('levelName').textContent = l.name; $('goal').textContent = l.goal;
+  $('goldGuide').hidden = l.objective !== 'gold';
+  const guideKey = `${l.id}:${state.gold}`;
+  if ($('goldFaces').dataset.level !== guideKey) {
+    $('goldFaces').dataset.level = guideKey;
+    $('goldFaces').innerHTML = Array.from({ length: state.gold }, (_, n) => `<span class="gold-example" role="img" aria-label="Gold ${names[n]}">${face(n)}<span aria-hidden="true">&#9670;</span></span>`).join('');
+  }
   $('left').textContent = state.pairsLeft; $('available').textContent = pairs; $('availableBox').classList.toggle('warning', pairs <= 1);
-  $('objectiveCount').textContent = l.objective === 'turns' ? Math.max(0, l.limit - state.turns) : l.objective === 'mistakes' ? `${state.mistakes}/${l.limit}` : state.pairsCleared;
-  $('objectiveLabel').textContent = l.objective === 'turns' ? 'TRIES LEFT' : l.objective === 'mistakes' ? 'WRONG PAIRS' : 'CLEARED';
-  $('guidance').textContent = pairs === 0 ? 'No free pairs. Shuffle to open a new route.' : pairs === 1 ? 'One free pair left. Look at what it will uncover.' : index < 3 ? 'Free means nothing on top and one side open.' : 'Choose a pair that opens up the stack.';
+  $('objectiveCount').textContent = l.objective === 'gold' ? S.goldLeft(state) : l.objective === 'turns' ? Math.max(0, l.limit - state.turns) : l.objective === 'mistakes' ? `${state.mistakes}/${l.limit}` : state.pairsCleared;
+  $('objectiveLabel').textContent = l.objective === 'gold' ? 'GOLD TILES LEFT' : l.objective === 'turns' ? 'TRIES LEFT' : l.objective === 'mistakes' ? 'WRONG PAIRS' : 'CLEARED';
+  $('guidance').textContent = pairs === 0 ? 'No free pairs. Shuffle to open a new route.' : pairs === 1 ? 'One free pair left. Look at what it will uncover.' : l.objective === 'gold' ? 'Match identical gold-marked faces. Plain tiles can stay; clear them to reach gold.' : index < 3 ? 'Free means nothing on top and one side open.' : 'Choose a pair that opens up the stack.';
   const space = $('boardSpace'), board = $('board');
   const maxX = Math.max(...state.tiles.map(t => t.x + 2)), maxY = Math.max(...state.tiles.map(t => t.y + 2)), maxZ = Math.max(...state.tiles.map(t => t.z));
   const unit = Math.min((space.clientWidth - 16) / (maxX + maxZ * .15), (space.clientHeight - 18) / (maxY * 1.22 + maxZ * .2), 42);
   board.style.width = `${(maxX + maxZ * .15) * unit}px`; board.style.height = `${(maxY * 1.22 + maxZ * .2) * unit}px`;
   const focused = document.activeElement?.dataset.tile;
   board.replaceChildren();
-  for (const t of state.tiles) { if (!t.alive) continue; const b = document.createElement('button'); b.className = 'tile' + (!free.has(t.id) ? ' blocked' : '') + (state.picked === t.id ? ' selected' : '') + (state.hint?.includes(t.id) ? ' hinted' : ''); b.dataset.tile = t.id; b.setAttribute('aria-label', `${names[t.face]} tile ${t.id + 1}, ${free.has(t.id) ? 'free' : 'blocked'}`); b.setAttribute('aria-pressed', String(state.picked === t.id)); b.style.cssText = `left:${(t.x + t.z * .15) * unit}px;top:${(t.y * 1.22 + (maxZ - t.z) * .2) * unit}px;width:${unit * 1.94}px;height:${unit * 2.32}px;z-index:${t.z + 1}`; b.innerHTML = face(t.face); b.onclick = () => send({ pick: t.id }); board.append(b); }
+  for (const t of state.tiles) { if (!t.alive) continue; const b = document.createElement('button'); b.className = 'tile' + (t.face < state.gold ? ' gold-tile' : '') + (!free.has(t.id) ? ' blocked' : '') + (state.picked === t.id ? ' selected' : '') + (state.hint?.includes(t.id) ? ' hinted' : ''); b.dataset.tile = t.id; b.setAttribute('aria-label', `${t.face < state.gold ? 'Gold, ' : ''}${names[t.face]} tile ${t.id + 1}, ${free.has(t.id) ? 'free' : 'blocked'}`); b.setAttribute('aria-pressed', String(state.picked === t.id)); b.style.cssText = `left:${(t.x + t.z * .15) * unit}px;top:${(t.y * 1.22 + (maxZ - t.z) * .2) * unit}px;width:${unit * 1.94}px;height:${unit * 2.32}px;z-index:${t.z + 1}`; b.innerHTML = face(t.face) + (t.face < state.gold ? '<span class="gold-mark" aria-hidden="true">&#9670;</span>' : ''); b.onclick = () => send({ pick: t.id }); board.append(b); }
   if (focused !== undefined) board.querySelector(`[data-tile="${focused}"]`)?.focus({ preventScroll: true });
-  for (const kind of ['undo', 'hint', 'shuffle']) { const n = state[`${kind === 'undo' ? 'undos' : kind === 'hint' ? 'hints' : 'shuffles'}Left`]; $(kind).textContent = `${kind[0].toUpperCase() + kind.slice(1)} ${n ? '· ' + n : '· Ad'}`; $(kind).disabled = busy || (!n && !rewardAvailable()) || (kind === 'undo' && !state.history.length); }
+  for (const kind of ['undo', 'hint', 'shuffle']) { const n = state[`${kind === 'undo' ? 'undos' : kind === 'hint' ? 'hints' : 'shuffles'}Left`]; $(kind).textContent = `${kind[0].toUpperCase() + kind.slice(1)} ${n ? '· ' + n : rewardAvailable() ? '· Ad' : '· 0'}`; $(kind).disabled = busy || (!n && !rewardAvailable()) || (kind === 'undo' && !state.history.length); }
 }
 function burst() { if (saved.reduced) return; const layer = $('sparkles'); layer.replaceChildren(); for (let i = 0; i < 16; i++) { const p = document.createElement('i'); p.style.cssText = `--dx:${Math.cos(i * 2.4) * 120}px;--dy:${Math.sin(i * 2.4) * 100}px;--r:${i * 47}deg`; layer.append(p); } }
 function send(input) { if (busy || screen !== 'play') return; S.step(state, input); render(); const event = state.events[0]; if (event?.type === 'match') { tone(); burst(); } if (event?.type === 'mismatch') tell('Different faces. Try another pair.'); if (event?.type === 'blocked') tell('That tile needs an open side and nothing on top.'); if (S.status(state) !== 'playing') finish(); }
 async function finish() {
   const won = S.status(state) === 'won', l = LEVELS[index];
   if (won) { if (!saved.cleared.includes(l.id)) saved.cleared.push(l.id); save(); tone(true); }
-  $('resultKicker').textContent = won ? index === 9 ? 'THE BOAB CROWN IS YOURS' : 'ANOTHER STOP ON THE TRACK' : 'A DIFFERENT ROUTE NEXT TIME';
-  $('resultTitle').textContent = won ? index === 9 ? 'Chapter complete!' : 'Beautifully paired.' : 'Stack stopped.';
-  $('resultDetail').textContent = won ? `${l.name} complete.` : ({ stuck: 'No matching free pairs remain.', turns: 'You have used every try.', mistakes: 'Too many wrong pairs this time.' }[S.cause(state)]);
-  $('resultStats').textContent = `${state.pairsCleared} pairs cleared · ${state.turns} tries · ${state.mistakes} wrong pairs`;
-  $('resultNext').textContent = won && index < 9 ? `Next: ${LEVELS[index + 1].name}. ${LEVELS[index + 1].goal}.` : won ? 'All ten stops cleared. Come back for a fresh deal. More chapters are not available yet.' : 'Every new deal has a clearing route. Look for pairs that free the tiles below.';
-  $('next').hidden = !won; $('next').textContent = index < 9 ? 'On to the next stop' : 'Explore the track';
+  const finale = l.id % 10 === 0, next = LEVELS[index + 1];
+  $('resultKicker').textContent = won ? finale ? l.chapter === 1 ? 'BOAB CROWN EARNED' : 'RED CENTRE GOLD EARNED' : chapterName(l).toUpperCase() : 'A DIFFERENT ROUTE NEXT TIME';
+  $('resultTitle').textContent = won ? finale ? 'Chapter complete!' : l.objective === 'gold' ? 'All gold found!' : 'Beautifully paired.' : 'Stack stopped.';
+  $('resultDetail').textContent = won ? `${l.name} complete.${l.objective === 'gold' ? ' Every gold tile is cleared. Plain tiles can stay.' : ''}` : ({ stuck: 'No matching free pairs remain.', turns: 'You have used every try.', mistakes: 'Too many wrong pairs this time.' }[S.cause(state)]);
+  $('resultStats').textContent = `${state.pairsCleared} pairs cleared / ${state.turns} tries / ${state.mistakes} wrong pairs`;
+  $('resultNext').textContent = won ? next ? `${finale ? 'Chapter 2 unlocked: The Red Centre! ' : ''}Next: ${next.name}. ${next.goal}.` : 'All 20 stops cleared. Both chapter rewards are yours. Return tomorrow for a fresh deal. More chapters are not available yet.' : 'Every new deal has a clearing route. Look for pairs that free the tiles below.';
+  $('unlockCard').hidden = !(won && finale);
+  $('unlockCard').innerHTML = `<span class="eyebrow">${l.chapter === 1 ? 'NEW COUNTRY TO EXPLORE' : 'CHAPTER REWARD'}</span><h3>${l.chapter === 1 ? 'The Red Centre' : 'Red Centre Gold'}</h3><p>${l.chapter === 1 ? 'Ten new stops. Find the gold-marked pairs, with starting hints to help you.' : 'From First Nugget to Uluru Gold. Both chapters are yours to replay.'}</p>`;
+  $('next').hidden = !won; $('next').textContent = next ? finale ? 'Enter The Red Centre' : 'On to the next stop' : 'Explore both chapters';
   $('rescue').hidden = won || S.cause(state) !== 'stuck' || !rewardAvailable();
-  $('medal').textContent = won ? index === 9 ? '♛' : '✦' : '↻';
+  $('medal').textContent = won ? finale ? '\u265b' : '\u2726' : '\u21bb';
+  $('result').classList.toggle('finale', won && finale);
   show('result'); $('result').classList.toggle('celebrate', won); busy = true;
   try { await maybeInterstitial(); } catch { tell('The ad was unavailable. You can keep playing.'); } finally { busy = false; }
 }
@@ -102,7 +139,7 @@ async function help(kind, rescue = false) {
 }
 $('continue').onclick = () => state && S.status(state) === 'playing' ? show('play') : start(nextIndex());
 $('pause').onclick = () => show('paused'); $('resume').onclick = () => show('play');
-$('retry').onclick = () => start(index); $('next').onclick = () => index < 9 ? start(index + 1) : show('levels');
+$('retry').onclick = () => start(index); $('next').onclick = () => index < LEVELS.length - 1 ? start(index + 1) : show('levels');
 $('rescue').onclick = () => help('shuffle', true);
 for (const kind of ['undo', 'hint', 'shuffle']) $(kind).onclick = () => help(kind);
 document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => show(b.dataset.go));

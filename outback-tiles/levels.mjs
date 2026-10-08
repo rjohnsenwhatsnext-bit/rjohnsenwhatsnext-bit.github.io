@@ -31,4 +31,31 @@ export const LEVELS = [
   { id: 10, chapter: 1, name: 'Boab Crown', objective: 'mistakes', limit: 5, goal: 'Clear the crown with 5 wrong pairs at most',
     faces: 12, shuffles: 2, undos: 3,
     layers: [L(10, 4, 0, 0, [[0, 0], [9, 0], [0, 3], [9, 3]]), L(8, 2, 2, 2), L(6, 2, 4, 2), L(2, 2, 6, 2)] },
+
+  // Chapter 2, "The Red Centre", is LEVELS[10..19]. New: gold objective and starting hints.
+  // 11 to 12: gold nuggets, clear only those
+  { id: 11, chapter: 2, name: 'First Nugget', objective: 'gold', gold: 2, limit: 0, goal: 'Clear every gold tile',
+    faces: 6, hints: 2, shuffles: 3, undos: 4, layers: [L(6, 2), L(2, 2, 4)] },
+  { id: 12, chapter: 2, name: 'Spinifex Flat', objective: 'gold', gold: 3, limit: 0, goal: 'Clear every gold tile',
+    faces: 7, hints: 2, shuffles: 3, undos: 4, layers: [L(8, 2), L(6, 2, 2, 1)] },
+  // 13 to 15: a ring layout, a careful stack, then a deep gold seam
+  { id: 13, chapter: 2, name: 'Salt Pan', objective: 'clear', limit: 0, goal: 'Clear the ring',
+    faces: 8, hints: 2, shuffles: 3, undos: 4, layers: [L(6, 4, 0, 0, [[2, 1], [3, 1], [2, 2], [3, 2]]), L(2, 2, 2, 1)] },
+  { id: 14, chapter: 2, name: 'Ironbark', objective: 'mistakes', limit: 4, goal: 'Clear the stack with 4 wrong pairs at most',
+    faces: 9, hints: 1, shuffles: 2, undos: 3, layers: [L(8, 3), L(6, 2, 2, 1)] },
+  { id: 15, chapter: 2, name: 'Gold Seam', objective: 'gold', gold: 4, limit: 0, goal: 'Clear every gold tile',
+    faces: 8, hints: 1, shuffles: 2, undos: 3, layers: [L(8, 4), L(6, 2, 2, 1), L(4, 2, 2, 3)] },
+  // 16 to 18: gold, tries and a pair target together
+  { id: 16, chapter: 2, name: 'Mirage', objective: 'turns', limit: 26, goal: 'Clear the stack in 26 tries',
+    faces: 10, hints: 1, shuffles: 2, undos: 3, layers: [L(8, 2), L(6, 2, 2), L(4, 2, 4)] },
+  { id: 17, chapter: 2, name: 'Billabong', objective: 'gold', gold: 5, limit: 0, goal: 'Clear every gold tile',
+    faces: 9, hints: 1, shuffles: 2, undos: 3, layers: [L(10, 3, 0, 0, [[4, 1], [5, 1]]), L(6, 2, 2, 1)] },
+  { id: 18, chapter: 2, name: 'Dune Crossing', objective: 'target', limit: 18, goal: 'Clear 18 pairs',
+    faces: 10, hints: 1, shuffles: 2, undos: 3, layers: [L(10, 4), L(6, 2, 2, 2)] },
+  // 19: preparation challenge, few wrong pairs on a wide stack
+  { id: 19, chapter: 2, name: 'Heatwave', objective: 'mistakes', limit: 3, goal: 'Clear the stack with 3 wrong pairs at most',
+    faces: 11, hints: 0, shuffles: 2, undos: 2, layers: [L(10, 3), L(8, 2, 2, 1), L(6, 2, 4, 2)] },
+  // 20: finale
+  { id: 20, chapter: 2, name: 'Uluru Gold', objective: 'gold', gold: 6, limit: 0, goal: 'Clear every gold tile',
+    faces: 12, hints: 1, shuffles: 2, undos: 2, layers: [L(12, 2), L(10, 2, 2, 1), L(8, 2, 4, 1)] },
 ];

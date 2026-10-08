@@ -20,6 +20,13 @@
 //   Tiles are 2 x 2 in half units; dx and dy are in half units, so an odd offset
 //   rests a tile across two below.
 //
+// Chapter 2 additions (both optional, chapter 1 levels are unchanged):
+//   objective 'gold'   faces 0 to gold-1 are gold nuggets (level.gold = how many
+//                      faces); the level is won once no gold tile is left, even if
+//                      plain tiles remain. state.gold holds the count, goldLeft(s)
+//                      the gold tiles still in play.
+//   level.hints        hints the player starts with (default 0)
+//
 // Every deal is built by removing free pairs from the full layout one at a time
 // and giving each pair one face, so the layout can always be cleared in that
 // order. A shuffle deals the tiles left the same way, so it stays winnable.
@@ -124,7 +131,8 @@ export function newGame(level, seed = 1) {
     tiles, picked: null, hint: null, history: [],
     pairsTotal: tiles.length / 2, pairsLeft: tiles.length / 2, pairsCleared: 0,
     turns: 0, mistakes: 0, tick: 0,
-    undosLeft: level.undos ?? 0, shufflesLeft: level.shuffles ?? 0, hintsLeft: 0,
+    undosLeft: level.undos ?? 0, shufflesLeft: level.shuffles ?? 0, hintsLeft: level.hints ?? 0,
+    gold: level.gold ?? 0,
     events: [],
   };
   deal(s, tiles.map((t) => t.id));
@@ -140,7 +148,13 @@ export function cause(s) {
   return null;
 }
 
-const isWon = (s) => (s.objective === 'target' ? s.pairsCleared >= s.limit : s.pairsLeft === 0);
+export const goldLeft = (s) => s.tiles.filter((t) => t.alive && t.face < s.gold).length;
+
+const isWon = (s) => {
+  if (s.objective === 'target') return s.pairsCleared >= s.limit;
+  if (s.objective === 'gold') return goldLeft(s) === 0;
+  return s.pairsLeft === 0;
+};
 
 export function status(s) {
   if (isWon(s)) return 'won';
