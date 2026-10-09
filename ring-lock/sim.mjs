@@ -14,12 +14,31 @@
 // state.events lists what happened this tick, for sound and haptics:
 //   {type:'notch', ring}  {type:'hint', ring, dir}  {type:'won'}  {type:'lost'}
 // The list is replaced on every step.
+//
+// CHAPTER 2 RULES (all optional per ring, all depend only on positions):
+//   step: k           a direct turn moves this ring k notches instead of 1.
+//                     Its links still move by dir * factor.
+//   fixed: true       the ring cannot be turned directly. Only links move it.
+//   gate: {ring, at}  the ring can be turned directly only while ring `ring`
+//                     sits on notch `at`. A refused turn costs no move and
+//                     reports {type:'blocked', ring}. Links still drag a gated ring.
+// Level scrambles must stay legal under these rules (see tests). A gated ring's
+// links must never move its own gate ring, so every scramble reverses cleanly.
+// Moves are only listed by solve() and the bot when canTurn() allows them.
 
 const mod = (a, n) => ((a % n) + n) % n;
 
-// Turn `ring` by `dir`, plus its links. Mutates pos.
+// Can the player turn `ring` directly right now?
+export function canTurn(pos, rings, ring) {
+  const r = rings[ring];
+  if (r.fixed) return false;
+  if (r.gate) return pos[r.gate.ring] === r.gate.at;
+  return true;
+}
+
+// Turn `ring` by `dir`, plus its links. Mutates pos. Does not check canTurn.
 export function turn(pos, rings, ring, dir) {
-  pos[ring] = mod(pos[ring] + dir, rings[ring].n);
+  pos[ring] = mod(pos[ring] + dir * (rings[ring].step || 1), rings[ring].n);
   for (const [j, k] of rings[ring].links || []) pos[j] = mod(pos[j] + dir * k, rings[j].n);
 }
 
@@ -38,7 +57,8 @@ export function newGame(level, seed = 1) {
     levelId: level.id,
     seed,
     skin: Math.abs(Math.floor(seed)) % 5, // cosmetic only, never changes the rules
-    rings: level.rings.map((r) => ({ n: r.n, target: r.target, links: (r.links || []).map((l) => l.slice()) })),
+    rings: level.rings.map((r) => ({ n: r.n, target: r.target, links: (r.links || []).map((l) => l.slice()),
+      step: r.step || 1, fixed: !!r.fixed, gate: r.gate ? { ring: r.gate.ring, at: r.gate.at } : null })),
     pos: startPositions(level),
     movesLeft: level.moves,
     movesMade: 0,
@@ -66,6 +86,7 @@ export function solve(state, limit = state.movesLeft) {
     const next = [];
     for (const p of frontier) {
       for (let ring = 0; ring < rings.length; ring++) {
+        if (!canTurn(p, rings, ring)) continue;
         for (const dir of [1, -1]) {
           const q = p.slice();
           turn(q, rings, ring, dir);
@@ -92,6 +113,10 @@ export function step(state, input) {
   state.tick++;
   const move = input && input.move;
   if (move && Number.isInteger(move[0]) && move[0] >= 0 && move[0] < state.rings.length && (move[1] === 1 || move[1] === -1)) {
+    if (!canTurn(state.pos, state.rings, move[0])) {
+      state.events.push({ type: 'blocked', ring: move[0] });
+      return state;
+    }
     turn(state.pos, state.rings, move[0], move[1]);
     state.movesLeft--;
     state.movesMade++;

@@ -3,7 +3,8 @@
 // by dir also turns each linked ring by dir * factor (factor -1 turns it the
 // other way). scramble: moves played on the solved board to make the start, so
 // a level is always solvable in at most scramble.length moves. moves: the budget.
-const R = (n, target = 0, links = []) => ({ n, target, links });
+// Chapter 2 (LEVELS[10..19]) adds optional step, fixed and gate: see sim.mjs.
+const R = (n, target = 0, links = [], extra = {}) => ({ n, target, links, ...extra });
 
 export const LEVELS = [
   { id: 1, chapter: 1, name: 'First Turn', objective: 'Turn the ring until its mark sits at the top.',
@@ -28,4 +29,34 @@ export const LEVELS = [
   { id: 10, chapter: 1, name: 'The Lock', objective: 'Four linked rings, mixed sizes, one spare move. Open the lock.',
     rings: [R(6, 0, [[1, 1], [3, -1]]), R(8, 3, [[2, 1]]), R(12, 6, [[3, 1]]), R(6, 2)],
     scramble: [[0, 1], [1, 1], [2, -1], [3, 1], [0, 1], [2, -1]], moves: 7 },
+
+  // Chapter 2: Gates and Gears.
+  { id: 11, chapter: 2, name: 'Double Step', objective: 'This ring jumps two notches a turn. Count the jumps.',
+    rings: [R(8, 0, [], { step: 2 }), R(6)], scramble: [[0, 1], [0, 1], [1, 1]], moves: 4 },
+  { id: 12, chapter: 2, name: 'Odd Count', objective: 'Seven notches and two-notch jumps: it still gets there, the long way round.',
+    rings: [R(7, 0, [], { step: 2 }), R(7, 0, [[0, 1]])], scramble: [[0, 1], [0, 1], [0, 1], [1, -1]], moves: 5 },
+  { id: 13, chapter: 2, name: 'First Gate', objective: 'The second ring only turns while the first sits at the top.',
+    rings: [R(6), R(6, 0, [], { gate: { ring: 0, at: 0 } })], scramble: [[1, 1], [0, 1], [0, 1]], moves: 4 },
+  { id: 14, chapter: 2, name: 'Key Notch', objective: 'The gate opens at notch three, not at the top. Open it, turn, then come home.',
+    rings: [R(6), R(6, 0, [], { gate: { ring: 0, at: 3 } })],
+    scramble: [[0, 1], [0, 1], [0, 1], [1, 1], [1, 1], [0, -1]], moves: 7 },
+  { id: 15, chapter: 2, name: 'Frozen Ring', objective: 'The middle ring will not turn by hand. Move it with its neighbours.',
+    rings: [R(6, 0, [[1, 1]]), R(6, 0, [], { fixed: true }), R(6, 0, [[1, -1]])],
+    scramble: [[0, 1], [0, 1], [2, 1], [2, 1], [2, 1]], moves: 6 },
+  { id: 16, chapter: 2, name: 'Jump the Gate', objective: 'Two-notch jumps meet a gate that opens at notch four.',
+    rings: [R(8, 0, [], { step: 2 }), R(8, 3, [], { gate: { ring: 0, at: 4 } })],
+    scramble: [[0, 1], [0, 1], [1, 1], [1, 1], [0, 1]], moves: 6 },
+  { id: 17, chapter: 2, name: 'Two Gates', objective: 'Each gate is held open by the ring before it. Work from the front.',
+    rings: [R(6), R(6, 0, [], { gate: { ring: 0, at: 0 } }), R(6, 2, [], { gate: { ring: 1, at: 0 } })],
+    scramble: [[2, 1], [2, 1], [1, 1], [0, 1], [0, 1]], moves: 6 },
+  { id: 18, chapter: 2, name: 'Frozen Gate', objective: 'A frozen ring holds the gate. Turn its neighbours to free it.',
+    rings: [R(8, 0, [[1, 1]]), R(8, 0, [], { fixed: true }), R(8, 0, [], { gate: { ring: 1, at: 0 } }), R(8, 4, [[1, -1]])],
+    scramble: [[2, 1], [3, 1], [3, 1], [0, 1], [0, 1]], moves: 6 },
+  { id: 19, chapter: 2, name: 'Clockwork', objective: 'Jumps, links and two gates in one tight machine. Six moves at most.',
+    rings: [R(8, 0, [[3, 1]], { step: 2 }), R(8, 2, [], { gate: { ring: 0, at: 4 } }), R(8, 0, [], { gate: { ring: 1, at: 2 } }), R(8, 5)],
+    scramble: [[2, 1], [0, 1], [0, 1], [1, 1], [1, 1], [0, 1]], moves: 6 },
+  { id: 20, chapter: 2, name: 'The Vault', objective: 'Every trick so far, five rings, one spare move. Open the vault.',
+    rings: [R(6, 0, [[1, 1]]), R(6, 3, [], { fixed: true }), R(8, 0, [[3, 1]], { step: 2, gate: { ring: 1, at: 3 } }),
+      R(8, 4, [], { gate: { ring: 0, at: 0 } }), R(6, 0, [[1, -1]])],
+    scramble: [[2, 1], [3, 1], [0, 1], [4, 1], [0, 1], [4, 1], [2, 1]], moves: 8 },
 ];
