@@ -59,6 +59,25 @@ function walled(id, name, objective, shape, seed, slips, dirs) {
   return shaped(id, name, objective, shape, seed, slips, dirs, 2);
 }
 
+// Chapter 3, "Sturdy": the board is laid backwards as before, then `count`
+// arrows are made sturdy (two taps). Sturdy arrows block like plain ones, so
+// every board stays solvable.
+const STURDY = { '^': 'U', '>': 'R', v: 'D', '<': 'L' };
+function sturdy(id, name, objective, shape, seed, slips, dirs, count) {
+  const lvl = shaped(id, name, objective, shape, seed, slips, dirs, 3);
+  const rand = rng(seed + 99);
+  const spots = [];
+  lvl.rows.forEach((r, y) => r.split('').forEach((c, x) => { if (STURDY[c]) spots.push([x, y]); }));
+  for (let i = spots.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    const t = spots[i]; spots[i] = spots[j]; spots[j] = t;
+  }
+  const grid = lvl.rows.map((r) => r.split(''));
+  for (const [x, y] of spots.slice(0, Math.min(count, spots.length))) grid[y][x] = STURDY[grid[y][x]];
+  lvl.rows = grid.map((r) => r.join(''));
+  return lvl;
+}
+
 export const LEVELS = [
   drawn(1, 'First Slide', 'Tap each arrow to send it off the board.',
     ['>..', '...', '.^.'], 5),
@@ -101,6 +120,27 @@ export const LEVELS = [
     ['#######', '#X#####', '#######', '###X###', '#######', '#####X#', '#######'], 1909, 1),
   walled(20, 'Open Road', 'The finale. A walled yard, a long road and no slips allowed.',
     ['#######', '#XX#XX#', '#######', '#######', '#XX#XX#', '#######', '#######'], 2010, 0),
+  // Chapter 3, "Sturdy": LEVELS[20..29]. Sturdy arrows (thick, marked with a pip) need two taps.
+  sturdy(21, 'Two Taps', 'A sturdy arrow takes two taps: one to crack it, one to send it off. Cracking is not a slip.',
+    ['###', '###', '###'], 2101, 4, '^>v<', 2),
+  sturdy(22, 'Crack and Clear', 'Crack a sturdy arrow only when its way is open. A blocked tap is still a slip. At most 4 slips.',
+    ['####', '####', '####', '####'], 2202, 4, '^>v<', 4),
+  sturdy(23, 'Heavy Rows', 'Long rows of sturdy arrows slide sideways. Undo brings a crack back too. At most 3 slips.',
+    ['#####', '#####', '.....', '#####', '#####'], 2303, 3, '<>', 6),
+  sturdy(24, 'Tall Stacks', 'Columns of sturdy arrows only move up and down. At most 3 slips.',
+    ['#####', '#####', '#####', '#####', '#####', '#####'], 2404, 3, '^v', 8),
+  sturdy(25, 'Hard Centre', 'A sturdy heart inside a soft ring. At most 3 slips.',
+    ['#####', '#####', '#####', '#####', '#####'], 2505, 3, '^>v<', 9),
+  sturdy(26, 'Wall and Shell', 'Walls and sturdy arrows together. Clear the soft ones around the walls first. At most 3 slips.',
+    ['#####', '#XXX#', '#####', '#XXX#', '#####'], 2606, 3, '^>v<', 7),
+  sturdy(27, 'Split Yard', 'Two yards split by a wall line. Every sturdy arrow costs a second tap. At most 2 slips.',
+    ['######', '######', 'XXXXXX', '######', '######'], 2707, 2, '^>v<', 10),
+  sturdy(28, 'Hollow Plus', 'A plus shape with pillars in the arms. At most 2 slips.',
+    ['..##..', '..#X..', '######', '##X###', '..##..', '..##..'], 2808, 2, '^>v<', 9),
+  sturdy(29, 'Iron Grid', 'A packed grid of sturdy arrows. Plan twice, tap twice. At most 1 slip.',
+    ['######', '#X##X#', '######', '######', '#X##X#', '######'], 2909, 1, '^>v<', 14),
+  sturdy(30, 'Last Lock', 'The finale. A big sturdy board and no slips allowed.',
+    ['#######', '#######', '###X###', '#######', '#######', '#######', '#######'], 3010, 0, '^>v<', 18),
 ];
 
 // A fresh solvable 6x6 board for a given day number (for example days since 2026-01-01).

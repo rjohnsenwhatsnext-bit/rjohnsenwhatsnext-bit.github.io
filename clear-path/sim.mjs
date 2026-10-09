@@ -11,6 +11,13 @@
 // arrow still has a way out (the tests check it with the bot). A wall is reported
 // as a blocker like any arrow, so the highlight shows it.
 //
+// STURDY ARROWS (chapter 3): 'U' 'R' 'D' 'L' are sturdy arrows (cell values 6 to
+// 9, direction as the plain arrow). A sturdy arrow needs two taps. The first tap,
+// when its path is clear, cracks it into a plain arrow (last.type 'crack', no
+// slip, left unchanged); the second slides it off. A blocked tap is a slip as
+// usual. Undo takes back a crack too. Solvability is unchanged, because a sturdy
+// arrow blocks exactly like a plain one and is free exactly when a plain one is.
+//
 // TICK: one tick is one player action (there is no clock in the rules). The
 // frontend animates the slide however long it likes.
 //
@@ -22,12 +29,23 @@
 // STATE (plain object, JSON safe): { w, h, cells, left, slips, maxSlips,
 //   ticks, seed, history, last }. cells is row major: 0 empty, 1 up, 2 right,
 //   3 down, 4 left. last describes the most recent action:
-//   { type: 'slide'|'blocked'|'undo'|'none', x, y, blockers: [{x,y}] }.
+//   { type: 'slide'|'blocked'|'undo'|'crack'|'none', x, y, blockers: [{x,y}] }.
+//   Cells 6 to 9 are sturdy up, right, down, left.
 
 export const EMPTY = 0, UP = 1, RIGHT = 2, DOWN = 3, LEFT = 4, WALL = 5;
+export const STURDY_UP = 6, STURDY_RIGHT = 7, STURDY_DOWN = 8, STURDY_LEFT = 9;
 const DX = [0, 0, 1, 0, -1];
 const DY = [0, -1, 0, 1, 0];
-const GLYPH = { '^': UP, '>': RIGHT, v: DOWN, '<': LEFT, X: WALL };
+const GLYPH = {
+  '^': UP, '>': RIGHT, v: DOWN, '<': LEFT, X: WALL,
+  U: STURDY_UP, R: STURDY_RIGHT, D: STURDY_DOWN, L: STURDY_LEFT,
+};
+
+// Direction 1 to 4 of an arrow cell, sturdy or plain (0 for empty or wall).
+function dirOf(c) {
+  if (c >= STURDY_UP) return c - 5;
+  return c === WALL ? 0 : c;
+}
 
 export function newGame(level, seed = 0) {
   const w = level.w, h = level.h;
@@ -48,9 +66,9 @@ export function newGame(level, seed = 0) {
 
 // Cells holding an arrow in front of the arrow at (x, y), nearest first.
 export function blockers(state, x, y) {
-  const d = state.cells[y * state.w + x];
+  const d = dirOf(state.cells[y * state.w + x]);
   const out = [];
-  if (!d || d === WALL) return out;
+  if (!d) return out;
   let cx = x + DX[d], cy = y + DY[d];
   while (cx >= 0 && cy >= 0 && cx < state.w && cy < state.h) {
     if (state.cells[cy * state.w + cx]) out.push({ x: cx, y: cy });
@@ -84,7 +102,7 @@ export function step(state, input) {
     const prev = state.history.pop();
     if (prev) {
       state.cells[prev.y * state.w + prev.x] = prev.d;
-      state.left++;
+      if (!prev.crack) state.left++;
       state.last = { type: 'undo', x: prev.x, y: prev.y, blockers: [] };
     }
     return state;
@@ -97,6 +115,11 @@ export function step(state, input) {
   if (b.length) {
     state.slips++;
     state.last = { type: 'blocked', x: t.x, y: t.y, blockers: b };
+  } else if (d >= STURDY_UP) {
+    // First tap on a free sturdy arrow only cracks it: it becomes a plain arrow.
+    state.cells[t.y * state.w + t.x] = d - 5;
+    state.history.push({ x: t.x, y: t.y, d, crack: true });
+    state.last = { type: 'crack', x: t.x, y: t.y, blockers: [] };
   } else {
     state.cells[t.y * state.w + t.x] = EMPTY;
     state.left--;

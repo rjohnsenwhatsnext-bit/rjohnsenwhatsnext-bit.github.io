@@ -27,6 +27,11 @@ function save() {
 }
 let screen = 'home', state = null, level = null, daily = false, settingsFrom = 'home', busy = false, total = 0, session = 0;
 let dayKey = '', toastTimer, audio;
+const chapters = {
+  1: { name: 'First Steps', place: 'Find an opening. Make some space.' },
+  2: { name: 'Walls', place: 'The sunlit courtyard. Find a way past the stone.' },
+  3: { name: 'Sturdy', place: 'The dusk quarry. Crack the shell. Open the path.' },
+};
 const directions = ['', 'up', 'right', 'down', 'left'];
 const track = (event, detail = {}) => window.arcade?.track?.(event, { game: 'clear-path', ...detail });
 const panels = { home:'home', levels:'levels', play:'playScreen', pause:'pause', settings:'settings', over:'over' };
@@ -66,7 +71,8 @@ function updateHome() {
   const firstDone = LEVELS.slice(0,10).every(item => saved.completed.includes(item.id));
   const wallsDone = LEVELS.slice(10,20).every(item => saved.completed.includes(item.id));
   $('chapterStamp').hidden = !firstDone;
-  $('chapterStamp').textContent = wallsDone ? '✦ First Steps + Walls mastered. Twenty boards cleared.' : '✦ First Steps mastered. Chapter 2: Walls is open.';
+  const sturdyDone = LEVELS.slice(20,30).length === 10 && LEVELS.slice(20,30).every(item => saved.completed.includes(item.id));
+  $('chapterStamp').textContent = sturdyDone ? 'Three chapter stamps earned. Thirty boards cleared.' : wallsDone ? 'Walls mastered. Chapter 3: Sturdy is open.' : 'First Steps mastered. Chapter 2: Walls is open.';
   $('play').textContent = saved.completed.length === LEVELS.length ? 'Revisit the finale' : `${saved.completed.length ? 'Continue' : 'Start'} level ${nextLevel().id}`;
   $('dailyButton').innerHTML = (saved.daily === today().key ? 'Daily board cleared' : 'Daily board') + '<span>↗</span>';
 }
@@ -77,12 +83,13 @@ function selectLevels() {
       const heading = document.createElement('div');
       heading.className = 'chapter-heading chapter-' + item.chapter;
       const count = LEVELS.filter(l => l.chapter === item.chapter && saved.completed.includes(l.id)).length;
-      heading.innerHTML = `<p class="eyebrow">CHAPTER 0${item.chapter} / ${count} / 10 CLEARED</p><h3>${item.chapter === 2 ? 'Walls' : 'First Steps'}</h3><p>${item.chapter === 2 ? 'The sunlit courtyard. Find a way past the stone.' : 'Find an opening. Make some space.'}</p><small>${unlocked(index) ? 'Chapter open' : 'Clear level 10 to open the courtyard'}</small>`;
+      heading.innerHTML = `<p class="eyebrow">CHAPTER 0${item.chapter} / ${count} / 10 CLEARED</p><h3>${chapters[item.chapter].name}</h3><p>${chapters[item.chapter].place}</p><small>${unlocked(index) ? 'Chapter open' : `Clear level ${index} to open this chapter`}</small>`;
       $('levelList').append(heading);
     }
     const button = document.createElement('button'), done = saved.completed.includes(item.id);
     button.disabled = !unlocked(index);
     button.classList.toggle('walls-level', item.chapter === 2);
+    button.classList.toggle('sturdy-level', item.chapter === 3);
     button.innerHTML = `<b class="number">${String(item.id).padStart(2,'0')}</b><div>${item.name}<small>${done ? 'Cleared · replay anytime' : button.disabled ? 'Clear the previous board to unlock' : 'Ready when you are'}</small></div><span class="mark">${done ? '✓' : button.disabled ? '○' : '↗'}</span>`;
     button.onclick = () => start(item); $('levelList').append(button);
   });
@@ -92,7 +99,8 @@ function start(item, isDaily = false) {
   if (busy) return;
   session++; level = item; daily = isDaily; state = newGame(item, 0); total = state.left;
   document.body.dataset.chapter = item.chapter;
-  $('wallLegend').hidden = item.chapter !== 2;
+  $('wallLegend').hidden = !state.cells.includes(WALL);
+  $('sturdyLegend').hidden = item.chapter !== 3;
   $('levelLabel').textContent = isDaily ? 'DAILY BOARD · ' + dayKey : `CHAPTER 0${item.chapter} · LEVEL ${item.id} / ${LEVELS.length}`;
   $('levelName').textContent = item.name;
   $('instruction').textContent = item.objective;
@@ -112,7 +120,11 @@ function render() {
       cell.innerHTML = '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 7H34V33H6ZM6 20H34M20 7V20M14 20V33"/></svg>';
       cell.setAttribute('aria-label', `Row ${Math.floor(index/state.w)+1}, column ${index%state.w+1}, permanent wall`);
     } else if (direction) {
-      cell.innerHTML = arrow(direction); cell.setAttribute('aria-label', `Row ${Math.floor(index/state.w)+1}, column ${index%state.w+1}, arrow ${directions[direction]}`);
+      const sturdy = direction >= 6 && direction <= 9;
+      const facing = sturdy ? direction - 5 : direction;
+      cell.classList.toggle('sturdy', sturdy);
+      cell.innerHTML = arrow(facing) + (sturdy ? '<i class="sturdy-pip" aria-hidden="true"></i>' : '');
+      cell.setAttribute('aria-label', `Row ${Math.floor(index/state.w)+1}, column ${index%state.w+1}, ${sturdy ? 'sturdy arrow' : 'arrow'} ${directions[facing]}${sturdy ? ', two taps when clear' : ''}`);
       cell.onclick = () => action({ tap: { x:index%state.w, y:Math.floor(index/state.w) } });
     } else cell.setAttribute('aria-label','Empty cell');
     $('board').append(cell);
@@ -142,6 +154,9 @@ function action(input) {
     highlight(state.last.blockers,'blocker');
     $('instruction').textContent = state.last.blockers.some(p => state.cells[p.y * state.w + p.x] === WALL) ? 'Blocked by stone. Walls stay put. Look for an arrow with an open path to the edge.' : 'Blocked. The outlined arrows are in the way. Clear those paths first.';
     track('blocked_tap',{ level:level.id, slips:state.slips });
+  } else if (state.last.type === 'crack') {
+    tone(); highlight([state.last], 'cracked');
+    $('instruction').textContent = 'Shell cracked. The arrow is still here. Tap it again to slide it away.';
   } else if (state.last.type === 'slide') {
     tone(); $('instruction').textContent = state.left ? 'Space made. Find the next clear path.' : 'Every arrow is home.';
     if (!saved.reduced) {
@@ -150,7 +165,7 @@ function action(input) {
       cell.style.setProperty('--dx', [0,0,350,0,-350][previous]+'px');
       cell.style.setProperty('--dy', [0,-350,0,350,0][previous]+'px');
     }
-  } else if (input.undo) $('instruction').textContent = 'Arrow restored. Undo is free; used slips stay used.';
+  } else if (input.undo) $('instruction').textContent = 'Last move restored, including any shell. Undo is free; used slips stay used.';
   if (status(state) !== 'playing') {
     busy = true; const currentSession = session;
     setTimeout(() => { if (currentSession !== session) return; busy = false; finish(); }, saved.reduced ? 0 : state.last.type === 'blocked' ? 1100 : 380);
@@ -165,12 +180,15 @@ function finish() {
   }
   track('level_end',{level:level.id,won,daily,slips:state.slips});
   const finale = won && !daily && level.id % 10 === 0;
-  const opensWalls = finale && level.id === 10;
+  const followingChapter = finale && chapters[level.chapter + 1];
   $('chapterUnlock').hidden = !finale;
-  $('chapterUnlock').textContent = opensWalls ? 'CHAPTER 02 UNLOCKED: Walls\nEnter the sunlit courtyard. Stone stays. Arrows go.' : 'WALLS MASTERED\nYour courtyard stamp is earned. All 20 boards are open to replay.';
+  $('chapterUnlock').textContent = followingChapter
+    ? `CHAPTER 0${level.chapter + 1} UNLOCKED: ${followingChapter.name}\n${followingChapter.place}`
+    : 'STURDY MASTERED\nYour quarry stamp is earned. All 30 boards are open to replay.';
+  $('chapterUnlock').classList.toggle('quarry-unlock', finale && level.id >= 20);
   $('resultKicker').textContent = won ? finale ? 'CHAPTER COMPLETE' : 'A LITTLE MORE SPACE' : 'A PATH TO TRY AGAIN';
-  $('resultTitle').textContent = won ? finale ? (opensWalls ? 'First Steps, mastered.' : 'Walls, mastered.') : 'Beautifully clear.' : 'That path was blocked.';
-  $('resultText').textContent = won ? daily ? 'Today’s board is clear. A fresh one arrives tomorrow.' : finale ? (opensWalls ? 'Ten boards cleared. A new place and a new kind of obstacle await.' : 'Twenty boards cleared. Every courtyard path found.') : 'One board lighter. One new challenge ahead.' : 'You used the slip allowance. Restart for a fresh board and use a free hint whenever you like.';
+  $('resultTitle').textContent = won ? finale ? `${chapters[level.chapter].name}, mastered.` : 'Beautifully clear.' : 'That path was blocked.';
+  $('resultText').textContent = won ? daily ? 'The daily board is clear. A fresh one arrives tomorrow.' : finale ? (followingChapter ? `Chapter ${level.chapter} complete. Your stamp is earned. A new place awaits.` : 'Three chapters complete. Every quarry path found.') : 'One board lighter. One new challenge ahead.' : 'You used the slip allowance. Restart for a fresh board and use a free hint whenever you like.';
   $('resultStats').textContent = `${total-state.left} / ${total} arrows cleared · ${state.slips} slips`;
   const following = !daily && LEVELS[level.id];
   $('nextGoal').textContent = won ? following ? `Up next: ${following.name}. ${following.objective}` : 'Next goal: try the daily board or revisit a favourite.' : 'Tip: follow the arrow all the way to the edge before tapping.';
@@ -199,7 +217,7 @@ $('undo').onclick=()=>action({undo:true});
 $('hint').onclick=()=>{
   if(busy || screen!=='play' || status(state)!=='playing')return;
   const point=nextHint(state); if(!point)return;
-  highlight([point],'hinted'); $('instruction').textContent='The green outlined arrow has a clear path. Tap it when you are ready.';
+  highlight([point],'hinted'); $('instruction').textContent = state.cells[point.y * state.w + point.x] >= 6 ? 'The green outlined sturdy arrow has a clear path. Tap once to crack, then again to slide.' : 'The green outlined arrow has a clear path. Tap it when you are ready.';
   track('hint_used',{level:level.id});
 };
 $('sound').checked=saved.sound; $('motion').checked=saved.reduced;

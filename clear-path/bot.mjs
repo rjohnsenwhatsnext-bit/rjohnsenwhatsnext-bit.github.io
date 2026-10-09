@@ -21,7 +21,7 @@ export function flail(level, seed = 0, { maxTicks = 2000 } = {}) {
   const state = newGame(level, seed);
   const inputs = [];
   while (status(state) === 'playing' && state.ticks < maxTicks) {
-    const i = state.cells.findIndex((c) => c >= 1 && c <= 4);
+    const i = state.cells.findIndex((c) => c >= 1 && c !== 5);
     const input = { tap: { x: i % state.w, y: Math.floor(i / state.w) } };
     inputs.push(input);
     step(state, input);

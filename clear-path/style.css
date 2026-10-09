@@ -21,3 +21,29 @@ body[data-chapter="2"] .cell.empty{background:#b9a788}
 .unlock-card{white-space:pre-line;text-align:center;padding:22px 18px;border:1px solid #c4a570;border-radius:20px;background:linear-gradient(135deg,#fff5d8,#e8cfaa);color:#59472f;font-weight:700;line-height:1.7;animation:arrival .6s ease-out both}
 @keyframes arrival{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-height:730px){.wall-legend{margin-top:8px}body[data-chapter="2"] .arena{min-height:210px}}
+/* Chapter 3: dusk quarry, copper shells against cool cut stone. */
+body[data-chapter="3"]{--ink:#283e50;background:radial-gradient(ellipse at 90% 0,#bccbda,transparent 60%),#e9edf0;color:var(--ink)}
+body[data-chapter="3"] h1 em{color:#986039}
+body[data-chapter="3"] .hero i{background:#c9d5e0;box-shadow:0 4px 0 #9daebd}
+body[data-chapter="3"] .hero i:nth-child(6){background:#eac09a}
+body[data-chapter="3"] .arena{position:relative;border-radius:28px;background:linear-gradient(150deg,transparent 20%,#879db51a 20%,#879db51a 38%,transparent 38%),linear-gradient(25deg,transparent 55%,#748da21c 55%,#748da21c 75%,transparent 75%)}
+body[data-chapter="3"] #board{background:#b9c7d3;border-color:#93a7b8;box-shadow:0 14px 0 -5px #879cac,0 25px 32px #283e5019}
+body[data-chapter="3"] .cell.empty{background:#879bad}
+body[data-chapter="3"] .cell:not(.wall):not(.sturdy):not(.blocker):not(.hinted):not(.empty){background:#fcfaf3;box-shadow:0 3px 0 #97a9b8}
+.cell.sturdy{background:#f0c69f;color:#593b27;box-shadow:inset 0 0 0 2px #a66b3e,0 3px 0 #885b3b}
+.cell.sturdy svg{stroke-width:4.5}
+.sturdy-pip{position:absolute;bottom:9%;right:9%;width:12%;height:12%;border-radius:50%;background:#593b27;border:1px solid #fff3dc}
+.cell.sturdy.blocker{background:#f5c6a4;outline:3px solid #ab4c24}
+.cell.sturdy.hinted{background:#d1ef94;outline:3px solid #54812c}
+.cell.cracked:after{content:'';position:absolute;inset:0;border:3px solid #a66b3e;border-radius:10px;pointer-events:none;animation:shell-crack .55s ease-out forwards}
+.sturdy-legend{font-size:12px;text-align:center;line-height:1.5;margin:10px 0 0;color:#593b27}
+.sturdy-legend span{color:#a66b3e;margin-right:4px}
+.chapter-heading.chapter-3,.unlock-card.quarry-unlock{background:linear-gradient(135deg,#d5e0e9,#bbcbd8);border-color:#93a7b8;color:#283e50}
+.chapter-heading.chapter-3{position:relative;overflow:hidden;border-bottom:5px solid #a66b3e}
+#levelList .sturdy-level{background:#f1f4f7;border-color:#b6c7d4}#levelList .sturdy-level .number{color:#87552f}
+body[data-chapter="3"] .chapter-stamp{background:#dae4ec;border-color:#93a7b8}
+body[data-chapter="3"] .progress-card{background:#dce5ec;border-color:#b6c7d4}
+body[data-chapter="3"] #celebration{color:#986039}
+@keyframes shell-crack{from{opacity:1;transform:scale(.85)}to{opacity:0;transform:scale(1.35)}}
+.reduced .cell.cracked:after{opacity:1;border-style:dashed}
+@media(max-height:730px){.sturdy-legend{margin-top:6px}body[data-chapter="3"] .arena{min-height:200px;padding:14px 0}}
