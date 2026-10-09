@@ -102,6 +102,28 @@ function gated(id, name, objective, shape, seed, slips, dirs, gateAt, count) {
   return build(seed, true);
 }
 
+// Chapter 5, "Ghosts": built as chapter 3 (or chapter 4 when gateAt is set), then
+// `ghosts` plain arrows become see-through ghost arrows (N E S W). A ghost never
+// blocks another arrow, so the board stays solvable.
+const GHOST = { '^': 'N', '>': 'E', v: 'S', '<': 'W' };
+function ghosted(id, name, objective, shape, seed, slips, dirs, ghosts, count = 0, gateAt = 0) {
+  const lvl = gateAt
+    ? gated(id, name, objective, shape, seed, slips, dirs, gateAt, count)
+    : sturdy(id, name, objective, shape, seed, slips, dirs, count);
+  lvl.chapter = 5;
+  const rand = rng(seed + 7);
+  const spots = [];
+  lvl.rows.forEach((r, y) => r.split('').forEach((c, x) => { if (GHOST[c]) spots.push([x, y]); }));
+  for (let i = spots.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    const t = spots[i]; spots[i] = spots[j]; spots[j] = t;
+  }
+  const grid = lvl.rows.map((r) => r.split(''));
+  for (const [x, y] of spots.slice(0, Math.min(ghosts, spots.length))) grid[y][x] = GHOST[grid[y][x]];
+  lvl.rows = grid.map((r) => r.join(''));
+  return lvl;
+}
+
 export const LEVELS = [
   drawn(1, 'First Slide', 'Tap each arrow to send it off the board.',
     ['>..', '...', '.^.'], 5),
@@ -186,6 +208,27 @@ export const LEVELS = [
     ['#######', '#G###G#', '#######', '###G###', '#######', '#G###G#', '#######'], 3909, 1, '^>v<', 14, 10),
   gated(40, 'Open Gates', 'The finale. Gates and walls on a big board, and no slips allowed. Gates open at 18.',
     ['#######', '#G#X#G#', '#######', '#X#G#X#', '#######', '#G#X#G#', '#######'], 4010, 0, '^>v<', 18, 16),
+  // Chapter 5, "Ghosts": LEVELS[40..49]. A ghost arrow (pale, see-through) never blocks anything.
+  ghosted(41, 'See Through', 'A pale ghost arrow blocks nothing, but it can still be blocked. Tap through the mist. At most 4 slips.',
+    ['####', '####', '####', '####'], 4101, 4, '^>v<', 4),
+  ghosted(42, 'Ghost Rows', 'Ghosts in long rows let the arrows behind them leave first. At most 3 slips.',
+    ['#####', '#####', '.....', '#####', '#####'], 4202, 3, '<>', 6),
+  ghosted(43, 'Ghost and Wall', 'A ghost is not a wall. Walls still stop everything. At most 3 slips.',
+    ['#####', '#XXX#', '#####', '#XXX#', '#####'], 4303, 3, '^>v<', 6),
+  ghosted(44, 'Ghost Stacks', 'Ghosts hide in tall columns. Spot which ones let you through. At most 3 slips.',
+    ['#####', '#####', '#####', '#####', '#####', '#####'], 4404, 3, '^v', 8),
+  ghosted(45, 'Ghost Shell', 'Sturdy arrows and ghosts share a board. Crack the sturdy ones, ignore the ghosts. At most 3 slips.',
+    ['#####', '#####', '#####', '#####', '#####'], 4505, 3, '^>v<', 6, 6),
+  ghosted(46, 'Ghost Gate', 'Ghosts do not hold a gate shut. Gates open at 8 arrows. At most 2 slips.',
+    ['####', '####', 'G##G', '####', '####'], 4606, 2, '^>v<', 6, 4, 8),
+  ghosted(47, 'Ghost Ring', 'A ring of ghosts and arrows around an empty yard. At most 2 slips.',
+    ['#####', '#...#', '#...#', '#...#', '#####'], 4707, 2, '^>v<', 8),
+  ghosted(48, 'Fog Yard', 'Gates, walls, sturdy arrows and ghosts in one yard. Gates open at 10. At most 2 slips.',
+    ['######', '#G##G#', '##XX##', '##XX##', '#G##G#', '######'], 4808, 2, '^>v<', 8, 6, 10),
+  ghosted(49, 'Last Preparations', 'A packed board of sturdy arrows and ghosts. Plan twice. At most 1 slip.',
+    ['######', '######', '######', '######', '######', '######', '######'], 4909, 1, '^>v<', 10, 12),
+  ghosted(50, 'Ghost Light', 'The finale. Every idea at once and no slips allowed. Gates open at 16.',
+    ['#######', '#GX#XG#', '#######', '###G###', '#######', '#GX#XG#', '#######'], 5010, 0, '^>v<', 14, 14, 16),
 ];
 
 // A fresh solvable 6x6 board for a given day number (for example days since 2026-01-01).

@@ -72,3 +72,22 @@ body[data-chapter="4"] #celebration{color:#397d89}
 .cell.gate-lift{animation:gate-lift .65s ease-out}
 @keyframes gate-lift{from{transform:translateY(3px);outline:4px solid #e9d293}to{transform:translateY(0);outline:0 solid transparent}}
 @media(max-height:730px){.gate-legend{margin-top:6px;padding:6px 10px}body[data-chapter="4"] .arena{min-height:180px;padding:14px 0}body[data-chapter="4"] #playScreen header{margin-bottom:10px}body[data-chapter="4"] .hud{margin-bottom:8px}}
+/* Chapter 5: mist garden, lilac paper, dew and distant garden arches. */
+body[data-chapter="5"]{--ink:#383650;background:radial-gradient(ellipse at 85% 0,#d6cce9,transparent 60%),linear-gradient(150deg,#f5f2fa,#e8f1eb);color:var(--ink)}
+body[data-chapter="5"] h1 em,body[data-chapter="5"] #celebration{color:#79639e}
+body[data-chapter="5"] .hero i{background:#e4dcee;box-shadow:0 4px 0 #b8a8cd}
+body[data-chapter="5"] .hero i:nth-child(2),body[data-chapter="5"] .hero i:nth-child(6){background:#ffffff80;border:1px dashed #79639e;box-shadow:none}
+body[data-chapter="5"] .arena{position:relative;border-radius:80px 80px 24px 24px;background:radial-gradient(ellipse at 50% 100%,#ffffffc0,transparent 70%),repeating-radial-gradient(ellipse at 50% 100%,transparent 0,transparent 42px,#79639e12 43px,#79639e12 45px,transparent 46px)}
+body[data-chapter="5"] #board{background:linear-gradient(145deg,#d2c9df,#c5dad4);border-color:#a99cbd;box-shadow:0 14px 0 -5px #a6a9bb,0 25px 32px #38365019}
+body[data-chapter="5"] .cell.empty{background:#9da9b3}
+body[data-chapter="5"] .cell:not(.wall):not(.gate):not(.sturdy):not(.ghost):not(.blocker):not(.hinted):not(.empty){background:#fffcf8;box-shadow:0 3px 0 #ada2be}
+.cell.ghost{background:#ffffff40;color:#665080;border:1px dashed #79639e;box-shadow:inset 0 0 12px #ffffff60}
+.cell.ghost svg{stroke-width:2.5;filter:drop-shadow(0 1px 1px #fff)}
+.cell.ghost:after{content:'';position:absolute;bottom:8%;width:28%;border-bottom:2px dotted currentColor;pointer-events:none}
+.cell.ghost.hinted{background:#d1ef94;color:#334c28;border-color:#54812c;outline:3px solid #54812c}
+.ghost-legend{font-size:12px;line-height:1.5;text-align:center;margin:8px 0 0;padding:7px 10px;border:1px dashed #a99cbd;border-radius:12px;background:#f5f0fa;color:#58446f}
+.chapter-heading.chapter-5,.unlock-card.mist-unlock{background:radial-gradient(ellipse at 80% 10%,#ffffffa0,transparent 60%),linear-gradient(135deg,#e3d8ef,#cee4dc);border-color:#a99cbd;color:#383650;border-bottom:5px solid #79639e}
+#levelList .ghosts-level{background:#f6f1fa;border-color:#c7b8db}#levelList .ghosts-level .number{color:#79639e}
+body[data-chapter="5"] .chapter-stamp,body[data-chapter="5"] .progress-card{background:#e6dfef;border-color:#b8a8cd}
+#celebration.grand-finale{height:125px;font-size:88px;background:radial-gradient(ellipse,#e3d8ef,transparent 68%);border-radius:50%}
+@media(max-height:780px){body[data-chapter="5"] .arena{min-height:180px;padding:12px 0}body[data-chapter="5"] #playScreen header{margin-bottom:8px}body[data-chapter="5"] .hud{margin-bottom:6px}body[data-chapter="5"] .wall-legend,body[data-chapter="5"] .sturdy-legend{margin-top:4px}body[data-chapter="5"] .gate-legend,body[data-chapter="5"] .ghost-legend{margin-top:5px;padding:5px 8px}body[data-chapter="5"] .instruction{min-height:0;margin:10px 0;font-size:13px}body[data-chapter="5"] #playScreen>.footnote{margin-bottom:0}}

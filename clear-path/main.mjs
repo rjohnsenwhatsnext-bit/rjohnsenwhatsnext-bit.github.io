@@ -32,7 +32,10 @@ const chapters = {
   2: { name: 'Walls', place: 'The sunlit courtyard. Find a way past the stone.' },
   3: { name: 'Sturdy', place: 'The dusk quarry. Crack the shell. Open the path.' },
   4: { name: 'Gates', place: 'The moonlit canal. Make space. Lift the gates.' },
+  5: { name: 'Ghosts', place: 'The mist garden. See through the haze. Find the final path.' },
 };
+const isGhost = cell => cell >= 11 && cell <= 14;
+const directionOf = cell => isGhost(cell) ? cell - 10 : cell >= 6 && cell <= 9 ? cell - 5 : cell;
 const directions = ['', 'up', 'right', 'down', 'left'];
 const track = (event, detail = {}) => window.arcade?.track?.(event, { game: 'clear-path', ...detail });
 const panels = { home:'home', levels:'levels', play:'playScreen', pause:'pause', settings:'settings', over:'over' };
@@ -74,7 +77,8 @@ function updateHome() {
   $('chapterStamp').hidden = !firstDone;
   const sturdyDone = LEVELS.slice(20,30).length === 10 && LEVELS.slice(20,30).every(item => saved.completed.includes(item.id));
   const gatesDone = LEVELS.slice(30,40).length === 10 && LEVELS.slice(30,40).every(item => saved.completed.includes(item.id));
-  $('chapterStamp').textContent = gatesDone ? 'Four chapter stamps earned. Forty boards cleared.' : sturdyDone ? 'Sturdy mastered. Chapter 4: Gates is open.' : wallsDone ? 'Walls mastered. Chapter 3: Sturdy is open.' : 'First Steps mastered. Chapter 2: Walls is open.';
+  const ghostsDone = LEVELS.slice(40,50).length === 10 && LEVELS.slice(40,50).every(item => saved.completed.includes(item.id));
+  $('chapterStamp').textContent = ghostsDone ? 'Five chapter stamps earned. All 50 boards cleared.' : gatesDone ? 'Gates mastered. Chapter 5: Ghosts is open.' : sturdyDone ? 'Sturdy mastered. Chapter 4: Gates is open.' : wallsDone ? 'Walls mastered. Chapter 3: Sturdy is open.' : 'First Steps mastered. Chapter 2: Walls is open.';
   $('play').textContent = saved.completed.length === LEVELS.length ? 'Revisit the finale' : `${saved.completed.length ? 'Continue' : 'Start'} level ${nextLevel().id}`;
   $('dailyButton').innerHTML = (saved.daily === today().key ? 'Daily board cleared' : 'Daily board') + '<span>↗</span>';
 }
@@ -93,6 +97,7 @@ function selectLevels() {
     button.classList.toggle('walls-level', item.chapter === 2);
     button.classList.toggle('sturdy-level', item.chapter === 3);
     button.classList.toggle('gates-level', item.chapter === 4);
+    button.classList.toggle('ghosts-level', item.chapter === 5);
     button.innerHTML = `<b class="number">${String(item.id).padStart(2,'0')}</b><div>${item.name}<small>${done ? 'Cleared · replay anytime' : button.disabled ? 'Clear the previous board to unlock' : 'Ready when you are'}</small></div><span class="mark">${done ? '✓' : button.disabled ? '○' : '↗'}</span>`;
     button.onclick = () => start(item); $('levelList').append(button);
   });
@@ -105,6 +110,7 @@ function start(item, isDaily = false) {
   $('wallLegend').hidden = !state.cells.includes(WALL);
   $('sturdyLegend').hidden = !state.cells.some(cell => cell >= 6 && cell <= 9);
   $('gateLegend').hidden = !state.cells.includes(GATE);
+  $('ghostLegend').hidden = !state.cells.some(isGhost);
   $('levelLabel').textContent = isDaily ? 'DAILY BOARD · ' + dayKey : `CHAPTER 0${item.chapter} · LEVEL ${item.id} / ${LEVELS.length}`;
   $('levelName').textContent = item.name;
   $('instruction').textContent = item.objective;
@@ -131,10 +137,12 @@ function render() {
       cell.setAttribute('aria-label', `Row ${Math.floor(index/state.w)+1}, column ${index%state.w+1}, gate ${open ? 'open, arrows can pass' : 'shut, opens at '+state.gateAt+' arrows left'}`);
     } else if (direction) {
       const sturdy = direction >= 6 && direction <= 9;
-      const facing = sturdy ? direction - 5 : direction;
+      const ghost = isGhost(direction);
+      const facing = directionOf(direction);
+      cell.classList.toggle('ghost', ghost);
       cell.classList.toggle('sturdy', sturdy);
       cell.innerHTML = arrow(facing) + (sturdy ? '<i class="sturdy-pip" aria-hidden="true"></i>' : '');
-      cell.setAttribute('aria-label', `Row ${Math.floor(index/state.w)+1}, column ${index%state.w+1}, ${sturdy ? 'sturdy arrow' : 'arrow'} ${directions[facing]}${sturdy ? ', two taps when clear' : ''}`);
+      cell.setAttribute('aria-label', `Row ${Math.floor(index/state.w)+1}, column ${index%state.w+1}, ${ghost ? 'ghost arrow' : sturdy ? 'sturdy arrow' : 'arrow'} ${directions[facing]}${ghost ? ', blocks nothing, can still be blocked' : sturdy ? ', two taps when clear' : ''}`);
       cell.onclick = () => action({ tap: { x:index%state.w, y:Math.floor(index/state.w) } });
     } else cell.setAttribute('aria-label','Empty cell');
     $('board').append(cell);
@@ -177,13 +185,14 @@ function action(input) {
     tone(); $('instruction').textContent = state.left ? 'Space made. Find the next clear path.' : 'Every arrow is home.';
     if (!saved.reduced) {
       const cell = $('board').children[state.last.y*state.w+state.last.x];
-      cell.innerHTML = arrow(previous); cell.className = 'cell departing';
-      cell.style.setProperty('--dx', [0,0,350,0,-350][previous]+'px');
-      cell.style.setProperty('--dy', [0,-350,0,350,0][previous]+'px');
+      const facing = directionOf(previous);
+      cell.innerHTML = arrow(facing); cell.className = 'cell departing' + (isGhost(previous) ? ' ghost' : '');
+      cell.style.setProperty('--dx', [0,0,350,0,-350][facing]+'px');
+      cell.style.setProperty('--dy', [0,-350,0,350,0][facing]+'px');
     }
   } else if (input.undo) $('instruction').textContent = 'Last move restored, including any shell. Undo is free; used slips stay used.';
   if (wereOpen !== gatesOpen(state)) {
-    $('instruction').textContent = gatesOpen(state) ? 'The gates are open. Follow the new paths through the canal.' : 'Move restored. The gates are shut again until enough arrows leave.';
+    $('instruction').textContent = gatesOpen(state) ? 'The gates are open. Follow the new paths through the board.' : 'Move restored. The gates are shut again until enough arrows leave.';
     if (gatesOpen(state)) {
       $('board').querySelectorAll('.gate').forEach(cell => cell.classList.add('gate-lift'));
       tone(true);
@@ -207,21 +216,23 @@ function finish() {
   $('chapterUnlock').hidden = !finale;
   $('chapterUnlock').textContent = followingChapter
     ? `CHAPTER 0${level.chapter + 1} UNLOCKED: ${followingChapter.name}\n${followingChapter.place}`
-    : 'GATES MASTERED\nYour canal stamp is earned. All 40 boards are open to replay.';
+    : 'GHOSTS MASTERED\nYour mist garden stamp is earned. All 50 boards are open to replay.';
   $('chapterUnlock').classList.toggle('quarry-unlock', finale && level.id === 20);
-  $('chapterUnlock').classList.toggle('canal-unlock', finale && level.id >= 30);
+  $('chapterUnlock').classList.toggle('canal-unlock', finale && level.id === 30);
+  $('chapterUnlock').classList.toggle('mist-unlock', finale && level.id >= 40);
+  $('celebration').classList.toggle('grand-finale', finale && level.id === 50);
   $('resultKicker').textContent = won ? finale ? 'CHAPTER COMPLETE' : 'A LITTLE MORE SPACE' : 'A PATH TO TRY AGAIN';
   $('resultTitle').textContent = won ? finale ? `${chapters[level.chapter].name}, mastered.` : 'Beautifully clear.' : 'That path was blocked.';
-  $('resultText').textContent = won ? daily ? 'The daily board is clear. A fresh one arrives tomorrow.' : finale ? (followingChapter ? `Chapter ${level.chapter} complete. Your stamp is earned. A new place awaits.` : 'Four chapters complete. Every canal gate opened. Your fourth stamp is earned.') : 'One board lighter. One new challenge ahead.' : 'You used the slip allowance. Restart for a fresh board and use a free hint whenever you like.';
+  $('resultText').textContent = won ? daily ? 'The daily board is clear. A fresh one arrives tomorrow.' : finale ? (followingChapter ? `Chapter ${level.chapter} complete. Your stamp is earned. A new place awaits.` : 'Five chapters complete. The mist has lifted. Your fifth stamp is earned. Come back tomorrow for a fresh daily board.') : 'One board lighter. One new challenge ahead.' : 'You used the slip allowance. Restart for a fresh board and use a free hint whenever you like.';
   $('resultStats').textContent = `${total-state.left} / ${total} arrows cleared · ${state.slips} slips`;
   const following = !daily && LEVELS[level.id];
   $('nextGoal').textContent = won ? following ? `Up next: ${following.name}. ${following.objective}` : 'Next goal: try the daily board or revisit a favourite.' : 'Tip: follow the arrow all the way to the edge before tapping.';
   $('next').textContent = won ? following ? `Play level ${following.id}` : daily ? 'Choose a level' : 'Play the daily board' : 'Try again';
   $('next').onclick = () => { if(busy)return; if (!won) start(level,daily); else if(following) start(following); else if(daily) selectLevels(); else startDaily(); };
   $('retry').hidden = !won; $('celebration').textContent = won ? '✦' : '↶';
-  if (won && !saved.reduced) for(let i=0;i<(finale?36:18);i++) {
+  if (won && !saved.reduced) for(let i=0;i<(finale ? level.id === 50 ? 50 : 36 : 18);i++) {
     const piece=document.createElement('i'), angle=i*2.4;
-    piece.style.cssText=`--x:${Math.cos(angle)*140}px;--y:${Math.sin(angle)*90}px;--angle:${i*51}deg;--colour:${(level.chapter === 4 || (finale && level.id === 30) ? ['#397d89','#d3ad59','#9ad9ca'] : ['#548164','#e2ad70','#b5d47e'])[i%3]}`;
+    piece.style.cssText=`--x:${Math.cos(angle)*140}px;--y:${Math.sin(angle)*90}px;--angle:${i*51}deg;--colour:${(level.chapter === 5 || (finale && level.id === 40) ? ['#79639e','#c9b8e2','#80b6a9'] : level.chapter === 4 || (finale && level.id === 30) ? ['#397d89','#d3ad59','#9ad9ca'] : ['#548164','#e2ad70','#b5d47e'])[i%3]}`;
     $('celebration').append(piece);
   }
   show('over');
@@ -241,7 +252,8 @@ $('undo').onclick=()=>action({undo:true});
 $('hint').onclick=()=>{
   if(busy || screen!=='play' || status(state)!=='playing')return;
   const point=nextHint(state); if(!point)return;
-  highlight([point],'hinted'); $('instruction').textContent = state.cells[point.y * state.w + point.x] >= 6 ? 'The green outlined sturdy arrow has a clear path. Tap once to crack, then again to slide.' : 'The green outlined arrow has a clear path. Tap it when you are ready.';
+  const cell = state.cells[point.y * state.w + point.x];
+  highlight([point],'hinted'); $('instruction').textContent = isGhost(cell) ? 'The green outlined ghost has a clear path. Tap to slide it away. Other arrows can pass through ghosts.' : cell >= 6 && cell <= 9 ? 'The green outlined sturdy arrow has a clear path. Tap once to crack, then again to slide.' : 'The green outlined arrow has a clear path. Tap it when you are ready.';
   track('hint_used',{level:level.id});
 };
 $('sound').checked=saved.sound; $('motion').checked=saved.reduced;

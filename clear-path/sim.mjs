@@ -27,6 +27,12 @@
 // only built from seeds where the bot wins and the gates matter (closed for good,
 // the bot is stuck), so every gate board is solvable.
 //
+// GHOST ARROWS (chapter 5): 'N' 'E' 'S' 'W' are ghost arrows pointing up, right,
+// down, left (cell values 11 to 14). A ghost is tapped and slides off like a plain
+// arrow and is blocked like one, but it is see-through: it never blocks any other
+// arrow, so it is never reported as a blocker. Because a ghost only removes
+// blockers, a board that is solvable with plain arrows stays solvable.
+//
 // TICK: one tick is one player action (there is no clock in the rules). The
 // frontend animates the slide however long it likes.
 //
@@ -44,16 +50,19 @@
 export const EMPTY = 0, UP = 1, RIGHT = 2, DOWN = 3, LEFT = 4, WALL = 5;
 export const STURDY_UP = 6, STURDY_RIGHT = 7, STURDY_DOWN = 8, STURDY_LEFT = 9;
 export const GATE = 10;
+export const GHOST_UP = 11, GHOST_RIGHT = 12, GHOST_DOWN = 13, GHOST_LEFT = 14;
 const DX = [0, 0, 1, 0, -1];
 const DY = [0, -1, 0, 1, 0];
 const GLYPH = {
   '^': UP, '>': RIGHT, v: DOWN, '<': LEFT, X: WALL,
   U: STURDY_UP, R: STURDY_RIGHT, D: STURDY_DOWN, L: STURDY_LEFT, G: GATE,
+  N: GHOST_UP, E: GHOST_RIGHT, S: GHOST_DOWN, W: GHOST_LEFT,
 };
 
 // Direction 1 to 4 of an arrow cell, sturdy or plain (0 for empty, wall or gate).
 function dirOf(c) {
   if (c >= STURDY_UP && c <= STURDY_LEFT) return c - 5;
+  if (c >= GHOST_UP && c <= GHOST_LEFT) return c - 10;
   return c === WALL || c === GATE ? 0 : c;
 }
 
@@ -94,7 +103,8 @@ export function blockers(state, x, y) {
   let cx = x + DX[d], cy = y + DY[d];
   while (cx >= 0 && cy >= 0 && cx < state.w && cy < state.h) {
     const c = state.cells[cy * state.w + cx];
-    if (c && !(c === GATE && open)) out.push({ x: cx, y: cy });
+    const ghost = c >= GHOST_UP && c <= GHOST_LEFT;
+    if (c && !ghost && !(c === GATE && open)) out.push({ x: cx, y: cy });
     cx += DX[d]; cy += DY[d];
   }
   return out;
