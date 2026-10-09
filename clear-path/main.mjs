@@ -1,10 +1,10 @@
-import { newGame, step, status, hint as nextHint } from './sim.mjs';
+import { newGame, step, status, hint as nextHint, WALL } from './sim.mjs';
 import { LEVELS, dailyLevel } from './levels.mjs';
 import { initAds, maybeInterstitial, showRewarded, adsAvailable, hasUnit, bannerOnScreens } from './arcade-ads.js';
 import { mountRemoveAds } from './arcade-noads.js';
 
 // One simulation tick is one player action. All board changes go through step.
-// Hints are free; no rewarded offer is needed for this first chapter.
+// Hints are free; no rewarded offer is needed for these chapters.
 const $ = id => document.getElementById(id);
 const key = 'clearpath.progress.v1';
 let saved = { completed: [], daily: '', sound: true, reduced: matchMedia('(prefers-reduced-motion: reduce)').matches };
@@ -14,7 +14,7 @@ try {
   if (raw) {
     const data = JSON.parse(raw);
     if (!data || !Array.isArray(data.completed)) throw new Error('Invalid save');
-    saved.completed = data.completed.filter(id => Number.isInteger(id) && id >= 1 && id <= 10);
+    saved.completed = data.completed.filter(id => Number.isInteger(id) && id >= 1 && LEVELS.some(level => level.id === id));
     saved.completed = [...new Set(saved.completed)];
     saved.daily = typeof data.daily === 'string' ? data.daily : '';
     if (typeof data.sound === 'boolean') saved.sound = data.sound;
@@ -52,24 +52,37 @@ function show(name) {
   if (name === 'home') updateHome();
   if (name !== 'play') $(panels[name]).querySelector('button')?.focus({ preventScroll: true });
 }
-function nextLevel() { return LEVELS.find(l => !saved.completed.includes(l.id)) || LEVELS[9]; }
+function nextLevel() { return LEVELS.find(l => !saved.completed.includes(l.id)) || LEVELS[LEVELS.length - 1]; }
 function unlocked(index) { return index === 0 || saved.completed.includes(LEVELS[index - 1].id); }
 function today() {
   const date = new Date();
   return { key: `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`, seed: Math.floor(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()) / 86400000) };
 }
 function updateHome() {
-  $('progressText').textContent = `${saved.completed.length} / 10 cleared`;
+  document.body.dataset.chapter = nextLevel().chapter;
+  $('progressText').textContent = `${saved.completed.length} / ${LEVELS.length} cleared`;
+  $('campaignProgress').max = LEVELS.length;
   $('campaignProgress').value = saved.completed.length;
-  $('chapterStamp').hidden = saved.completed.length !== 10;
-  $('play').textContent = saved.completed.length === 10 ? 'Revisit the finale' : `${saved.completed.length ? 'Continue' : 'Start'} level ${nextLevel().id}`;
+  const firstDone = LEVELS.slice(0,10).every(item => saved.completed.includes(item.id));
+  const wallsDone = LEVELS.slice(10,20).every(item => saved.completed.includes(item.id));
+  $('chapterStamp').hidden = !firstDone;
+  $('chapterStamp').textContent = wallsDone ? '✦ First Steps + Walls mastered. Twenty boards cleared.' : '✦ First Steps mastered. Chapter 2: Walls is open.';
+  $('play').textContent = saved.completed.length === LEVELS.length ? 'Revisit the finale' : `${saved.completed.length ? 'Continue' : 'Start'} level ${nextLevel().id}`;
   $('dailyButton').innerHTML = (saved.daily === today().key ? 'Daily board cleared' : 'Daily board') + '<span>↗</span>';
 }
 function selectLevels() {
   $('levelList').replaceChildren();
-  LEVELS.slice(0,10).forEach((item,index) => {
+  LEVELS.forEach((item,index) => {
+    if (index % 10 === 0) {
+      const heading = document.createElement('div');
+      heading.className = 'chapter-heading chapter-' + item.chapter;
+      const count = LEVELS.filter(l => l.chapter === item.chapter && saved.completed.includes(l.id)).length;
+      heading.innerHTML = `<p class="eyebrow">CHAPTER 0${item.chapter} / ${count} / 10 CLEARED</p><h3>${item.chapter === 2 ? 'Walls' : 'First Steps'}</h3><p>${item.chapter === 2 ? 'The sunlit courtyard. Find a way past the stone.' : 'Find an opening. Make some space.'}</p><small>${unlocked(index) ? 'Chapter open' : 'Clear level 10 to open the courtyard'}</small>`;
+      $('levelList').append(heading);
+    }
     const button = document.createElement('button'), done = saved.completed.includes(item.id);
     button.disabled = !unlocked(index);
+    button.classList.toggle('walls-level', item.chapter === 2);
     button.innerHTML = `<b class="number">${String(item.id).padStart(2,'0')}</b><div>${item.name}<small>${done ? 'Cleared · replay anytime' : button.disabled ? 'Clear the previous board to unlock' : 'Ready when you are'}</small></div><span class="mark">${done ? '✓' : button.disabled ? '○' : '↗'}</span>`;
     button.onclick = () => start(item); $('levelList').append(button);
   });
@@ -78,7 +91,9 @@ function selectLevels() {
 function start(item, isDaily = false) {
   if (busy) return;
   session++; level = item; daily = isDaily; state = newGame(item, 0); total = state.left;
-  $('levelLabel').textContent = isDaily ? 'DAILY BOARD · ' + dayKey : `CHAPTER 01 · LEVEL ${item.id} / 10`;
+  document.body.dataset.chapter = item.chapter;
+  $('wallLegend').hidden = item.chapter !== 2;
+  $('levelLabel').textContent = isDaily ? 'DAILY BOARD · ' + dayKey : `CHAPTER 0${item.chapter} · LEVEL ${item.id} / ${LEVELS.length}`;
   $('levelName').textContent = item.name;
   $('instruction').textContent = item.objective;
   render(); show('play');
@@ -91,8 +106,12 @@ function render() {
   $('board').replaceChildren();
   state.cells.forEach((direction,index) => {
     const cell = document.createElement('button'); cell.className = 'cell' + (direction ? '' : ' empty');
-    cell.disabled = !direction; cell.dataset.index = index;
-    if (direction) {
+    cell.disabled = !direction || direction === WALL; cell.dataset.index = index;
+    if (direction === WALL) {
+      cell.classList.add('wall');
+      cell.innerHTML = '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 7H34V33H6ZM6 20H34M20 7V20M14 20V33"/></svg>';
+      cell.setAttribute('aria-label', `Row ${Math.floor(index/state.w)+1}, column ${index%state.w+1}, permanent wall`);
+    } else if (direction) {
       cell.innerHTML = arrow(direction); cell.setAttribute('aria-label', `Row ${Math.floor(index/state.w)+1}, column ${index%state.w+1}, arrow ${directions[direction]}`);
       cell.onclick = () => action({ tap: { x:index%state.w, y:Math.floor(index/state.w) } });
     } else cell.setAttribute('aria-label','Empty cell');
@@ -121,7 +140,7 @@ function action(input) {
   }
   if (state.last.type === 'blocked') {
     highlight(state.last.blockers,'blocker');
-    $('instruction').textContent = 'Blocked. The outlined arrows are in the way. Clear those paths first.';
+    $('instruction').textContent = state.last.blockers.some(p => state.cells[p.y * state.w + p.x] === WALL) ? 'Blocked by stone. Walls stay put. Look for an arrow with an open path to the edge.' : 'Blocked. The outlined arrows are in the way. Clear those paths first.';
     track('blocked_tap',{ level:level.id, slips:state.slips });
   } else if (state.last.type === 'slide') {
     tone(); $('instruction').textContent = state.left ? 'Space made. Find the next clear path.' : 'Every arrow is home.';
@@ -145,10 +164,13 @@ function finish() {
     save(); track('level_complete',{level:level.id,chapter:level.chapter,daily,slips:state.slips,ticks:state.ticks}); tone(true);
   }
   track('level_end',{level:level.id,won,daily,slips:state.slips});
-  const finale = won && !daily && level.id === 10;
+  const finale = won && !daily && level.id % 10 === 0;
+  const opensWalls = finale && level.id === 10;
+  $('chapterUnlock').hidden = !finale;
+  $('chapterUnlock').textContent = opensWalls ? 'CHAPTER 02 UNLOCKED: Walls\nEnter the sunlit courtyard. Stone stays. Arrows go.' : 'WALLS MASTERED\nYour courtyard stamp is earned. All 20 boards are open to replay.';
   $('resultKicker').textContent = won ? finale ? 'CHAPTER COMPLETE' : 'A LITTLE MORE SPACE' : 'A PATH TO TRY AGAIN';
-  $('resultTitle').textContent = won ? finale ? 'First Steps, mastered.' : 'Beautifully clear.' : 'That path was blocked.';
-  $('resultText').textContent = won ? daily ? 'Today’s board is clear. A fresh one arrives tomorrow.' : finale ? 'Ten boards cleared. Your First Steps stamp is earned.' : 'One board lighter. One new challenge ahead.' : 'You used the slip allowance. Restart for a fresh board and use a free hint whenever you like.';
+  $('resultTitle').textContent = won ? finale ? (opensWalls ? 'First Steps, mastered.' : 'Walls, mastered.') : 'Beautifully clear.' : 'That path was blocked.';
+  $('resultText').textContent = won ? daily ? 'Today’s board is clear. A fresh one arrives tomorrow.' : finale ? (opensWalls ? 'Ten boards cleared. A new place and a new kind of obstacle await.' : 'Twenty boards cleared. Every courtyard path found.') : 'One board lighter. One new challenge ahead.' : 'You used the slip allowance. Restart for a fresh board and use a free hint whenever you like.';
   $('resultStats').textContent = `${total-state.left} / ${total} arrows cleared · ${state.slips} slips`;
   const following = !daily && LEVELS[level.id];
   $('nextGoal').textContent = won ? following ? `Up next: ${following.name}. ${following.objective}` : 'Next goal: try the daily board or revisit a favourite.' : 'Tip: follow the arrow all the way to the edge before tapping.';

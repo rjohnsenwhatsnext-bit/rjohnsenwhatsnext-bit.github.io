@@ -3,3 +3,21 @@ html{overflow-x:hidden}body{overflow-x:hidden}.screen{padding-top:max(24px,env(s
 
 .screen{padding-top:max(24px,env(safe-area-inset-top))}.chapter-stamp{border:1px solid #91aa72;border-radius:16px;padding:14px 18px;background:#e2edcd;font-weight:750;margin:14px 0}.chapter-stamp span{color:#547657;margin-right:8px}.chapter-stamp small{display:block;font-weight:400;margin:4px 0 0 26px;color:#526b60}.hud{align-items:center;gap:12px}.hud>span:first-child{flex-shrink:0}.hud .last-chance{max-width:150px;text-align:right;font-size:12px;color:#853b20;font-weight:700}#boardProgress{flex-shrink:0}.reduced .departing{visibility:hidden}@media(max-width:360px){.screen{padding-left:16px;padding-right:16px}#board{gap:4px;padding:8px}.tools button{padding-left:8px;padding-right:8px}}
 
+/* Chapter 2: sunlit stone courtyard, with the same paper arrows. */
+body[data-chapter="2"]{--ink:#334c50;background:radial-gradient(ellipse at 100% 0,#f0d7ae,transparent 65%),#f5eee0;color:var(--ink)}
+body[data-chapter="2"] h1 em{color:#967047}
+body[data-chapter="2"] .arena{position:relative;background:linear-gradient(90deg,transparent 48%,#c7a57818 49%,#c7a57818 51%,transparent 52%);border-radius:28px}
+body[data-chapter="2"] #board{background:#d9c9ad;border-color:#c0ac8b;box-shadow:0 14px 0 -5px #b69e79,0 25px 32px #79583219}
+body[data-chapter="2"] .cell:not(.wall):not(.blocker):not(.hinted):not(.empty){background:#fffaf0;box-shadow:0 3px 0 #bfae8d}
+body[data-chapter="2"] .cell.empty{background:#b9a788}
+.cell.wall:disabled{opacity:1;background:linear-gradient(135deg,#8f9690,#697570);color:#dce0d4;box-shadow:inset 0 2px 0 #b3b8ad,0 3px 0 #4f5e59;border-radius:5px;cursor:default}
+.cell.wall svg{width:78%;height:78%;stroke-width:1.6;stroke-linecap:butt;stroke-linejoin:miter}
+.cell.wall.blocker:disabled{background:#a95736;color:#fff2d9;outline:3px solid #7b3218}
+.wall-legend{font-size:12px;text-align:center;margin:12px 0 0;color:#53645d}.wall-legend span{font-size:20px;vertical-align:middle;margin-right:5px}
+.chapter-heading{padding:20px;border-radius:20px;background:#e4ead8;margin-top:12px;border:1px solid #d1dbc8}
+.chapter-heading h3{font-size:30px;letter-spacing:-1px;margin:8px 0}.chapter-heading p{margin:5px 0}.chapter-heading>p:not(.eyebrow){font-size:14px}.chapter-heading small{display:block;margin-top:12px;font-weight:700}
+.chapter-heading.chapter-2{background:linear-gradient(135deg,#eee0c5,#d6c2a0);border-color:#c0ac8b;color:#334c50}
+#levelList .walls-level{border-color:#d1bd9b;background:#fff8ea}#levelList .walls-level .number{color:#83603f}
+.unlock-card{white-space:pre-line;text-align:center;padding:22px 18px;border:1px solid #c4a570;border-radius:20px;background:linear-gradient(135deg,#fff5d8,#e8cfaa);color:#59472f;font-weight:700;line-height:1.7;animation:arrival .6s ease-out both}
+@keyframes arrival{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-height:730px){.wall-legend{margin-top:8px}body[data-chapter="2"] .arena{min-height:210px}}

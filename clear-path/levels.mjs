@@ -20,7 +20,8 @@ const STEP = { '^': [0, -1], '>': [1, 0], v: [0, 1], '<': [-1, 0] };
 // shape: rows where '#' is a cell to fill. dirs: allowed arrow glyphs.
 export function layBackwards(shape, seed, dirs = '^>v<') {
   const h = shape.length, w = shape[0].length;
-  const grid = shape.map(() => new Array(w).fill('.'));
+  // 'X' in a shape is a wall: it stays put, so every path must also avoid it.
+  const grid = shape.map((r) => r.split('').map((c) => (c === 'X' ? 'X' : '.')));
   const cells = [];
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (shape[y][x] === '#') cells.push([x, y]);
   const rand = rng(seed);
@@ -48,9 +49,14 @@ function drawn(id, name, objective, rows, slips) {
   return { id, chapter: 1, name, objective, w: rows[0].length, h: rows.length, rows, slips };
 }
 
-function shaped(id, name, objective, shape, seed, slips, dirs) {
+function shaped(id, name, objective, shape, seed, slips, dirs, chapter = 1) {
   const rows = layBackwards(shape, seed, dirs);
-  return { id, chapter: 1, name, objective, w: rows[0].length, h: rows.length, rows, slips };
+  return { id, chapter, name, objective, w: rows[0].length, h: rows.length, rows, slips };
+}
+
+// Chapter 2, "Walls": '#' is an arrow cell, 'X' is a wall that never moves.
+function walled(id, name, objective, shape, seed, slips, dirs) {
+  return shaped(id, name, objective, shape, seed, slips, dirs, 2);
 }
 
 export const LEVELS = [
@@ -74,6 +80,27 @@ export const LEVELS = [
     ['#######', '#######', '#######', '#######', '#######', '#######'], 509, 1),
   shaped(10, 'Clear Path', 'The finale. A big board and no slips allowed.',
     ['#######', '#######', '#######', '#######', '#######', '#######', '#######'], 610, 0),
+  // Chapter 2, "Walls": LEVELS[10..19]. Walls never move and block like arrows.
+  walled(11, 'First Wall', 'A grey wall never moves. Arrows cannot slide through it, so aim for the open side.',
+    ['###', '#X#', '###', '###'], 1101, 4),
+  walled(12, 'Gatepost', 'Walls guard the middle of each row. The highlight shows a wall too. At most 4 slips.',
+    ['####', 'X##X', '####', '####'], 1202, 4),
+  walled(13, 'Corridor', 'Two wall lines make a corridor. Arrows inside leave along it. At most 3 slips.',
+    ['#####', 'XXXX#', '#####', '#XXXX', '#####'], 1303, 3),
+  walled(14, 'Checkerboard', 'Walls and arrows take turns. Find the open lanes. At most 3 slips.',
+    ['#X#X#', 'X#X#X', '#X#X#', 'X#X#X', '#X#X#'], 1404, 3, '^>v<'),
+  walled(15, 'The Pillar', 'A pillar sits in the heart of a ring. At most 3 slips.',
+    ['#####', '#####', '##X##', '#####', '#####'], 1505, 3),
+  walled(16, 'Sidestep', 'Walls close the ends. Stripes slide up and down only. At most 2 slips.',
+    ['X####X', '######', 'X####X', '######', 'X####X'], 1606, 2, '^v'),
+  walled(17, 'Maze Edge', 'A wall maze with arrows tucked into the turns. At most 2 slips.',
+    ['######', 'X####X', '#XXXX#', '######', '#X##X#', '######'], 1707, 2),
+  walled(18, 'Fortress', 'Four towers hold the corners. At most 2 slips.',
+    ['XX###XX', 'X#####X', '#######', '#######', 'X#####X', 'XX###XX'], 1808, 2),
+  walled(19, 'Pinwheel', 'Walls spin around the middle. Plan the order. At most 1 slip.',
+    ['#######', '#X#####', '#######', '###X###', '#######', '#####X#', '#######'], 1909, 1),
+  walled(20, 'Open Road', 'The finale. A walled yard, a long road and no slips allowed.',
+    ['#######', '#XX#XX#', '#######', '#######', '#XX#XX#', '#######', '#######'], 2010, 0),
 ];
 
 // A fresh solvable 6x6 board for a given day number (for example days since 2026-01-01).

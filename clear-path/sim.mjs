@@ -5,6 +5,12 @@
 // blocked and counts as a slip. Clear every arrow to win; more slips than the
 // level allows loses. Undo is free and unlimited, but it never takes a slip back.
 //
+// WALLS (chapter 2): 'X' in a level's rows is a wall, stored as 5. A wall is
+// never tapped, never slides, never counts towards left, and never leaves, so
+// any arrow pointing at one is blocked for good, so levels are laid so every
+// arrow still has a way out (the tests check it with the bot). A wall is reported
+// as a blocker like any arrow, so the highlight shows it.
+//
 // TICK: one tick is one player action (there is no clock in the rules). The
 // frontend animates the slide however long it likes.
 //
@@ -18,10 +24,10 @@
 //   3 down, 4 left. last describes the most recent action:
 //   { type: 'slide'|'blocked'|'undo'|'none', x, y, blockers: [{x,y}] }.
 
-export const EMPTY = 0, UP = 1, RIGHT = 2, DOWN = 3, LEFT = 4;
+export const EMPTY = 0, UP = 1, RIGHT = 2, DOWN = 3, LEFT = 4, WALL = 5;
 const DX = [0, 0, 1, 0, -1];
 const DY = [0, -1, 0, 1, 0];
-const GLYPH = { '^': UP, '>': RIGHT, v: DOWN, '<': LEFT };
+const GLYPH = { '^': UP, '>': RIGHT, v: DOWN, '<': LEFT, X: WALL };
 
 export function newGame(level, seed = 0) {
   const w = level.w, h = level.h;
@@ -31,7 +37,7 @@ export function newGame(level, seed = 0) {
     for (let x = 0; x < w; x++) {
       const d = GLYPH[level.rows[y][x]] || EMPTY;
       cells[y * w + x] = d;
-      if (d) left++;
+      if (d && d !== WALL) left++;
     }
   }
   return {
@@ -44,7 +50,7 @@ export function newGame(level, seed = 0) {
 export function blockers(state, x, y) {
   const d = state.cells[y * state.w + x];
   const out = [];
-  if (!d) return out;
+  if (!d || d === WALL) return out;
   let cx = x + DX[d], cy = y + DY[d];
   while (cx >= 0 && cy >= 0 && cx < state.w && cy < state.h) {
     if (state.cells[cy * state.w + cx]) out.push({ x: cx, y: cy });
@@ -58,7 +64,8 @@ export function freeArrows(state) {
   const out = [];
   for (let y = 0; y < state.h; y++) {
     for (let x = 0; x < state.w; x++) {
-      if (state.cells[y * state.w + x] && !blockers(state, x, y).length) out.push({ x, y });
+      const c = state.cells[y * state.w + x];
+      if (c && c !== WALL && !blockers(state, x, y).length) out.push({ x, y });
     }
   }
   return out;
@@ -85,7 +92,7 @@ export function step(state, input) {
   const t = input.tap;
   if (!t || t.x < 0 || t.y < 0 || t.x >= state.w || t.y >= state.h) return state;
   const d = state.cells[t.y * state.w + t.x];
-  if (!d) return state;
+  if (!d || d === WALL) return state;
   const b = blockers(state, t.x, t.y);
   if (b.length) {
     state.slips++;
