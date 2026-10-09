@@ -16,3 +16,19 @@ body[data-chapter="2"] .hero i{box-shadow:0 12px 20px #0006,inset 0 2px #fff5}
 @media(prefers-reduced-motion:reduce){.finale .seal{animation:none}}
 
 .chapterLegend{display:none}body[data-chapter="2"] .chapterLegend{display:block}.picker button{flex:1;min-width:0;padding:8px 3px;font-size:13px;max-width:68px}
+/* Chapter 3: moonlit tidal pools, coral stops and rippling stone terraces. */
+body[data-chapter="3"]{background:radial-gradient(ellipse at 95% 8%,#cbb8ed22,transparent 45%),repeating-radial-gradient(ellipse at 0% 65%,transparent 0,transparent 42px,#96d9d20a 43px,#96d9d20a 45px,transparent 46px,transparent 67px),linear-gradient(155deg,#203b4b,#182735 65%,#263646)}
+body[data-chapter="3"] button{background:#293e50;border-color:#718b9d}
+body[data-chapter="3"] .primary{background:#c8b6e9;border-color:#c8b6e9;color:#202d40}
+body[data-chapter="3"] .eyebrow,body[data-chapter="3"] #moves,body[data-chapter="3"] .chapterHeading{color:#d4c4f3}
+body[data-chapter="3"] #board{border-radius:50%;margin-top:10px;margin-bottom:14px;box-shadow:0 0 0 3px #8cbfc177,0 0 0 8px #314c61,0 0 0 10px #a4b6d033,0 18px 35px #08182399}
+body[data-chapter="3"] #board svg>circle:first-child{fill:#182f40;stroke:#8daebc}
+body[data-chapter="3"] .hero i{border-color:#91cfc7;box-shadow:0 14px 24px #08182388,inset 0 2px #fff5}
+body[data-chapter="3"] .hero i:nth-child(2){border-color:#c8b6e9}
+body[data-chapter="3"] .hero i:nth-child(3){border-color:#ffaf9f}
+body[data-chapter="3"] .seal{color:#c8b6e9;border-color:#c8b6e9;background:radial-gradient(circle,#8dbfbc22,transparent 70%)}
+body[data-chapter="3"] .finale .seal{box-shadow:0 0 0 9px #c8b6e915,0 0 55px #91cfc744}
+.blockLegend{display:none}body[data-chapter="3"] .blockLegend,body[data-chapter="3"] .chapterLegend{display:block}
+body[data-chapter="3"] .blockLegend{color:#ffcfbc;margin-top:4px}
+body[data-chapter="3"] .picker button[aria-pressed=true]{background:#4b5268;border-color:#d4c4f3}
+@media(max-width:400px){body[data-chapter="3"] #ruleNote{font-size:11px}body[data-chapter="3"] .instructions{font-size:11px;margin:8px 0}}

@@ -25,14 +25,29 @@
 // Level scrambles must stay legal under these rules (see tests). A gated ring's
 // links must never move its own gate ring, so every scramble reverses cleanly.
 // Moves are only listed by solve() and the bot when canTurn() allows them.
+//
+// CHAPTER 3 RULE:
+//   block: [notches]  a direct turn is refused if it would land this ring on a
+//                     listed notch (after its step, in the direction asked). A
+//                     refused turn costs no move and reports {type:'blocked', ring}.
+//                     Links ignore block, so a linked ring can still be dragged
+//                     onto a blocked notch. canTurn(pos, rings, ring, dir) checks
+//                     block only when dir is given. Chapter 3 scrambles never land
+//                     a directly turned ring on its own blocked notches, so every
+//                     scramble reverses cleanly.
 
 const mod = (a, n) => ((a % n) + n) % n;
 
-// Can the player turn `ring` directly right now?
-export function canTurn(pos, rings, ring) {
+// Can the player turn `ring` directly right now? Pass dir (+1 or -1) to also
+// check the ring's blocked notches.
+export function canTurn(pos, rings, ring, dir) {
   const r = rings[ring];
   if (r.fixed) return false;
-  if (r.gate) return pos[r.gate.ring] === r.gate.at;
+  if (r.gate && pos[r.gate.ring] !== r.gate.at) return false;
+  if (dir && r.block && r.block.length) {
+    const landing = mod(pos[ring] + dir * (r.step || 1), r.n);
+    if (r.block.indexOf(landing) !== -1) return false;
+  }
   return true;
 }
 
@@ -58,7 +73,8 @@ export function newGame(level, seed = 1) {
     seed,
     skin: Math.abs(Math.floor(seed)) % 5, // cosmetic only, never changes the rules
     rings: level.rings.map((r) => ({ n: r.n, target: r.target, links: (r.links || []).map((l) => l.slice()),
-      step: r.step || 1, fixed: !!r.fixed, gate: r.gate ? { ring: r.gate.ring, at: r.gate.at } : null })),
+      step: r.step || 1, fixed: !!r.fixed, gate: r.gate ? { ring: r.gate.ring, at: r.gate.at } : null,
+      block: r.block ? r.block.slice() : [] })),
     pos: startPositions(level),
     movesLeft: level.moves,
     movesMade: 0,
@@ -86,8 +102,8 @@ export function solve(state, limit = state.movesLeft) {
     const next = [];
     for (const p of frontier) {
       for (let ring = 0; ring < rings.length; ring++) {
-        if (!canTurn(p, rings, ring)) continue;
         for (const dir of [1, -1]) {
+          if (!canTurn(p, rings, ring, dir)) continue;
           const q = p.slice();
           turn(q, rings, ring, dir);
           const k = key(q);
@@ -113,7 +129,7 @@ export function step(state, input) {
   state.tick++;
   const move = input && input.move;
   if (move && Number.isInteger(move[0]) && move[0] >= 0 && move[0] < state.rings.length && (move[1] === 1 || move[1] === -1)) {
-    if (!canTurn(state.pos, state.rings, move[0])) {
+    if (!canTurn(state.pos, state.rings, move[0], move[1])) {
       state.events.push({ type: 'blocked', ring: move[0] });
       return state;
     }
