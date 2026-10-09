@@ -43,6 +43,17 @@
 //                     a jammed ring can still be dragged. A jammed ring's links must
 //                     never move its own jam ring, so every scramble reverses cleanly.
 //                     Jam combines with step, gate, fixed and block.
+//
+// CHAPTER 5 RULE:
+//   oneWay: +1 | -1   a ratchet: the ring can be turned directly only in this
+//                     direction. A refused turn costs no move and reports
+//                     {type:'blocked', ring}. Links ignore oneWay, so a linked ring
+//                     can still be dragged backwards. canTurn(pos, rings, ring, dir)
+//                     checks oneWay only when dir is given. Scrambles only turn a
+//                     ratchet its own way, so the way back is the rest of the circle
+//                     (n minus the scramble notches, in steps). Combines with step,
+//                     gate, jam and links; block is not paired with it, because a
+//                     ratchet cannot go round a blocked notch without a link.
 
 const mod =(a, n) => ((a % n) + n) % n;
 
@@ -53,6 +64,7 @@ export function canTurn(pos, rings, ring, dir) {
   if (r.fixed) return false;
   if (r.gate && pos[r.gate.ring] !== r.gate.at) return false;
   if (r.jam && pos[r.jam.ring] === r.jam.at) return false;
+  if (dir && r.oneWay && dir !== r.oneWay) return false;
   if (dir && r.block && r.block.length) {
     const landing = mod(pos[ring] + dir * (r.step || 1), r.n);
     if (r.block.indexOf(landing) !== -1) return false;
@@ -83,7 +95,8 @@ export function newGame(level, seed = 1) {
     skin: Math.abs(Math.floor(seed)) % 5, // cosmetic only, never changes the rules
     rings: level.rings.map((r) => ({ n: r.n, target: r.target, links: (r.links || []).map((l) => l.slice()),
       step: r.step || 1, fixed: !!r.fixed, gate: r.gate ? { ring: r.gate.ring, at: r.gate.at } : null,
-      block: r.block ? r.block.slice() : [], jam: r.jam ? { ring: r.jam.ring, at: r.jam.at } : null })),
+      block: r.block ? r.block.slice() : [], jam: r.jam ? { ring: r.jam.ring, at: r.jam.at } : null,
+      oneWay: r.oneWay || 0 })),
     pos: startPositions(level),
     movesLeft: level.moves,
     movesMade: 0,

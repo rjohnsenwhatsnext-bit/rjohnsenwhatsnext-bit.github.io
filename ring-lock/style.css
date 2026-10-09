@@ -48,3 +48,25 @@ body[data-chapter="4"] .picker button[aria-pressed=true]{background:#615065;bord
 body[data-chapter="4"] .jamLegend{color:#ffcfaa;margin-top:4px}
 body[data-chapter="4"] #ruleNote{padding:8px;border:1px solid #c4967244;border-radius:10px;background:#221f3033}
 @media(max-width:400px){body[data-chapter="4"] #ruleNote,body[data-chapter="4"] .instructions{font-size:11px}body[data-chapter="4"] .instructions{margin:8px 0}}
+
+/* Chapter 5: an open observatory above the clouds, in the first light of dawn. */
+body[data-chapter="5"]{background:radial-gradient(ellipse at 50% 0%,#f4ce8655,transparent 48%),repeating-conic-gradient(from -30deg at 50% 15%,transparent 0deg 29deg,#efd7a009 29deg 30deg),linear-gradient(170deg,#35495b,#172e38 65%,#1e4148);background-attachment:fixed}
+body[data-chapter="5"] button{background:#2d4652;border-color:#869eaa}
+body[data-chapter="5"] .primary{background:#f7d994;border-color:#f7d994;color:#18313b}
+body[data-chapter="5"] .eyebrow,body[data-chapter="5"] #moves{color:#ffe4aa}
+body[data-chapter="5"] #board{border-radius:50%;margin-top:10px;margin-bottom:14px;box-shadow:0 0 0 3px #e3c486,0 0 0 8px #354e5c,0 0 0 10px #e3c48655,0 18px 38px #071e2999}
+body[data-chapter="5"] #board svg>circle:first-child{fill:#1b3542;stroke:#c0b78e}
+body[data-chapter="5"] .hero{border:1px dotted #f7d99488;border-radius:50%;background:radial-gradient(circle,#f7d99422,transparent 70%)}
+body[data-chapter="5"] .hero i{box-shadow:0 14px 24px #071e2988,inset 0 2px #fff5}
+body[data-chapter="5"] .hero i:nth-child(2){border-color:#f7d994}
+body[data-chapter="5"] .seal{color:#ffe4aa;border-color:#f7d994;background:repeating-conic-gradient(#f7d99418 0deg 10deg,transparent 10deg 30deg)}
+body[data-chapter="5"] .finale .seal{box-shadow:0 0 0 10px #f7d99418,0 0 0 20px #f7d99408,0 0 70px #f7d99455}
+body[data-chapter="5"] .picker button[aria-pressed=true]{background:#52646a;border-color:#ffe4aa}
+body[data-chapter="5"] #ruleNote{padding:8px;border:1px solid #f7d99444;border-radius:10px;background:#12293466}
+.ratchetLegend{display:none}body[data-chapter="5"] .ratchetLegend,body[data-chapter="5"] .chapterLegend{display:block}
+body[data-chapter="5"] .ratchetLegend{color:#ffe4aa;margin-top:4px}
+#levelGrid [data-chapter="5"]{border-color:#c4b682;background:#2d4652}
+#levelGrid .chapterHeading[data-chapter="5"]{color:#ffe4aa;background:none;border-top:1px solid #c4b68266;padding-top:16px}
+@media(max-width:400px){body[data-chapter="5"] #ruleNote,body[data-chapter="5"] .instructions{font-size:11px}body[data-chapter="5"] .instructions{margin:8px 0}}
+
+body[data-chapter="5"] .jamLegend{display:block;color:#ffcfaa;margin-top:4px}
