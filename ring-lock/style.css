@@ -32,3 +32,19 @@ body[data-chapter="3"] .finale .seal{box-shadow:0 0 0 9px #c8b6e915,0 0 55px #91
 body[data-chapter="3"] .blockLegend{color:#ffcfbc;margin-top:4px}
 body[data-chapter="3"] .picker button[aria-pressed=true]{background:#4b5268;border-color:#d4c4f3}
 @media(max-width:400px){body[data-chapter="3"] #ruleNote{font-size:11px}body[data-chapter="3"] .instructions{font-size:11px;margin:8px 0}}
+/* Chapter 4: a sandstone gatehouse at dusk, copper fittings and violet shadows. */
+body[data-chapter="4"]{background:repeating-linear-gradient(0deg,transparent 0,transparent 87px,#efbb7509 88px,#efbb7509 90px),radial-gradient(ellipse at 50% 0%,#bd805c55,transparent 55%),linear-gradient(155deg,#3e3445,#24283c 65%,#182f37)}
+body[data-chapter="4"] button{background:#383447;border-color:#a38983}
+body[data-chapter="4"] .primary{background:#ffc18c;border-color:#ffc18c;color:#302b40}
+body[data-chapter="4"] .eyebrow,body[data-chapter="4"] #moves,body[data-chapter="4"] .chapterHeading{color:#ffcda4}
+body[data-chapter="4"] #board{border-radius:50%;margin-top:10px;margin-bottom:14px;box-shadow:0 0 0 3px #c49672,0 0 0 8px #514151,0 0 0 10px #d9a57644,0 18px 35px #14122299}
+body[data-chapter="4"] #board svg>circle:first-child{fill:#262b3d;stroke:#b69581}
+body[data-chapter="4"] .hero{border:1px solid #d8ae7855;border-radius:48% 48% 0 0;background:linear-gradient(0deg,#ffc18c0a,transparent)}
+body[data-chapter="4"] .hero i{box-shadow:0 14px 24px #14122288,inset 0 2px #fff5}
+body[data-chapter="4"] .seal{color:#ffc18c;border-color:#ffc18c;background:radial-gradient(circle,#ffc18c22,transparent 70%)}
+body[data-chapter="4"] .finale .seal{box-shadow:0 0 0 9px #ffc18c15,0 0 65px #ffc18c44}
+body[data-chapter="4"] .picker button[aria-pressed=true]{background:#615065;border-color:#ffd7b6}
+.jamLegend{display:none}body[data-chapter="4"] .jamLegend,body[data-chapter="4"] .chapterLegend{display:block}
+body[data-chapter="4"] .jamLegend{color:#ffcfaa;margin-top:4px}
+body[data-chapter="4"] #ruleNote{padding:8px;border:1px solid #c4967244;border-radius:10px;background:#221f3033}
+@media(max-width:400px){body[data-chapter="4"] #ruleNote,body[data-chapter="4"] .instructions{font-size:11px}body[data-chapter="4"] .instructions{margin:8px 0}}
