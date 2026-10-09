@@ -47,3 +47,28 @@ body[data-chapter="3"] #celebration{color:#986039}
 @keyframes shell-crack{from{opacity:1;transform:scale(.85)}to{opacity:0;transform:scale(1.35)}}
 .reduced .cell.cracked:after{opacity:1;border-style:dashed}
 @media(max-height:730px){.sturdy-legend{margin-top:6px}body[data-chapter="3"] .arena{min-height:200px;padding:14px 0}}
+/* Chapter 4: moonlit canal, brass gates and pale paper arrows. */
+body[data-chapter="4"]{--ink:#183e50;background:radial-gradient(ellipse at 85% 0,#adcdd4,transparent 60%),#e5efed;color:var(--ink)}
+body[data-chapter="4"] h1 em{color:#397d89}
+body[data-chapter="4"] .hero i{background:#b8dad5;box-shadow:0 4px 0 #87b3b1}
+body[data-chapter="4"] .hero i:nth-child(6){background:#edd397}
+body[data-chapter="4"] .arena{position:relative;border-radius:28px;background:repeating-linear-gradient(175deg,transparent 0,transparent 22px,#397d8910 23px,#397d8910 25px,transparent 26px),linear-gradient(90deg,#397d8919,transparent 25%,transparent 75%,#397d8919)}
+body[data-chapter="4"] #board{background:#aec9cd;border-color:#729fa9;box-shadow:0 14px 0 -5px #7196a0,0 25px 32px #183e5019}
+body[data-chapter="4"] .cell.empty{background:#7196a0}
+body[data-chapter="4"] .cell:not(.wall):not(.gate):not(.sturdy):not(.blocker):not(.hinted):not(.empty){background:#f9fcf4;box-shadow:0 3px 0 #80a6aa}
+.cell.gate:disabled{opacity:1;cursor:default;border-radius:5px;background:#ecd095;color:#674b1d;box-shadow:inset 0 0 0 2px #b08a44,0 3px 0 #826935}
+.cell.gate svg{width:85%;height:85%;stroke-width:2.4}
+.cell.gate .gate-clear{display:none}
+.cell.gate.gate-open:disabled{background:#c2e4db;color:#286e63;box-shadow:inset 0 0 0 1px #68a89b}
+.cell.gate-open .gate-bars{display:none}
+.cell.gate-open .gate-clear{display:block}
+.cell.gate.blocker:disabled{background:#f5c6a4;color:#7b3218;outline:3px solid #ab4c24}
+.gate-legend{font-size:12px;font-weight:700;line-height:1.5;text-align:center;margin:10px 0 0;padding:9px 12px;border-radius:12px;background:#f5e5bf;color:#674b1d;border:1px solid #c7a766}
+.gate-legend.is-open{background:#d4ece1;color:#245f55;border-color:#86b6a4}
+.chapter-heading.chapter-4,.unlock-card.canal-unlock{background:repeating-linear-gradient(175deg,transparent 0,transparent 22px,#397d8910 23px,#397d8910 25px,transparent 26px),linear-gradient(135deg,#dfefeb,#adcdd4);border-color:#729fa9;color:#183e50;border-bottom:5px solid #b08a44}
+#levelList .gates-level{background:#eef6f2;border-color:#a4c5c8}#levelList .gates-level .number{color:#397d89}
+body[data-chapter="4"] .chapter-stamp,body[data-chapter="4"] .progress-card{background:#d6e8e2;border-color:#92bcb9}
+body[data-chapter="4"] #celebration{color:#397d89}
+.cell.gate-lift{animation:gate-lift .65s ease-out}
+@keyframes gate-lift{from{transform:translateY(3px);outline:4px solid #e9d293}to{transform:translateY(0);outline:0 solid transparent}}
+@media(max-height:730px){.gate-legend{margin-top:6px;padding:6px 10px}body[data-chapter="4"] .arena{min-height:180px;padding:14px 0}body[data-chapter="4"] #playScreen header{margin-bottom:10px}body[data-chapter="4"] .hud{margin-bottom:8px}}

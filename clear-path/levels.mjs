@@ -4,6 +4,8 @@
 // moment, and the last one placed is the first one cleared, so every board is
 // solvable by construction (the tests also check it with the bot).
 
+import { play } from './bot.mjs';
+
 function rng(seed) {
   let a = seed >>> 0;
   return () => {
@@ -78,6 +80,28 @@ function sturdy(id, name, objective, shape, seed, slips, dirs, count) {
   return lvl;
 }
 
+// Chapter 4, "Gates": 'G' in a shape is a gate. It stays shut until gateAt arrows
+// are left, then opens (see sim.mjs). Arrows are laid as if gates were open, then
+// the first seed where the bot wins AND the gates matter (shut for good, the bot
+// is stuck) is kept. If no seed qualifies, the board is laid with the gates as
+// walls, which is always solvable. `count` arrows are made sturdy.
+function gated(id, name, objective, shape, seed, slips, dirs, gateAt, count) {
+  const open = shape.map((r) => r.replace(/G/g, '.'));
+  const build = (s, wallsOnly) => {
+    const lay = wallsOnly ? shape.map((r) => r.replace(/G/g, 'X')) : open;
+    const lvl = sturdy(id, name, objective, lay, s, slips, dirs, count);
+    lvl.chapter = 4;
+    lvl.gateAt = gateAt;
+    lvl.rows = lvl.rows.map((r, y) => r.split('').map((c, x) => (shape[y][x] === 'G' ? 'G' : c)).join(''));
+    return lvl;
+  };
+  for (let k = 0; k < 400; k++) {
+    const lvl = build(seed + k * 101, false);
+    if (play(lvl, 1).won && !play(Object.assign({}, lvl, { gateAt: -1 }), 1).won) return lvl;
+  }
+  return build(seed, true);
+}
+
 export const LEVELS = [
   drawn(1, 'First Slide', 'Tap each arrow to send it off the board.',
     ['>..', '...', '.^.'], 5),
@@ -141,6 +165,27 @@ export const LEVELS = [
     ['######', '#X##X#', '######', '######', '#X##X#', '######'], 2909, 1, '^>v<', 14),
   sturdy(30, 'Last Lock', 'The finale. A big sturdy board and no slips allowed.',
     ['#######', '#######', '###X###', '#######', '#######', '#######', '#######'], 3010, 0, '^>v<', 18),
+  // Chapter 4, "Gates": LEVELS[30..39]. A gate is shut until enough arrows are gone.
+  gated(31, 'First Gate', 'A gate stays shut until only 4 arrows are left. Clear the others first. At most 4 slips.',
+    ['###', '#G#', '###', '###'], 3101, 4, '^>v<', 4, 0),
+  gated(32, 'Twin Gates', 'Two gates, one rule: they open together when 6 arrows are left. At most 4 slips.',
+    ['#####', '#G.G#', '#####', '#####'], 3202, 4, '^>v<', 6, 0),
+  gated(33, 'Late Opener', 'Gates in the middle row hold the long columns back. Clear the edges first. At most 3 slips.',
+    ['######', '######', '..GG..', '######', '######'], 3303, 3, '^v', 12, 0),
+  gated(34, 'Gate and Wall', 'Walls stay shut for good. Gates open at 8 arrows. Tell them apart. At most 3 slips.',
+    ['#####', '#GXG#', '#####', '#XGX#', '#####'], 3404, 3, '^>v<', 8, 0),
+  gated(35, 'Sturdy Gate', 'Sturdy arrows count once they slide, not when they crack. Gates open at 8. At most 3 slips.',
+    ['####', '####', 'G##G', '####', '####'], 3505, 3, '^>v<', 8, 6),
+  gated(36, 'Long Lock', 'A row of empty road with a gate at each end. Gates open at 10. At most 2 slips.',
+    ['#######', '#######', 'G.....G', '#######', '#######'], 3606, 2, '^>v<', 10, 5),
+  gated(37, 'Gate Ring', 'A ring of gates around a small yard. They open at 6. At most 2 slips.',
+    ['#####', '#GGG#', '#G#G#', '#GGG#', '#####'], 3707, 2, '^>v<', 6, 4),
+  gated(38, 'Four Corners', 'Gates in each quarter and walls in the middle. They open at 12. At most 2 slips.',
+    ['######', '#G##G#', '##XX##', '##XX##', '#G##G#', '######'], 3808, 2, '^>v<', 12, 8),
+  gated(39, 'Patient Yard', 'A big yard and five gates. Be patient: they open at 14. At most 1 slip.',
+    ['#######', '#G###G#', '#######', '###G###', '#######', '#G###G#', '#######'], 3909, 1, '^>v<', 14, 10),
+  gated(40, 'Open Gates', 'The finale. Gates and walls on a big board, and no slips allowed. Gates open at 18.',
+    ['#######', '#G#X#G#', '#######', '#X#G#X#', '#######', '#G#X#G#', '#######'], 4010, 0, '^>v<', 18, 16),
 ];
 
 // A fresh solvable 6x6 board for a given day number (for example days since 2026-01-01).

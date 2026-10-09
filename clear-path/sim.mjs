@@ -18,6 +18,15 @@
 // usual. Undo takes back a crack too. Solvability is unchanged, because a sturdy
 // arrow blocks exactly like a plain one and is free exactly when a plain one is.
 //
+// GATES (chapter 4): 'G' in a level's rows is a gate (cell value 10). While more
+// than level.gateAt arrows are left, a gate is closed and blocks like a wall (it is
+// reported as a blocker, never tapped, never counted in left). Once left is
+// gateAt or fewer, every gate is open and blocks nothing. The state is derived
+// from left, so undo closes the gates again. state.gateAt is 0 on boards without
+// gates; state.gateOpen(state) is not stored, use gatesOpen(state). Levels are
+// only built from seeds where the bot wins and the gates matter (closed for good,
+// the bot is stuck), so every gate board is solvable.
+//
 // TICK: one tick is one player action (there is no clock in the rules). The
 // frontend animates the slide however long it likes.
 //
@@ -34,17 +43,28 @@
 
 export const EMPTY = 0, UP = 1, RIGHT = 2, DOWN = 3, LEFT = 4, WALL = 5;
 export const STURDY_UP = 6, STURDY_RIGHT = 7, STURDY_DOWN = 8, STURDY_LEFT = 9;
+export const GATE = 10;
 const DX = [0, 0, 1, 0, -1];
 const DY = [0, -1, 0, 1, 0];
 const GLYPH = {
   '^': UP, '>': RIGHT, v: DOWN, '<': LEFT, X: WALL,
-  U: STURDY_UP, R: STURDY_RIGHT, D: STURDY_DOWN, L: STURDY_LEFT,
+  U: STURDY_UP, R: STURDY_RIGHT, D: STURDY_DOWN, L: STURDY_LEFT, G: GATE,
 };
 
-// Direction 1 to 4 of an arrow cell, sturdy or plain (0 for empty or wall).
+// Direction 1 to 4 of an arrow cell, sturdy or plain (0 for empty, wall or gate).
 function dirOf(c) {
-  if (c >= STURDY_UP) return c - 5;
-  return c === WALL ? 0 : c;
+  if (c >= STURDY_UP && c <= STURDY_LEFT) return c - 5;
+  return c === WALL || c === GATE ? 0 : c;
+}
+
+// True when a cell is an arrow, sturdy or plain.
+function isArrow(c) {
+  return c !== EMPTY && c !== WALL && c !== GATE;
+}
+
+// True once enough arrows are gone for the gates to be open.
+export function gatesOpen(state) {
+  return state.gateAt > 0 && state.left <= state.gateAt;
 }
 
 export function newGame(level, seed = 0) {
@@ -55,11 +75,12 @@ export function newGame(level, seed = 0) {
     for (let x = 0; x < w; x++) {
       const d = GLYPH[level.rows[y][x]] || EMPTY;
       cells[y * w + x] = d;
-      if (d && d !== WALL) left++;
+      if (isArrow(d)) left++;
     }
   }
   return {
     w, h, cells, left, slips: 0, maxSlips: level.slips == null ? 3 : level.slips,
+    gateAt: level.gateAt || 0,
     ticks: 0, seed, history: [], last: { type: 'none', x: -1, y: -1, blockers: [] },
   };
 }
@@ -69,9 +90,11 @@ export function blockers(state, x, y) {
   const d = dirOf(state.cells[y * state.w + x]);
   const out = [];
   if (!d) return out;
+  const open = gatesOpen(state);
   let cx = x + DX[d], cy = y + DY[d];
   while (cx >= 0 && cy >= 0 && cx < state.w && cy < state.h) {
-    if (state.cells[cy * state.w + cx]) out.push({ x: cx, y: cy });
+    const c = state.cells[cy * state.w + cx];
+    if (c && !(c === GATE && open)) out.push({ x: cx, y: cy });
     cx += DX[d]; cy += DY[d];
   }
   return out;
@@ -83,7 +106,7 @@ export function freeArrows(state) {
   for (let y = 0; y < state.h; y++) {
     for (let x = 0; x < state.w; x++) {
       const c = state.cells[y * state.w + x];
-      if (c && c !== WALL && !blockers(state, x, y).length) out.push({ x, y });
+      if (isArrow(c) && !blockers(state, x, y).length) out.push({ x, y });
     }
   }
   return out;
@@ -110,12 +133,12 @@ export function step(state, input) {
   const t = input.tap;
   if (!t || t.x < 0 || t.y < 0 || t.x >= state.w || t.y >= state.h) return state;
   const d = state.cells[t.y * state.w + t.x];
-  if (!d || d === WALL) return state;
+  if (!isArrow(d)) return state;
   const b = blockers(state, t.x, t.y);
   if (b.length) {
     state.slips++;
     state.last = { type: 'blocked', x: t.x, y: t.y, blockers: b };
-  } else if (d >= STURDY_UP) {
+  } else if (d >= STURDY_UP && d <= STURDY_LEFT) {
     // First tap on a free sturdy arrow only cracks it: it becomes a plain arrow.
     state.cells[t.y * state.w + t.x] = d - 5;
     state.history.push({ x: t.x, y: t.y, d, crack: true });
