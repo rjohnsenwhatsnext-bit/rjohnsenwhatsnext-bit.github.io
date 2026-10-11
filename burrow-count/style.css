@@ -33,3 +33,25 @@ body[data-chapter="2"] .play header .eyebrow{display:block;font-size:9px;margin-
 .trail-reveal{width:100%;padding:22px 16px;margin:12px 0;border-radius:24px;background:radial-gradient(ellipse at top,#647a99,#2e405b);color:#fff3ce;animation:bloom .8s ease-out}
 .trail-reveal>span{display:block;font-size:38px;color:#f5cf7d}.trail-reveal b{font-family:Georgia,serif;font-size:25px}.trail-reveal p{font-size:13px}
 @media(max-width:380px){.clue b{font-size:24px}.clue small{font-size:7px}.board{gap:3px}.chapter-map{padding:16px 10px}}
+/* Chapter 3: amber paths, mist and teal trail markers. */
+body[data-chapter="3"]{--ink:#443d31;--green:#326567;color:var(--ink);background:radial-gradient(ellipse at 8% 0,#f2cb89,transparent 52%),radial-gradient(ellipse at 100% 65%,#c4dbd3,transparent 60%),#f5ebd7}
+body[data-chapter="3"] .eyebrow{color:#706047}
+body[data-chapter="3"] .woodland{background:linear-gradient(165deg,transparent 42%,#fff5d477 43%,transparent 58%),#b5c8bc}
+body[data-chapter="3"] .sun{background:#ffe4a4;box-shadow:0 0 0 18px #fff3cf44}
+body[data-chapter="3"] .woodland:after{background:#a37c48;box-shadow:0 -14px 0 #d8b97a}
+body[data-chapter="3"] .burrow{background:#375650;border-color:#b29766;box-shadow:0 -7px 0 #ead5a4}
+body[data-chapter="3"] .sprig{background:#718f79}
+body[data-chapter="3"] .sprig:before,body[data-chapter="3"] .sprig:after{background:#d3a356}
+body[data-chapter="3"] .board{background:#fff1d4;border-color:#c8aa77;box-shadow:0 7px 0 #bfa477,0 16px 30px #68543820}
+body[data-chapter="3"] .play header .eyebrow{display:block;font-size:9px;margin-bottom:6px}
+.chapter-3{background:radial-gradient(ellipse at top right,#fff0c6,transparent 65%),#dbe5d9;border:1px solid #b8b695}
+.clue.line{border:2px solid #327778;background:#d7eeea;color:#214e50}
+.clue.line.matched{background:#285e60;color:#fff7da;border-color:#78aaa1}
+.clue.line.over{background:#a64d38;color:#fff;border-color:#793827}
+.clue.line sup{font-weight:900;font-size:.6em}
+.crossroads-reveal{background:radial-gradient(ellipse at top,#547f76,#284d4b);color:#fff3ce}
+body[data-chapter="3"] .chapter-win{background:radial-gradient(ellipse at 50% 28%,#f8c96d77,transparent 65%)}
+.signpost-equipped .signpost{display:block;position:absolute;right:-18%;bottom:-6%;width:7%;height:80%;background:#745135;border-radius:2px;z-index:4;transform:rotate(8deg)}
+.signpost:before,.signpost:after{content:'';position:absolute;width:520%;height:25%;left:-180%;top:7%;background:#337677;border:1px solid #204d50;clip-path:polygon(0 0,80% 0,100% 50%,80% 100%,0 100%)}
+.signpost:after{top:40%;transform:rotate(180deg);background:#e6b85f;border-color:#997243}
+@media(max-width:380px){.clue.line b{font-size:21px}.clue.line small{font-size:7px}.level{gap:9px}.level b{font-size:14px}}

@@ -8,12 +8,12 @@
 // answer, the first cell where another answer differs is turned into one more clue
 // cell (which only removes cells that are not in our answer) until one answer is left.
 // `extraClues` says how many were needed; the tests prove every level has exactly one.
-import { neighbours, solve } from './sim.mjs';
+import { neighbours, lineCells, solve } from './sim.mjs';
 
 function build(chapter, n, name, objective, lives, drawing) {
   const rows = drawing.length, cols = drawing[0].length, flat = drawing.join('');
-  const letters = [...new Set(flat.toLowerCase().replace(/[.*]/g, ''))];
-  const isClue = (ch) => ch === '.' || ch === '*';
+  const letters = [...new Set(flat.toLowerCase().replace(/[.*+]/g, ''))];
+  const isClue = (ch) => ch === '.' || ch === '*' || ch === '+';
   const level = {
     id: `c${chapter}-${String(n).padStart(2, '0')}`, chapter, name, objective, lives, rows, cols,
     regionCount: letters.length,
@@ -22,12 +22,14 @@ function build(chapter, n, name, objective, lives, drawing) {
   };
   [...flat].forEach((ch, i) => { if (!isClue(ch) && ch === ch.toUpperCase()) level.solution[level.region[i]] = i; });
   if (level.solution.includes(-1)) throw new Error(`${level.id}: every region needs exactly one capital`);
-  const addClue = (i, reach = 1) => {
-    const hit = new Set(level.solution), k = { r: (i / cols) | 0, c: i % cols, n: neighbours(level, i, reach).filter((j) => hit.has(j)).length };
+  const addClue = (i, reach = 1, line = false) => {
+    const hit = new Set(level.solution), r = (i / cols) | 0, c = i % cols;
+    const k = { r, c, n: (line ? lineCells(level, r, c) : neighbours(level, i, reach)).filter((j) => hit.has(j)).length };
     if (reach > 1) k.reach = reach; // wide clue, see the top of sim.mjs
+    if (line) k.line = true; // line clue, see the top of sim.mjs
     level.clues.push(k);
   };
-  [...flat].forEach((ch, i) => { if (isClue(ch)) addClue(i, ch === '*' ? 2 : 1); });
+  [...flat].forEach((ch, i) => { if (isClue(ch)) addClue(i, ch === '*' ? 2 : 1, ch === '+'); });
   for (;;) {
     const found = solve(level, 2);
     if (!found.length) throw new Error(`${level.id}: no answer`);
@@ -195,5 +197,87 @@ export const LEVELS = [
     'Ffh.ggG',
     'hhHh*ii',
     'hhhhiIi',
+  ]),
+
+  // Chapter 3 teaches the line clue, drawn '+': it counts every critter in its row and column.
+  build(3, 1, 'Crossroads', 'Meet the line clue: it counts its whole row and column', 5, [
+    'aAab',
+    '+bbB',
+    'cCcd',
+    'ccdD',
+  ]),
+  build(3, 2, 'Straight Lines', 'Two lines cross the board, so read both ways', 5, [
+    'aAabb',
+    'a+bbB',
+    'cCcdd',
+    'ee+dD',
+    'Eeedd',
+  ]),
+  build(3, 3, 'Two Lines', 'A corner line and a middle line together', 4, [
+    '+aAbb',
+    'ca.bB',
+    'CcddD',
+    'ceeed',
+    'ee+Ed',
+  ]),
+  build(3, 4, 'Corner Cross', 'A line from the corner of a six by six board', 4, [
+    '+aaAbb',
+    'cabbBb',
+    'cC.ddb',
+    'eeddDf',
+    'Eefff.',
+    'eefFf+',
+  ]),
+  build(3, 5, 'Column Watch', 'Lines in the middle of the board see a long way', 4, [
+    'aaAbbb',
+    'a+bbBc',
+    'dd.ccC',
+    'DdeeEc',
+    'ffe+ec',
+    'fFfeee',
+  ]),
+  build(3, 6, 'Lines And Lookouts', 'Mix line clues with a wide clue and close clues', 3, [
+    'aAa*bb',
+    'a+bbBc',
+    'ddbcCc',
+    'Dd.eec',
+    'ffeEe+',
+    'Ffffee',
+  ]),
+  build(3, 7, 'Three Ways', 'Close, wide and line clues on a wider board', 3, [
+    'aAab+bb',
+    'a.cbBdd',
+    'cCcc*dd',
+    'eefdDdg',
+    'EefffgG',
+    'e+fFfgg',
+  ]),
+  build(3, 8, 'Cross And Wide', 'Eight regions and three kinds of clue', 3, [
+    'aAab+bb',
+    'a.cbBcc',
+    'ddCc*ee',
+    'dDffeee',
+    'ggf+fEe',
+    'GgfFhhh',
+    'g+hhHh.',
+  ]),
+  build(3, 9, 'Quiet Crossing', 'Only two lines to start with: let them lead', 3, [
+    'aaAabbb',
+    'cabdbBd',
+    'CccdddD',
+    'ceeffd+',
+    'eEefffg',
+    'ee+fFgg',
+    'eeffggG',
+  ]),
+  build(3, 10, 'The Great Crossing', 'The finale: nine regions and every kind of clue', 3, [
+    'aAa*bbcc',
+    'a.bbBcCc',
+    'ddb+ccee',
+    'DdfffEee',
+    'gdf*fhhe',
+    'ggFfhHhi',
+    'Gg+hiiiI',
+    'gghhiiii',
   ]),
 ];
