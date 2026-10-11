@@ -6,6 +6,7 @@
 
 export const CHAPTERS = [
   { id: 1, name: 'Town Loop', idea: 'Send trams to the stop in the order the queue wants them.' },
+  { id: 2, name: 'Signal Box', idea: 'Closed signals and sleeping trams open once enough trams have been served.' },
 ];
 
 export const LEVELS = [
@@ -73,5 +74,67 @@ export const LEVELS = [
       [2, 2, 'R', 2], [1, 2, 'R', 0], [0, 2, 'R', 1],
     ],
     queue: [1, 0, 0, 1, 2, 2, 2, 1, 0, 0, 0, 1, 2],
+  },
+  // Chapter 2, "Signal Box". `signals` are [x, y, n]: closed until n trams are served.
+  // `locks` are { tramIndex: n }: that tram sleeps until n trams are served.
+  {
+    id: 'c2-01', chapter: 2, name: 'Signal Ahead', objective: 'A red signal blocks the top tram. Serve the other one to open it.',
+    w: 3, h: 2, lanes: 2, par: 0, signals: [[1, 0, 1]],
+    trams: [[0, 0, 'R', 0], [0, 1, 'R', 1]],
+    queue: [1, 0],
+  },
+  {
+    id: 'c2-02', chapter: 2, name: 'Two Signals', objective: 'Each signal opens after a different number of trams are served.',
+    w: 4, h: 3, lanes: 2, par: 0, signals: [[2, 0, 1], [2, 2, 2]],
+    trams: [[0, 0, 'R', 0], [0, 2, 'R', 1], [0, 1, 'R', 2]],
+    queue: [2, 0, 1],
+  },
+  {
+    id: 'c2-03', chapter: 2, name: 'Behind the Signal', objective: 'The signal opens, but a tram is still in front. Park it once.',
+    w: 4, h: 2, lanes: 2, par: 1, signals: [[3, 0, 1]],
+    trams: [[0, 0, 'R', 0], [1, 0, 'R', 1], [0, 1, 'L', 2]],
+    queue: [2, 0, 1],
+  },
+  {
+    id: 'c2-04', chapter: 2, name: 'Sleeper', objective: 'The left tram is asleep until two trams are served.',
+    w: 3, h: 3, lanes: 2, par: 0, locks: { 0: 2 },
+    trams: [[0, 0, 'U', 0], [1, 0, 'U', 1], [2, 0, 'U', 2]],
+    queue: [1, 2, 0],
+  },
+  {
+    id: 'c2-05', chapter: 2, name: 'Wake Up Call', objective: 'Two sleepers wake at different times. Serve in the right order.',
+    w: 4, h: 2, lanes: 2, par: 0, locks: { 0: 2, 1: 1 },
+    trams: [[0, 0, 'U', 0], [1, 0, 'U', 1], [2, 0, 'U', 2], [3, 0, 'U', 3]],
+    queue: [3, 1, 0, 2],
+  },
+  {
+    id: 'c2-06', chapter: 2, name: 'Signal and Sleeper', objective: 'A signal and a sleeper both wait on the first tram. Park one to finish.',
+    w: 4, h: 3, lanes: 2, par: 1, signals: [[2, 1, 1]], locks: { 2: 1 },
+    trams: [[0, 1, 'R', 0], [1, 1, 'R', 1], [3, 0, 'D', 2], [1, 2, 'L', 3]],
+    queue: [3, 2, 0, 1],
+  },
+  {
+    id: 'c2-07', chapter: 2, name: 'One Lane Crossing', objective: 'One lane and one park. Open the signal first.',
+    w: 3, h: 3, lanes: 1, par: 1, maxParks: 1, signals: [[2, 0, 1]],
+    trams: [[0, 0, 'R', 0], [1, 0, 'R', 1], [0, 2, 'L', 2], [1, 2, 'L', 3]],
+    queue: [2, 0, 1, 3],
+  },
+  {
+    id: 'c2-08', chapter: 2, name: 'Two Gates', objective: 'Two signals open together after two trams. Find the two that unlock them.',
+    w: 4, h: 3, lanes: 2, par: 1, signals: [[3, 0, 2], [3, 2, 2]],
+    trams: [[0, 0, 'R', 0], [1, 0, 'R', 1], [0, 2, 'R', 2], [1, 2, 'R', 3], [2, 1, 'U', 3], [3, 1, 'R', 0]],
+    queue: [3, 0, 1, 0, 2, 3],
+  },
+  {
+    id: 'c2-09', chapter: 2, name: 'Late Shift', objective: 'Dig through the column with exactly two parks, then wake the sleeper.',
+    w: 4, h: 3, lanes: 2, par: 2, maxParks: 2, locks: { 3: 1 },
+    trams: [[0, 0, 'D', 0], [0, 1, 'D', 1], [0, 2, 'D', 2], [1, 0, 'U', 3], [3, 1, 'R', 3]],
+    queue: [3, 0, 3, 1, 2],
+  },
+  {
+    id: 'c2-10', chapter: 2, name: 'Signal Box Finale', objective: 'Wake the sleeper, open the signal and park once to clear the box.',
+    w: 4, h: 3, lanes: 2, par: 1, maxParks: 1, held: [1], signals: [[3, 0, 2]], locks: { 2: 1 },
+    trams: [[0, 0, 'R', 0], [1, 0, 'R', 1], [0, 1, 'R', 2], [2, 1, 'U', 3], [0, 2, 'L', 0], [1, 2, 'L', 3]],
+    queue: [0, 3, 3, 1, 2, 0, 1],
   },
 ];

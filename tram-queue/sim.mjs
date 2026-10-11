@@ -16,19 +16,30 @@
 //                    rest of the queue into one that can (seeded, so deterministic)
 //   null or {}       nothing
 // step(state, input) mutates the state and fills state.events with what happened.
+//
+// CHAPTER 2 RULES (both depend only on how many trams have been served, so undo restores them):
+//   signals: [[x, y, n]]  a closed signal on a cell. It blocks any tram whose path crosses
+//                    that cell until n trams have been served, then it is open for good.
+//   locks: { id: n }  tram `id` (its index in `trams`) is asleep and cannot be sent until n
+//                    trams have been served. It still sits on the board and still blocks others.
 
 const DIRS = { U: [0, -1], D: [0, 1], L: [-1, 0], R: [1, 0] };
 
 export const FIRST_CLEAR_TOKENS = 10;
-export const CHAPTER_REWARDS = { 1: { tokens: 50, unlock: 'livery-gold', name: 'Gold livery' } };
+export const CHAPTER_REWARDS = {
+  1: { tokens: 50, unlock: 'livery-gold', name: 'Gold livery' },
+  2: { tokens: 75, unlock: 'livery-night', name: 'Night livery' },
+};
 
-// level: { w, h, lanes, trams: [[x, y, dir, colour]], queue: [colour], held?: [colour], maxParks? }
+// level: { w, h, lanes, trams: [[x, y, dir, colour]], queue: [colour], held?: [colour], maxParks?,
+//          signals?: [[x, y, n]], locks?: { id: n } }
 // queue has one entry per tram, parked-at-start ones included.
 export function newGame(level, seed = 1) {
   const trams = level.trams.map(([x, y, d, c], id) => ({ id, x, y, d, c, where: 'board' }));
   for (const c of level.held || []) trams.push({ id: trams.length, x: -1, y: -1, d: 'U', c, where: 'held' });
   const s = {
     w: level.w, h: level.h, lanes: level.lanes, maxParks: level.maxParks, par: level.par,
+    signals: (level.signals || []).map((g) => g.slice()), locks: { ...(level.locks || {}) },
     trams, queue: level.queue.slice(), qi: 0,
     held: trams.filter((t) => t.where === 'held').map((t) => t.id),
     parks: 0, taps: 0, undos: 0, shuffles: 0,
@@ -39,10 +50,12 @@ export function newGame(level, seed = 1) {
   return s;
 }
 
-export function isFree(s, t) {
+export function isFree(s, t, ignoreGates = false) {
   if (!t || t.where !== 'board') return false;
+  if (!ignoreGates && s.locks[t.id] > s.qi) return false;
   const [dx, dy] = DIRS[t.d];
   for (let x = t.x + dx, y = t.y + dy; x >= 0 && y >= 0 && x < s.w && y < s.h; x += dx, y += dy) {
+    if (!ignoreGates && s.signals.some(([gx, gy, n]) => gx === x && gy === y && s.qi < n)) return false;
     if (s.trams.some((o) => o.where === 'board' && o.x === x && o.y === y)) return false;
   }
   return true;
@@ -154,7 +167,7 @@ export function solve(s) {
 function peelOrder(s) {
   const c = copy(s);
   const colours = c.held.map((i) => c.trams[i].c);
-  for (let free = c.trams.find((t) => isFree(c, t)); free; free = c.trams.find((t) => isFree(c, t))) {
+  for (let free = c.trams.find((t) => isFree(c, t, true)); free; free = c.trams.find((t) => isFree(c, t, true))) {
     colours.push(free.c);
     free.where = 'gone';
   }
