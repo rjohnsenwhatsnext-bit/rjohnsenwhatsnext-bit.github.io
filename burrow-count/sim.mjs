@@ -15,6 +15,11 @@
 // Other clues have no line field. clueNear() handles it, so the solver, mistakes and
 // "show me why" need nothing else.
 //
+// JUMP CLUE (chapter 4): a clue with `jump: true` counts every critter a knight's move away
+// (2 steps one way and 1 step the other, up to 8 cells, none of them touching it). Its drawing
+// mark is '~'. Other clues have no jump field. clueNear() handles it, so the solver, mistakes
+// and "show me why" need nothing else.
+//
 // TICK: step() advances the game by one fixed tick of 1/60 s. Nothing is timed;
 // state.tick only paces animation and stats.
 // INPUT to step(state, input), one per tick, or null/undefined to idle:
@@ -50,9 +55,22 @@ export function lineCells(level, r, c) {
   return out;
 }
 
+// the cells a knight's move from (r, c)
+export function jumpCells(level, r, c) {
+  const out = [];
+  for (const [dr, dc] of [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]]) {
+    const rr = r + dr, cc = c + dc;
+    if (rr >= 0 && rr < level.rows && cc >= 0 && cc < level.cols) out.push(rr * level.cols + cc);
+  }
+  return out;
+}
+
 // the cells a clue counts: its 8 neighbours, for a wide clue (reach 2) every cell within 2 steps,
-// for a line clue every cell in its row and column
-export function clueNear(level, k) { return k.line ? lineCells(level, k.r, k.c) : neighbours(level, k.r * level.cols + k.c, k.reach || 1); }
+// for a line clue every cell in its row and column, for a jump clue the knight's-move cells
+export function clueNear(level, k) {
+  if (k.jump) return jumpCells(level, k.r, k.c);
+  return k.line ? lineCells(level, k.r, k.c) : neighbours(level, k.r * level.cols + k.c, k.reach || 1);
+}
 
 // how many placed critters touch each clue, in level.clues order
 export function clueCounts(level, placed) {
@@ -138,7 +156,7 @@ export function step(state, input) {
 // 'only' (a region has one cell left), 'fit' (the one place that fits every clue).
 export function hint(state) {
   const L = state.level, pos = (i) => [(i / L.cols) | 0, i % L.cols];
-  const at = (k) => `the ${L.clues[k].reach > 1 ? 'wide ' : L.clues[k].line ? 'line ' : ''}${L.clues[k].n} at row ${L.clues[k].r + 1}, column ${L.clues[k].c + 1}`;
+  const at = (k) => `the ${L.clues[k].reach > 1 ? 'wide ' : L.clues[k].line ? 'line ' : L.clues[k].jump ? 'jump ' : ''}${L.clues[k].n} at row ${L.clues[k].r + 1}, column ${L.clues[k].c + 1}`;
   const counts = clueCounts(L, state.placed);
   const bad = L.clues.findIndex((k, j) => counts[j] > k.n);
   if (bad >= 0) {
@@ -194,7 +212,8 @@ export const UNLOCKS = [
 // chapter completion rewards, issued once when every level of the chapter is cleared
 export const CHAPTER_REWARDS = { 1: { coins: 50, unlock: 'keeper-hat', name: 'Burrow Keeper hat' },
   2: { coins: 75, unlock: 'tunnel-lantern', name: 'Tunnel lantern' },
-  3: { coins: 100, unlock: 'crossroads-signpost', name: 'Crossroads signpost' } };
+  3: { coins: 100, unlock: 'crossroads-signpost', name: 'Crossroads signpost' },
+  4: { coins: 125, unlock: 'hilltop-lookout', name: 'Hilltop lookout' } };
 
 export const newProgress = () => ({ v: 1, levels: {}, coins: 0, unlocks: [], chapters: {}, bonus: {} });
 

@@ -8,12 +8,12 @@
 // answer, the first cell where another answer differs is turned into one more clue
 // cell (which only removes cells that are not in our answer) until one answer is left.
 // `extraClues` says how many were needed; the tests prove every level has exactly one.
-import { neighbours, lineCells, solve } from './sim.mjs';
+import { neighbours, lineCells, jumpCells, solve } from './sim.mjs';
 
 function build(chapter, n, name, objective, lives, drawing) {
   const rows = drawing.length, cols = drawing[0].length, flat = drawing.join('');
-  const letters = [...new Set(flat.toLowerCase().replace(/[.*+]/g, ''))];
-  const isClue = (ch) => ch === '.' || ch === '*' || ch === '+';
+  const letters = [...new Set(flat.toLowerCase().replace(/[.*+~]/g, ''))];
+  const isClue = (ch) => ch === '.' || ch === '*' || ch === '+' || ch === '~';
   const level = {
     id: `c${chapter}-${String(n).padStart(2, '0')}`, chapter, name, objective, lives, rows, cols,
     regionCount: letters.length,
@@ -22,14 +22,16 @@ function build(chapter, n, name, objective, lives, drawing) {
   };
   [...flat].forEach((ch, i) => { if (!isClue(ch) && ch === ch.toUpperCase()) level.solution[level.region[i]] = i; });
   if (level.solution.includes(-1)) throw new Error(`${level.id}: every region needs exactly one capital`);
-  const addClue = (i, reach = 1, line = false) => {
+  const addClue = (i, reach = 1, line = false, jump = false) => {
     const hit = new Set(level.solution), r = (i / cols) | 0, c = i % cols;
-    const k = { r, c, n: (line ? lineCells(level, r, c) : neighbours(level, i, reach)).filter((j) => hit.has(j)).length };
+    const cells = jump ? jumpCells(level, r, c) : line ? lineCells(level, r, c) : neighbours(level, i, reach);
+    const k = { r, c, n: cells.filter((j) => hit.has(j)).length };
     if (reach > 1) k.reach = reach; // wide clue, see the top of sim.mjs
     if (line) k.line = true; // line clue, see the top of sim.mjs
+    if (jump) k.jump = true; // jump clue, see the top of sim.mjs
     level.clues.push(k);
   };
-  [...flat].forEach((ch, i) => { if (isClue(ch)) addClue(i, ch === '*' ? 2 : 1, ch === '+'); });
+  [...flat].forEach((ch, i) => { if (isClue(ch)) addClue(i, ch === '*' ? 2 : 1, ch === '+', ch === '~'); });
   for (;;) {
     const found = solve(level, 2);
     if (!found.length) throw new Error(`${level.id}: no answer`);
@@ -278,6 +280,89 @@ export const LEVELS = [
     'gdf*fhhe',
     'ggFfhHhi',
     'Gg+hiiiI',
+    'gghhiiii',
+  ]),
+
+  // Chapter 4 teaches the jump clue, drawn '~': it counts every critter a knight's move away.
+  build(4, 1, 'Hop Over', 'Meet the jump clue: it counts critters a knight move away', 5, [
+    'aAabb',
+    'ab~bB',
+    'cCcdd',
+    'ccddD',
+    '~cddd',
+  ]),
+  build(4, 2, 'Two Hops', 'Two jump clues watch opposite sides of the board', 5, [
+    '~aAab',
+    'aabbB',
+    'cc~dd',
+    'CcddD',
+    'ccdd.',
+  ]),
+  build(4, 3, 'Corner Hops', 'Jump clues in the corners reach into the middle', 4, [
+    'aAab~',
+    'abbbB',
+    'ccd~d',
+    'CcdDe',
+    '~ceEe',
+  ]),
+  build(4, 4, 'Skip And Touch', 'Jump clues and close clues on a six by six board', 4, [
+    'aAabbb',
+    'a.bbBc',
+    'ddb~cC',
+    'Ddeeec',
+    'ffeEe~',
+    'Ffffee',
+  ]),
+  build(4, 5, 'Centre Leap', 'A jump clue in the middle of the board sees eight cells', 4, [
+    'aaAabb',
+    'cabbBb',
+    'cC~ddb',
+    'ceeDd.',
+    'EeffdF',
+    'eefff~',
+  ]),
+  build(4, 6, 'Hops And Looks', 'Mix jump, wide, line and close clues', 3, [
+    'aAab~b',
+    'a.bbBc',
+    'dd*cCc',
+    'Dddeec',
+    'ffeEe+',
+    'Ffffee',
+  ]),
+  build(4, 7, 'Long Jump', 'Seven regions on a wider board', 3, [
+    'aAabb~b',
+    'a.cbBdd',
+    'ccC~.dd',
+    'eefdDdg',
+    'EefffgG',
+    'e+fFfgg',
+  ]),
+  build(4, 8, 'Hop Scotch', 'Eight regions and four kinds of clue', 3, [
+    'aAabb~b',
+    'a.cbBcc',
+    'ddCc*ee',
+    'dDffeee',
+    'ggf~fEe',
+    'GgfFhhh',
+    'g+hhHh.',
+  ]),
+  build(4, 9, 'Quiet Leap', 'Only a few clues to start with: let the hops lead', 3, [
+    'aaAabbb',
+    'cabdbBd',
+    'CccdddD',
+    'ceeff~d',
+    'eEefffg',
+    'ee~fFgg',
+    'eeffggG',
+  ]),
+  build(4, 10, 'The Great Leap', 'The finale: nine regions and every kind of clue', 3, [
+    'aAab*bcc',
+    'a.bbBcCc',
+    'ddb~ccee',
+    'DdfffEee',
+    'gdf+fhhe',
+    'ggFfhHhi',
+    'Gg~hiiiI',
     'gghhiiii',
   ]),
 ];

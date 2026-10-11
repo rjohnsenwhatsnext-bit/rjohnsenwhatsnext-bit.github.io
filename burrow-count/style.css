@@ -55,3 +55,28 @@ body[data-chapter="3"] .chapter-win{background:radial-gradient(ellipse at 50% 28
 .signpost:before,.signpost:after{content:'';position:absolute;width:520%;height:25%;left:-180%;top:7%;background:#337677;border:1px solid #204d50;clip-path:polygon(0 0,80% 0,100% 50%,80% 100%,0 100%)}
 .signpost:after{top:40%;transform:rotate(180deg);background:#e6b85f;border-color:#997243}
 @media(max-width:380px){.clue.line b{font-size:21px}.clue.line small{font-size:7px}.level{gap:9px}.level b{font-size:14px}}
+/* Chapter 4: heather slopes, pale dawn skies and purple jump stones. */
+body[data-chapter="4"]{--ink:#40364f;--green:#65517f;color:var(--ink);background:radial-gradient(ellipse at 90% 0,#f6d8bc,transparent 48%),radial-gradient(ellipse at 0 70%,#d3c6e3,transparent 58%),#eeeaf3}
+body[data-chapter="4"] .eyebrow{color:#705d83}
+body[data-chapter="4"] .woodland{background:linear-gradient(155deg,transparent 48%,#aa9abd 49%,#aa9abd 65%,transparent 66%),linear-gradient(25deg,#8b879f 40%,#d5c7e4 41%,#f3dcc9)}
+body[data-chapter="4"] .sun{background:#fff0cb;box-shadow:0 0 0 16px #fff1da44}
+body[data-chapter="4"] .woodland:after{background:#82866b;box-shadow:0 -14px 0 #b3ae9b}
+body[data-chapter="4"] .burrow{background:#51485d;border-color:#a49aa7;box-shadow:0 -7px 0 #cbc1c6}
+body[data-chapter="4"] .sprig{background:#718474}
+body[data-chapter="4"] .sprig:before,body[data-chapter="4"] .sprig:after{background:#a580b4}
+body[data-chapter="4"] .board{background:#f0e8f5;border-color:#b6a3c5;box-shadow:0 7px 0 #ab99ba,0 16px 30px #49395526}
+body[data-chapter="4"] .play header .eyebrow{display:block;font-size:9px;margin-bottom:6px}
+body[data-chapter="4"] .hint{background:#fff9f0bb}
+.chapter-4{background:radial-gradient(ellipse at top right,#ffe6c8,transparent 65%),#e2d7ec;border:1px solid #bba6cd}
+.chapter-4 .chapter-access{color:#65517f}
+.clue.jump{border:2px solid #785497;background:#e6d8f3;color:#553872}
+.clue.jump.matched{background:#61447d;color:#fff5de;border-color:#bda0d5}
+.clue.jump.over{background:#a64d38;color:#fff;border-color:#793827}
+.clue.jump sup{font-weight:900;font-size:.65em}
+body[data-chapter="4"] .region.in-reach{box-shadow:inset 0 0 0 2px #64447d;border-style:dashed}
+.hilltop-reveal{background:radial-gradient(ellipse at top,#947da9,#514363);color:#fff2d8}
+body[data-chapter="4"] .chapter-win{background:radial-gradient(ellipse at 50% 28%,#d4b4ef88,transparent 65%)}
+.lookout-equipped .lookout{display:block;position:absolute;left:-24%;bottom:-9%;width:24%;height:60%;border:2px solid #79634f;background:repeating-linear-gradient(0deg,#cfbaa0 0 23%,#aa9278 24% 29%);border-radius:4px 4px 1px 1px;z-index:5}
+.lookout:before{content:'';position:absolute;left:45%;bottom:100%;height:80%;width:2px;background:#79634f}
+.lookout:after{content:'';position:absolute;left:calc(45% + 2px);bottom:140%;width:110%;height:42%;background:#85619e;clip-path:polygon(0 0,100% 15%,75% 55%,100% 100%,0 85%)}
+@media(max-width:380px){.clue.jump b{font-size:21px}.clue.jump small{font-size:7px}}
