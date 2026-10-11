@@ -8,12 +8,12 @@
 // answer, the first cell where another answer differs is turned into one more clue
 // cell (which only removes cells that are not in our answer) until one answer is left.
 // `extraClues` says how many were needed; the tests prove every level has exactly one.
-import { neighbours, lineCells, jumpCells, solve } from './sim.mjs';
+import { neighbours, lineCells, jumpCells, diagCells, solve } from './sim.mjs';
 
 function build(chapter, n, name, objective, lives, drawing) {
   const rows = drawing.length, cols = drawing[0].length, flat = drawing.join('');
-  const letters = [...new Set(flat.toLowerCase().replace(/[.*+~]/g, ''))];
-  const isClue = (ch) => ch === '.' || ch === '*' || ch === '+' || ch === '~';
+  const letters = [...new Set(flat.toLowerCase().replace(/[.*+~x]/g, ''))];
+  const isClue = (ch) => ch === '.' || ch === '*' || ch === '+' || ch === '~' || ch === 'x';
   const level = {
     id: `c${chapter}-${String(n).padStart(2, '0')}`, chapter, name, objective, lives, rows, cols,
     regionCount: letters.length,
@@ -22,16 +22,17 @@ function build(chapter, n, name, objective, lives, drawing) {
   };
   [...flat].forEach((ch, i) => { if (!isClue(ch) && ch === ch.toUpperCase()) level.solution[level.region[i]] = i; });
   if (level.solution.includes(-1)) throw new Error(`${level.id}: every region needs exactly one capital`);
-  const addClue = (i, reach = 1, line = false, jump = false) => {
+  const addClue = (i, reach = 1, line = false, jump = false, diag = false) => {
     const hit = new Set(level.solution), r = (i / cols) | 0, c = i % cols;
-    const cells = jump ? jumpCells(level, r, c) : line ? lineCells(level, r, c) : neighbours(level, i, reach);
+    const cells = diag ? diagCells(level, r, c) : jump ? jumpCells(level, r, c) : line ? lineCells(level, r, c) : neighbours(level, i, reach);
     const k = { r, c, n: cells.filter((j) => hit.has(j)).length };
     if (reach > 1) k.reach = reach; // wide clue, see the top of sim.mjs
     if (line) k.line = true; // line clue, see the top of sim.mjs
     if (jump) k.jump = true; // jump clue, see the top of sim.mjs
+    if (diag) k.diag = true; // diagonal clue, see the top of sim.mjs
     level.clues.push(k);
   };
-  [...flat].forEach((ch, i) => { if (isClue(ch)) addClue(i, ch === '*' ? 2 : 1, ch === '+', ch === '~'); });
+  [...flat].forEach((ch, i) => { if (isClue(ch)) addClue(i, ch === '*' ? 2 : 1, ch === '+', ch === '~', ch === 'x'); });
   for (;;) {
     const found = solve(level, 2);
     if (!found.length) throw new Error(`${level.id}: no answer`);
@@ -364,5 +365,89 @@ export const LEVELS = [
     'ggFfhHhi',
     'Gg~hiiiI',
     'gghhiiii',
+  ]),
+
+  // Chapter 5 teaches the diagonal clue, drawn 'x': it counts every critter on its four diagonals.
+  build(5, 1, 'Slanted Burrow', 'Meet the diagonal clue: it counts critters along its slants', 5, [
+    'Aaabb',
+    'axbbB',
+    'ccCdd',
+    'cdddD',
+    'ccdd.',
+  ]),
+  build(5, 2, 'Criss Cross', 'Two diagonal clues look along the slants from opposite sides', 5, [
+    'aaAbb',
+    'axbbb',
+    'ccdBd',
+    'Cc.dD',
+    'x.cdd',
+  ]),
+  build(5, 3, 'Slant And Touch', 'Diagonal clues and close clues on a six by six board', 4, [
+    'aAabbb',
+    'a.bbBc',
+    'ddxccC',
+    'Ddeeec',
+    'ffeEex',
+    'Ffffee',
+  ]),
+  build(5, 4, 'Corner Slant', 'A diagonal clue in the corner runs right across the board', 4, [
+    'xaaAbb',
+    'cabbBb',
+    'cCddbb',
+    'eedDxf',
+    'EeffdF',
+    'eefff.',
+  ]),
+  build(5, 5, 'Wide Slants', 'Mix diagonal, wide and close clues', 4, [
+    'aAab*b',
+    'a.bbBc',
+    'ddxcCc',
+    'Dd.eec',
+    'ffeEe.',
+    'Ffffxe',
+  ]),
+  build(5, 6, 'Lines And Slants', 'Mix diagonal, line and close clues', 3, [
+    'aaAbbb',
+    'cabxBd',
+    'cCcddd',
+    'eeDd+f',
+    'EefffF',
+    'eex.ff',
+  ]),
+  build(5, 7, 'Slant And Hop', 'Diagonal, jump and line clues on a wider board', 3, [
+    'aAabb~b',
+    'a.cbBdd',
+    'ccCxddd',
+    'eefdDdg',
+    'EefffgG',
+    'e+fFfxg',
+  ]),
+  build(5, 8, 'Every Which Way', 'Eight regions and five kinds of clue', 3, [
+    'aAab*bb',
+    'a.cbBdd',
+    'ccCx.dd',
+    'eeeD~ff',
+    'Eeggfgf',
+    'hhgGfFf',
+    'hHh+hf.',
+  ]),
+  build(5, 9, 'Quiet Slant', 'Only a few clues to start with: let the slants lead', 3, [
+    'aaAabbb',
+    'cabdbBd',
+    'CccdddD',
+    'ceexffd',
+    'eEeffgf',
+    'eexfFgg',
+    'eeffggG',
+  ]),
+  build(5, 10, 'The Grand Warren', 'The finale: nine regions and all five kinds of clue', 3, [
+    'aAa*bbcc',
+    'a.bbBcCc',
+    'ddbx.cee',
+    'DdfffEee',
+    'gdf+fhhe',
+    'ggFfhHhi',
+    'Gg~hiiiI',
+    'gghhxiii',
   ]),
 ];

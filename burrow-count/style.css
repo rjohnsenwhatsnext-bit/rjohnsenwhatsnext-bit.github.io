@@ -80,3 +80,26 @@ body[data-chapter="4"] .chapter-win{background:radial-gradient(ellipse at 50% 28
 .lookout:before{content:'';position:absolute;left:45%;bottom:100%;height:80%;width:2px;background:#79634f}
 .lookout:after{content:'';position:absolute;left:calc(45% + 2px);bottom:140%;width:110%;height:42%;background:#85619e;clip-path:polygon(0 0,100% 15%,75% 55%,100% 100%,0 85%)}
 @media(max-width:380px){.clue.jump b{font-size:21px}.clue.jump small{font-size:7px}}
+/* Chapter 5: rose quartz chambers, copper seams and a quiet crystal glow. */
+body[data-chapter="5"]{--ink:#513c43;--green:#824c59;color:var(--ink);background:radial-gradient(ellipse at 90% 0,#f9d8ba,transparent 48%),radial-gradient(ellipse at 0 75%,#dcc9dd,transparent 58%),#f4e9e8}
+body[data-chapter="5"] .eyebrow{color:#875664}
+body[data-chapter="5"] .woodland{background:linear-gradient(135deg,transparent 35%,#dca5b055 36%,transparent 48%),linear-gradient(45deg,transparent 48%,#ffe3c055 49%,transparent 60%),#624757}
+body[data-chapter="5"] .sun{background:#ffe1be;border-radius:25%;transform:rotate(45deg);width:52px;height:52px;box-shadow:0 0 28px #ffd2a977}
+body[data-chapter="5"] .woodland:after{background:#997783;box-shadow:0 -14px 0 #cc9da8}
+body[data-chapter="5"] .burrow{background:#4d3548;border-color:#bd909a;box-shadow:0 -7px 0 #eed0c1}
+body[data-chapter="5"] .sprig{background:#cc9fae;clip-path:polygon(50% 0,100% 30%,85% 100%,10% 100%,0 30%);width:32px}
+body[data-chapter="5"] .board{background:linear-gradient(135deg,#fff0dd,#ead5df);border-color:#ba8993;box-shadow:0 7px 0 #ac818e,0 16px 30px #68445126}
+body[data-chapter="5"] .play header .eyebrow{display:block;font-size:9px;margin-bottom:6px}
+body[data-chapter="5"] .hint{background:#fff9f2cc}
+.chapter-5{background:linear-gradient(135deg,#f9dfc7,#e6cdda);border:1px solid #bd929e}
+.chapter-5 .chapter-access{color:#824c59}
+.clue.diag{border:2px solid #a3634e;background:#ffe0ce;color:#733d30}
+.clue.diag.matched{background:#824c59;color:#fff7e4;border-color:#e9b799}
+.clue.diag.over{background:#a64d38;color:#fff;border-color:#793827}
+.clue.diag sup{font-weight:900;font-size:.55em}
+body[data-chapter="5"] .region.in-reach{box-shadow:inset 0 0 0 2px #824c59;border-style:dashed}
+.crystal-reveal{background:linear-gradient(135deg,#96596a,#503b58);border:1px solid #d7a380;color:#fff2da}
+body[data-chapter="5"] .chapter-win{background:radial-gradient(ellipse at 50% 28%,#efbba888,transparent 65%)}
+.crest-equipped .crest{display:block;position:absolute;left:38%;bottom:-7%;width:27%;height:35%;background:#ca9160;border:2px solid #8b533d;clip-path:polygon(50% 0,100% 25%,90% 75%,50% 100%,10% 75%,0 25%);z-index:6}
+.crest:after{content:'';position:absolute;inset:20%;background:#f6d0e4;transform:rotate(45deg);border:1px solid #9a657c}
+@media(max-width:380px){.clue.diag b{font-size:21px}.clue.diag small{font-size:7px}}
