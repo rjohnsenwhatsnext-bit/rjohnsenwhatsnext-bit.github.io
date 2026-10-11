@@ -23,7 +23,8 @@ const setting = (k, fallback) => (window.arcade && window.arcade.config ? window
 const RUNS_BETWEEN_INTERSTITIALS = () => setting('ads.interstitialEveryRuns', 3);
 const MIN_MS_BETWEEN_INTERSTITIALS = () => setting('ads.interstitialMinSeconds', 120) * 1000;
 // every ad outcome goes to the numbers page (arcade-telemetry), if loaded
-const report = (format, result) => window.arcade && window.arcade.track && window.arcade.track('ad', { format, result });
+// reason: Google's own words for a failure, so the numbers page can say why
+const report = (format, result, reason) => window.arcade && window.arcade.track && window.arcade.track('ad', reason ? { format, result, reason: String(reason).slice(0, 140) } : { format, result });
 
 // registerPlugin gives the promise based proxy the plugin's API expects.
 // Capacitor.Plugins.AdMob is the legacy proxy: on a real Android build its
@@ -156,7 +157,7 @@ export async function maybeInterstitial() {
   } catch (e) {
     lastError = 'No ad this time: ' + (e && e.message ? e.message : String(e));
     console.error(lastError);
-    report('interstitial', 'failed');
+    report('interstitial', 'failed', e && e.message ? e.message : e);
     return 'failed';
   }
 }
@@ -245,6 +246,12 @@ export async function showBanner() {
     if (!bannerListener) {
       bannerListener = true;
       await AdMob.addListener('bannerAdSizeChanged', (s) => setBannerHeight(bannerState === 'hidden' ? 0 : (s && s.height) || 0));
+      // Google's own word that a banner was really seen, or why none came.
+      // 'shown' below only means the game asked for one (once a session): on
+      // 12 Oct 2026 the games counted 3,897 'shown' in a week against 41 ads
+      // AdMob said it had shown, and these two are what tell them apart.
+      await AdMob.addListener('bannerAdImpression', () => report('banner', 'impression'));
+      await AdMob.addListener('bannerAdFailedToLoad', (e) => report('banner', 'failed to load', (e && (e.message || e.code)) || 'no reason given'));
     }
     await AdMob.showBanner({ adId: unitId('banner'), adSize: 'ADAPTIVE_BANNER', position: 'BOTTOM_CENTER', margin: 0 });
     if (bannerState === 'hidden') {
