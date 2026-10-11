@@ -17,3 +17,28 @@ body[data-chapter="2"] .hero{filter:hue-rotate(25deg) saturate(.8)}
 .night .tram{border-top:5px solid #22334e;box-shadow:0 5px 0 var(--dark),0 0 0 2px #83e3e0,0 8px 5px #29432f33}
 .chapter-unlock{padding:22px 16px;margin-top:18px;border-radius:20px;background:linear-gradient(135deg,#223955,#496887);color:#fff6df;border:2px solid #e8bd69;animation:pop .8s ease-out}.chapter-unlock>span{color:#f6d587;letter-spacing:9px;font-size:25px}.chapter-unlock h3{font-size:23px;margin:12px 0}.chapter-unlock p{font-size:14px}.result .chapter-unlock~.ticket{margin-top:18px}
 @media(max-width:380px){.chapter-2{padding-left:8px;padding-right:8px}.level{gap:8px;padding:10px}.stop-number{flex-shrink:0}.tram{padding-left:3px;padding-right:3px}.signal{padding:4px;min-width:30px}}
+
+/* Closing Gates: warm harbour masonry, tidal blue rails and sunrise brass. */
+body[data-chapter="3"]{--paper:#fff0df;--ink:#45364a;--muted:#725768;background:linear-gradient(165deg,#ffe3bc 0,#fff0df 42%,#e1efeb 100%);color:var(--ink)}
+body[data-chapter="3"] .board{background:linear-gradient(145deg,#b8d9d5,#8eb9ba);border-color:#cf9873;box-shadow:0 7px 0 #936957,inset 0 0 0 2px #fff1cf}
+body[data-chapter="3"] .track-cell{border-color:#668f94;background:repeating-linear-gradient(90deg,transparent 0 9px,#386c7430 9px 11px,transparent 11px 19px)}
+body[data-chapter="3"] .platform{background:#45364a;border-color:#e9a96a}
+body[data-chapter="3"] .lane{background:#f9e1c9;border-color:#b28a77}
+body[data-chapter="3"] .district{border-bottom:2px solid #cf9873;padding-bottom:10px}
+body[data-chapter="3"] .hero{border-radius:22px;margin-top:18px;margin-bottom:16px}
+.chapter-3{padding:20px 12px 6px;background:linear-gradient(145deg,#ffe2ae,#ebbdab 55%,#c6ded9);border:1px solid #ce9877;border-radius:22px;color:#45364a}
+.chapter-3 .eyebrow{color:#714437}.chapter-3 .level{color:#45364a}.chapter-3 .level:disabled{opacity:1;background:#eee1d7;color:#766660}
+.closing-gate{position:relative;align-self:center;justify-self:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:46px;max-width:100%;height:58px;pointer-events:none;z-index:2}
+.closing-gate i{display:block;width:9px;height:30px;align-self:flex-start;margin-left:6px;background:repeating-linear-gradient(0deg,#fff1bc 0 6px,#644036 6px 12px);border:1px solid #644036;border-radius:3px;box-shadow:0 2px 0 #644036}
+.closing-gate b{font-size:9px;line-height:16px;white-space:nowrap;background:#fff1bc;color:#563527;border:1px solid #76503b;border-radius:5px;padding:0 3px}
+.closing-gate.shut i{width:100%;height:12px;margin-left:0;background:repeating-linear-gradient(135deg,#ffddb0 0 6px,#793c3b 6px 12px)}
+.closing-gate.shut b{background:#793c3b;color:#fff6dc}
+.closing-gate.occupied{align-self:start;height:auto;transform:translateY(-13px)}
+.closing-gate.occupied i{display:none}
+.dawn .tram{border-top:5px solid #ffd4a0;box-shadow:0 5px 0 var(--dark),0 0 0 2px #a95865,0 8px 5px #29432f33}
+.chapter-prize-2,.chapter-prize-3{background:radial-gradient(circle at 50% 0,#ffdf9b,transparent 70%),linear-gradient(140deg,#f7c8a6,#d6e8dc);color:#45364a;border-color:#ad7054}
+.chapter-prize-2>span,.chapter-prize-3>span{color:#9a542e}
+.chapter-prize-3{padding-top:32px;padding-bottom:32px}
+@media(max-width:380px){.chapter-3{padding-left:8px;padding-right:8px}.closing-gate b{font-size:8px;padding:0 2px}.closing-gate{min-width:40px}}
+
+.chapter-3{background-image:linear-gradient(145deg,#ffe2aeee,#ebbdabed 55%,#c6ded9f5),url("assets/harbour.svg");background-size:cover}

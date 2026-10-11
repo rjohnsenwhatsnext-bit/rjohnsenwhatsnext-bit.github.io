@@ -7,6 +7,7 @@
 export const CHAPTERS = [
   { id: 1, name: 'Town Loop', idea: 'Send trams to the stop in the order the queue wants them.' },
   { id: 2, name: 'Signal Box', idea: 'Closed signals and sleeping trams open once enough trams have been served.' },
+  { id: 3, name: 'Closing Gates', idea: 'Gates shut for good once enough trams are served. Send the trams that need them first.' },
 ];
 
 export const LEVELS = [
@@ -136,5 +137,66 @@ export const LEVELS = [
     w: 4, h: 3, lanes: 2, par: 1, maxParks: 1, held: [1], signals: [[3, 0, 2]], locks: { 2: 1 },
     trams: [[0, 0, 'R', 0], [1, 0, 'R', 1], [0, 1, 'R', 2], [2, 1, 'U', 3], [0, 2, 'L', 0], [1, 2, 'L', 3]],
     queue: [0, 3, 3, 1, 2, 0, 1],
+  },
+  // Chapter 3, "Closing Gates". `shut` is [x, y, n]: open until n trams are served, then shut for good.
+  {
+    id: 'c3-01', chapter: 3, name: 'Last Call', objective: 'The gate shuts once one tram is served. Park the top tram before it does.',
+    w: 3, h: 2, lanes: 1, par: 1, shut: [[2, 0, 1]],
+    trams: [[0, 0, 'R', 0], [0, 1, 'R', 1]],
+    queue: [1, 0],
+  },
+  {
+    id: 'c3-02', chapter: 3, name: 'Rush Hour Gate', objective: 'Clear the front tram, then park the one behind it while the gate is open.',
+    w: 4, h: 3, lanes: 2, par: 1, shut: [[3, 0, 2]],
+    trams: [[0, 0, 'R', 0], [1, 0, 'R', 1], [0, 2, 'R', 2]],
+    queue: [1, 2, 0],
+  },
+  {
+    id: 'c3-03', chapter: 3, name: 'Shut Behind You', objective: 'The gate sits at the top of the column. Dig out the column before it closes.',
+    w: 3, h: 3, lanes: 2, par: 1, shut: [[0, 0, 2]],
+    trams: [[0, 2, 'U', 0], [0, 1, 'U', 1], [0, 0, 'U', 2]],
+    queue: [2, 0, 1],
+  },
+  {
+    id: 'c3-04', chapter: 3, name: 'Two Shutters', objective: 'Two gates close at different times. Park both trams behind them first.',
+    w: 4, h: 3, lanes: 2, par: 2, shut: [[3, 0, 1], [3, 2, 2]],
+    trams: [[0, 0, 'R', 0], [0, 2, 'R', 1], [0, 1, 'R', 2]],
+    queue: [2, 0, 1],
+  },
+  {
+    id: 'c3-05', chapter: 3, name: 'Narrow Window', objective: 'The sleeper wakes after one tram and its gate shuts after two. Send it in between.',
+    w: 4, h: 3, lanes: 2, par: 1, maxParks: 1, shut: [[3, 0, 2]], locks: { 0: 1 },
+    trams: [[0, 0, 'R', 0], [0, 2, 'R', 1], [1, 2, 'R', 2]],
+    queue: [2, 1, 0],
+  },
+  {
+    id: 'c3-06', chapter: 3, name: 'One Lane Shift', objective: 'One lane, one park. Park the top tram, then serve the rest in order.',
+    w: 4, h: 3, lanes: 1, par: 1, maxParks: 1, shut: [[3, 0, 2]],
+    trams: [[0, 0, 'R', 0], [1, 0, 'R', 1], [0, 2, 'R', 2], [1, 2, 'R', 3]],
+    queue: [1, 3, 2, 0],
+  },
+  {
+    id: 'c3-07', chapter: 3, name: 'Cross Traffic', objective: 'Two trams cross one gate. Park both, then serve the rest as it shuts.',
+    w: 4, h: 3, lanes: 2, par: 2, maxParks: 2, shut: [[2, 1, 2]],
+    trams: [[0, 1, 'R', 0], [2, 0, 'D', 1], [3, 2, 'L', 2], [3, 0, 'L', 3]],
+    queue: [2, 3, 0, 1],
+  },
+  {
+    id: 'c3-08', chapter: 3, name: 'Held Over', objective: 'One lane taken and no parking at all. Send the second tram before the gate shuts.',
+    w: 3, h: 2, lanes: 1, par: 0, maxParks: 0, held: [1], shut: [[2, 0, 2]],
+    trams: [[1, 0, 'R', 2], [0, 0, 'R', 0], [0, 1, 'R', 0]],
+    queue: [2, 0, 1, 0],
+  },
+  {
+    id: 'c3-09', chapter: 3, name: 'Three Rules', objective: 'Two gates and a signal. Serve the bottom row first, then park once.',
+    w: 4, h: 3, lanes: 2, par: 1, maxParks: 1, shut: [[3, 0, 3], [3, 1, 1]], signals: [[3, 2, 2]],
+    trams: [[0, 0, 'R', 0], [1, 0, 'R', 1], [0, 2, 'R', 2], [0, 1, 'R', 3]],
+    queue: [3, 1, 2, 0],
+  },
+  {
+    id: 'c3-10', chapter: 3, name: 'Closing Gates Finale', objective: 'Gate, signal and sleeper together. Park the front tram once to clear the line.',
+    w: 4, h: 3, lanes: 2, par: 1, maxParks: 1, held: [1], shut: [[3, 0, 3]], signals: [[3, 2, 1]], locks: { 2: 2 },
+    trams: [[0, 0, 'R', 0], [1, 0, 'R', 1], [0, 1, 'R', 2], [0, 2, 'R', 0], [3, 1, 'U', 3]],
+    queue: [3, 1, 0, 2, 0, 1],
   },
 ];
