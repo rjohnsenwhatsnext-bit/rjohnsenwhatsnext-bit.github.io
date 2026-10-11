@@ -12,20 +12,22 @@ import { neighbours, solve } from './sim.mjs';
 
 function build(chapter, n, name, objective, lives, drawing) {
   const rows = drawing.length, cols = drawing[0].length, flat = drawing.join('');
-  const letters = [...new Set(flat.toLowerCase().replace(/\./g, ''))];
+  const letters = [...new Set(flat.toLowerCase().replace(/[.*]/g, ''))];
+  const isClue = (ch) => ch === '.' || ch === '*';
   const level = {
     id: `c${chapter}-${String(n).padStart(2, '0')}`, chapter, name, objective, lives, rows, cols,
     regionCount: letters.length,
-    region: [...flat].map((ch) => (ch === '.' ? -1 : letters.indexOf(ch.toLowerCase()))),
+    region: [...flat].map((ch) => (isClue(ch) ? -1 : letters.indexOf(ch.toLowerCase()))),
     solution: Array(letters.length).fill(-1), clues: [], extraClues: 0,
   };
-  [...flat].forEach((ch, i) => { if (ch !== '.' && ch === ch.toUpperCase()) level.solution[level.region[i]] = i; });
+  [...flat].forEach((ch, i) => { if (!isClue(ch) && ch === ch.toUpperCase()) level.solution[level.region[i]] = i; });
   if (level.solution.includes(-1)) throw new Error(`${level.id}: every region needs exactly one capital`);
-  const addClue = (i) => {
-    const hit = new Set(level.solution);
-    level.clues.push({ r: (i / cols) | 0, c: i % cols, n: neighbours(level, i).filter((j) => hit.has(j)).length });
+  const addClue = (i, reach = 1) => {
+    const hit = new Set(level.solution), k = { r: (i / cols) | 0, c: i % cols, n: neighbours(level, i, reach).filter((j) => hit.has(j)).length };
+    if (reach > 1) k.reach = reach; // wide clue, see the top of sim.mjs
+    level.clues.push(k);
   };
-  level.region.forEach((g, i) => { if (g < 0) addClue(i); });
+  [...flat].forEach((ch, i) => { if (isClue(ch)) addClue(i, ch === '*' ? 2 : 1); });
   for (;;) {
     const found = solve(level, 2);
     if (!found.length) throw new Error(`${level.id}: no answer`);
@@ -109,5 +111,89 @@ export const LEVELS = [
     'AdFfec',
     'ad.eEc',
     'cccCcc',
+  ]),
+
+  // Chapter 2 teaches the wide clue, drawn '*': it counts every critter within 2 steps.
+  build(2, 1, 'Wide Eyes', 'Meet the wide clue: it counts critters two steps away', 5, [
+    'aAabb',
+    'a.*bB',
+    'cCcdd',
+    'ccddD',
+    'ccdd.',
+  ]),
+  build(2, 2, 'Long Sight', 'A wide clue in the corner reaches a long way', 5, [
+    '*aaAb',
+    'aabbB',
+    'ccdd.',
+    'CcdDd',
+    '.ccdd',
+  ]),
+  build(2, 3, 'Two Lookouts', 'Two wide clues watch the same board', 4, [
+    'aAab*b',
+    'a.bbBb',
+    'ccdD.d',
+    'Cc*dee',
+    'cceEee',
+  ]),
+  build(2, 4, 'Mixed Signals', 'Close clues and wide clues side by side', 4, [
+    'aaAbb*',
+    'a.bbBb',
+    'ccd.dd',
+    'Cc*dDe',
+    'ffeeeE',
+    'fFfe.e',
+  ]),
+  build(2, 5, 'Corner Watch', 'Wide clues in the corners of a six by six board', 4, [
+    '*aAabb',
+    'aab.bB',
+    'cCcddb',
+    'cc*dDd',
+    'eeffd.',
+    'EefFff',
+  ]),
+  build(2, 6, 'Near And Far', 'Use the close clues to make sense of the wide one', 3, [
+    'aAa.bb',
+    'a*bbBc',
+    'ddbc.c',
+    'DdeCcc',
+    '.eeeff',
+    'eEefFf',
+  ]),
+  build(2, 7, 'Long Corridor', 'Seven regions down a narrow board', 3, [
+    'aAab*b',
+    'a.bbBc',
+    'dd.ccC',
+    'dDe*cc',
+    'ffeEee',
+    'Ff.gGg',
+    'ffggg.',
+  ]),
+  build(2, 8, 'Wide Awake', 'Three wide clues and eight regions', 3, [
+    'aAab*bb',
+    'a.cbBdd',
+    'ccC.*dd',
+    'eeeD.ff',
+    'e*egFgf',
+    'EeggGgf',
+    'hhhHh.f',
+  ]),
+  build(2, 9, 'Steady Hands', 'Very few clues to start with: let the wide ones lead', 3, [
+    'aaAabbb',
+    'cacb*bB',
+    'cccddbd',
+    'CcedDde',
+    'eeEeeff',
+    'g*gfFff',
+    'Ggg.fff',
+  ]),
+  build(2, 10, 'The Long Tunnel', 'The finale: nine regions and wide clues to read them by', 3, [
+    'aAa*bbc',
+    'a.bbBcc',
+    'ddbc.cC',
+    'dD.eeec',
+    'ff*eEgg',
+    'Ffh.ggG',
+    'hhHh*ii',
+    'hhhhiIi',
   ]),
 ];

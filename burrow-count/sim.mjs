@@ -5,6 +5,11 @@
 // Win: every region has a critter and every clue matches. Every level has exactly
 // one solution, so no guessing is needed.
 //
+// WIDE CLUE (chapter 2): a clue with reach 2 counts every critter within 2 steps of it
+// (up to 24 cells, corners included) instead of the 8 touching cells. Its drawing mark
+// is '*'. Ordinary clues have no reach field (treated as 1). Every rule, the solver and
+// "show me why" read a clue's cells through clueNear(), so wide clues need nothing else.
+//
 // TICK: step() advances the game by one fixed tick of 1/60 s. Nothing is timed;
 // state.tick only paces animation and stats.
 // INPUT to step(state, input), one per tick, or null/undefined to idle:
@@ -19,10 +24,10 @@
 
 export const TICK = 1 / 60;
 
-export function neighbours(level, idx) {
+export function neighbours(level, idx, reach = 1) {
   const r = (idx / level.cols) | 0, c = idx % level.cols, out = [];
-  for (let dr = -1; dr <= 1; dr++) {
-    for (let dc = -1; dc <= 1; dc++) {
+  for (let dr = -reach; dr <= reach; dr++) {
+    for (let dc = -reach; dc <= reach; dc++) {
       const rr = r + dr, cc = c + dc;
       if ((dr || dc) && rr >= 0 && rr < level.rows && cc >= 0 && cc < level.cols) out.push(rr * level.cols + cc);
     }
@@ -30,10 +35,13 @@ export function neighbours(level, idx) {
   return out;
 }
 
+// the cells a clue counts: its 8 neighbours, or for a wide clue (reach 2) every cell within 2 steps
+export function clueNear(level, k) { return neighbours(level, k.r * level.cols + k.c, k.reach || 1); }
+
 // how many placed critters touch each clue, in level.clues order
 export function clueCounts(level, placed) {
   const set = new Set(placed.filter((i) => i >= 0));
-  return level.clues.map((k) => neighbours(level, k.r * level.cols + k.c).filter((i) => set.has(i)).length);
+  return level.clues.map((k) => clueNear(level, k).filter((i) => set.has(i)).length);
 }
 
 // Every way to place one critter per region that satisfies all clues, up to `limit`.
@@ -42,7 +50,7 @@ export function solve(level, limit = 2) {
   const cand = Array.from({ length: level.regionCount }, () => []);
   level.region.forEach((g, i) => { if (g >= 0) cand[g].push(i); });
   const order = [...cand.keys()].sort((a, b) => cand[a].length - cand[b].length);
-  const near = level.clues.map((k) => new Set(neighbours(level, k.r * level.cols + k.c)));
+  const near = level.clues.map((k) => new Set(clueNear(level, k)));
   const touch = level.region.map((_, i) => level.clues.map((_, k) => k).filter((k) => near[k].has(i)));
   // rem[k][d]: regions still to place from depth d that could reach clue k
   const rem = near.map((n) => Array.from({ length: order.length + 1 }, (_, d) => order.slice(d).filter((g) => cand[g].some((i) => n.has(i))).length));
@@ -114,17 +122,17 @@ export function step(state, input) {
 // 'only' (a region has one cell left), 'fit' (the one place that fits every clue).
 export function hint(state) {
   const L = state.level, pos = (i) => [(i / L.cols) | 0, i % L.cols];
-  const at = (k) => `the ${L.clues[k].n} at row ${L.clues[k].r + 1}, column ${L.clues[k].c + 1}`;
+  const at = (k) => `the ${L.clues[k].reach > 1 ? 'wide ' : ''}${L.clues[k].n} at row ${L.clues[k].r + 1}, column ${L.clues[k].c + 1}`;
   const counts = clueCounts(L, state.placed);
   const bad = L.clues.findIndex((k, j) => counts[j] > k.n);
   if (bad >= 0) {
-    const cell = neighbours(L, L.clues[bad].r * L.cols + L.clues[bad].c).find((i) => state.placed.includes(i));
+    const cell = clueNear(L, L.clues[bad]).find((i) => state.placed.includes(i));
     return { cell: pos(cell), clue: [L.clues[bad].r, L.clues[bad].c], n: L.clues[bad].n, kind: 'conflict', text: `Too many critters touch ${at(bad)}. Lift one of them.` };
   }
   const cand = Array.from({ length: L.regionCount }, () => new Set());
   L.region.forEach((g, i) => { if (g >= 0) cand[g].add(i); });
   state.placed.forEach((p, g) => { if (p >= 0) cand[g] = new Set([p]); });
-  const near = L.clues.map((k) => new Set(neighbours(L, k.r * L.cols + k.c)));
+  const near = L.clues.map((k) => new Set(clueNear(L, k)));
   const why = Array(L.regionCount).fill(null);
   for (let changed = true; changed;) {
     changed = false;
@@ -165,9 +173,11 @@ export const UNLOCKS = [
   { id: 'sunset', name: 'Sunset critters', stars: 6 },
   { id: 'moonlit', name: 'Moonlit critters', stars: 15 },
   { id: 'golden', name: 'Golden critters', stars: 24 },
+  { id: 'starlit', name: 'Starlit critters', stars: 40 },
 ];
 // chapter completion rewards, issued once when every level of the chapter is cleared
-export const CHAPTER_REWARDS = { 1: { coins: 50, unlock: 'keeper-hat', name: 'Burrow Keeper hat' } };
+export const CHAPTER_REWARDS = { 1: { coins: 50, unlock: 'keeper-hat', name: 'Burrow Keeper hat' },
+  2: { coins: 75, unlock: 'tunnel-lantern', name: 'Tunnel lantern' } };
 
 export const newProgress = () => ({ v: 1, levels: {}, coins: 0, unlocks: [], chapters: {}, bonus: {} });
 

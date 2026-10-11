@@ -113,6 +113,24 @@ export function initAds() {
   return ready;
 }
 
+// Told when an ad between games has been closed and the game is back in front
+// of the player (shell/noads.js uses it to offer Remove ads; Ryan, 12 Oct 2026:
+// "when interstitial ads come up ... the game prompts them to remove the ads").
+// Never while the ad is up: AdMob forbids anything drawn over an ad.
+const closedHooks = new Set();
+let closedListener = false;
+export function onInterstitialClosed(fn) {
+  closedHooks.add(fn);
+  return () => closedHooks.delete(fn);
+}
+function interstitialClosed() {
+  for (const fn of closedHooks) {
+    try { fn(); } catch (e) { console.error('[ads] a listener for the closed ad failed: ' + (e && e.message ? e.message : e)); }
+  }
+}
+// for tests and the web preview, where there is no ad to close
+export const _interstitialClosed = interstitialClosed;
+
 // Called at every game over. Shows an interstitial only when both the run
 // count and the time gap allow it. Returns what happened, for the caller.
 export async function maybeInterstitial() {
@@ -124,6 +142,11 @@ export async function maybeInterstitial() {
   if (!(await initAds())) return 'unavailable';
   const AdMob = plugin();
   try {
+    if (!closedListener) {
+      // registered once; the event is the plugin's word that the ad has gone
+      closedListener = true;
+      await AdMob.addListener('interstitialAdDismissed', interstitialClosed);
+    }
     await AdMob.prepareInterstitial({ adId: unitId('interstitial') });
     await AdMob.showInterstitial();
     runsSinceInterstitial = 0;

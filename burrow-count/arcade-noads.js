@@ -19,7 +19,7 @@
 // arcade-noads.js with these two imports renamed to arcade-billing.js and
 // arcade-ads.js, so it shares the one ads module the game itself uses.
 import { createBilling, billingAvailable } from './arcade-billing.js';
-import { setAdFree, isAdFree } from './arcade-ads.js';
+import { setAdFree, isAdFree, onInterstitialClosed } from './arcade-ads.js';
 
 const PRODUCT = 'remove_ads';
 const game = (window.ARCADE_GAME && window.ARCADE_GAME.idSuffix) || 'game';
@@ -69,6 +69,7 @@ async function start() {
       owned = await store.owned();
     }
     grant(owned.some((p) => p.productId === PRODUCT));
+    onInterstitialClosed(offerAfterAd);
   } catch (e) {
     // offline or the server down: keep whatever this phone last knew
     problem = 'The store could not be reached: ' + (e.message || e);
@@ -78,6 +79,69 @@ async function start() {
   return true;
 }
 let started = null;
+
+// The one purchase path, used by the button and by the offer after an ad.
+// say(text) is how the result is told to the player.
+async function buy(say) {
+  if (isAdFree()) return 'owned';
+  if (!store) { say(problem || 'The store is still loading. Try again in a moment.'); return 'not ready'; }
+  try {
+    const r = await store.buy(PRODUCT);
+    if (r.status === 'purchased') { grant(true); say('Ads removed. Thank you!'); return 'purchased'; }
+    if (r.status === 'pending') { say('Payment pending. Ads go once Google Play confirms it.'); return 'pending'; }
+    return r.status || 'cancelled';
+  } catch (e) {
+    say('Could not remove ads: ' + (e.message || e));
+    window.arcade && window.arcade.track && window.arcade.track('buy_failed', { product: PRODUCT, reason: String(e.message || e).slice(0, 200) });
+    return 'failed';
+  } finally { paint(); }
+}
+
+// After an ad between games has closed: one small card offering Remove ads.
+// Only when it can really be bought (Play lists it, the store answered) and is
+// not owned. It goes away on Not now, on a tap outside, or after a purchase.
+let offer = null;
+const track = (result) => window.arcade && window.arcade.track && window.arcade.track('noads_offer', { result });
+function closeOffer() {
+  if (offer) { offer.remove(); offer = null; }
+}
+function offerAfterAd() {
+  if (offer || isAdFree() || !store || problem || !price) return;
+  offer = document.createElement('div');
+  offer.className = 'arcade-noads-offer';
+  offer.setAttribute('role', 'dialog');
+  offer.setAttribute('aria-label', 'Remove ads');
+  offer.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45);padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));box-sizing:border-box;font:16px/1.35 system-ui,sans-serif';
+  const card = document.createElement('div');
+  card.style.cssText = 'width:100%;max-width:420px;background:#14161f;color:#fff;border-radius:16px;padding:18px;box-shadow:0 10px 40px rgba(0,0,0,.5);text-align:center';
+  const title = document.createElement('div');
+  title.textContent = 'Had enough of ads?';
+  title.style.cssText = 'font-weight:800;font-size:19px;margin-bottom:4px';
+  const text = document.createElement('div');
+  text.textContent = 'Remove them from this game for good. One payment, no banners, no ads between games.';
+  text.style.cssText = 'opacity:.82;margin-bottom:14px';
+  const yes = document.createElement('button');
+  yes.type = 'button';
+  yes.textContent = 'Remove ads · ' + price;
+  yes.style.cssText = 'display:block;width:100%;border:0;border-radius:12px;padding:14px;font:inherit;font-weight:800;background:#ffd23f;color:#14161f;margin-bottom:8px';
+  const no = document.createElement('button');
+  no.type = 'button';
+  no.textContent = 'Not now';
+  no.style.cssText = 'display:block;width:100%;border:0;border-radius:12px;padding:12px;font:inherit;background:transparent;color:#fff;opacity:.75';
+  card.append(title, text, yes, no);
+  offer.append(card);
+  no.addEventListener('click', () => { track('dismissed'); closeOffer(); });
+  offer.addEventListener('click', (e) => { if (e.target === offer) { track('dismissed'); closeOffer(); } });
+  yes.addEventListener('click', async () => {
+    yes.disabled = true; no.disabled = true;
+    const result = await buy((said) => { text.textContent = said; });
+    track(result);
+    if (result === 'purchased' || result === 'pending') setTimeout(closeOffer, 1800);
+    else { yes.disabled = false; no.disabled = false; }
+  });
+  document.body.append(offer);
+  track('shown');
+}
 
 // Puts the button in `parent` (before the element with id `before`, if given).
 // With no parent, it goes beside `before`, in whatever holds it.
@@ -97,16 +161,8 @@ export function mountRemoveAds(parent, { before, toast, className = '' } = {}) {
   toast = toast || ((text) => { b.textContent = text; b.disabled = true; setTimeout(paint, 3500); });
   b.addEventListener('click', async () => {
     if (isAdFree()) return;
-    if (!store) { toast(problem || 'The store is still loading. Try again in a moment.'); return; }
     b.disabled = true;
-    try {
-      const r = await store.buy(PRODUCT);
-      if (r.status === 'purchased') { grant(true); toast('Ads removed. Thank you!'); }
-      else if (r.status === 'pending') toast('Payment pending. Ads go once Google Play confirms it.');
-    } catch (e) {
-      toast('Could not remove ads: ' + (e.message || e));
-      window.arcade && window.arcade.track && window.arcade.track('buy_failed', { product: PRODUCT, reason: String(e.message || e).slice(0, 200) });
-    } finally { paint(); }
+    await buy(toast);
   });
   started = started || start();
   return b;
