@@ -12,9 +12,14 @@
 // or the tap limit is reached). state.events lists what the last tick did, for
 // the frontend: board, depart, tap, refused, undo.
 //
-// Level shape: { bays, seats, lanes: [[bus...]...], queue, par, maxTaps? }
+// Level shape: { bays, seats, lanes: [[bus...]...], queue, par, maxTaps?, bayColours? }
 // A bus is a colour letter with optional seats ('r', 'b3'). queue is a string of
 // colour letters; spaces are ignored.
+//
+// RESERVED BAYS (chapter 2): bayColours is an array with one entry per bay, a
+// colour letter or null. A reserved bay only accepts a bus of that colour. A tapped
+// bus goes to the first free bay that accepts it; if none is free the tap is
+// refused. Levels without bayColours behave exactly as before.
 
 export const TICK_MS = 50;
 
@@ -40,6 +45,7 @@ export function newGame(level, seed = 1) {
     tick: 0,
     lanes: level.lanes.map((lane) => lane.map((b) => parseBus(b, level.seats))),
     bays: Array.from({ length: level.bays }, () => null),
+    reserved: Array.from({ length: level.bays }, (_, i) => (level.bayColours && level.bayColours[i]) || null),
     queue: level.queue.replace(/\s/g, '').split(''),
     taps: 0,
     maxTaps: level.maxTaps ?? Infinity,
@@ -68,8 +74,11 @@ const snapshot = (s) => {
   return { lanes: c.lanes, bays: c.bays, queue: c.queue, taps: c.taps, rng: c.rng };
 };
 
+const bayFor = (s, bus) =>
+  s.bays.findIndex((b, i) => !b && (!s.reserved[i] || s.reserved[i] === bus.colour));
+
 function canTap(s) {
-  return s.taps < s.maxTaps && s.bays.some((b) => !b) && s.lanes.some((l) => l.length > 0);
+  return s.taps < s.maxTaps && s.lanes.some((l) => l.length > 0 && bayFor(s, l[0]) >= 0);
 }
 
 function board(s) {
@@ -106,7 +115,7 @@ export function step(state, input) {
   }
   if (inp.tap !== undefined && inp.tap !== null) {
     const lane = state.lanes[inp.tap];
-    const bay = state.bays.findIndex((b) => !b);
+    const bay = lane && lane.length > 0 ? bayFor(state, lane[0]) : -1;
     if (st !== 'playing' || !lane || lane.length === 0 || bay < 0 || state.taps >= state.maxTaps) {
       state.events.push({ type: 'refused', lane: inp.tap });
     } else {
@@ -132,6 +141,9 @@ export const CLEAR_COINS = 10;
 export const CHAPTER_COINS = 50;
 export const AD_REWARD_COINS = 20;
 export const CHAPTER_SKIN = 'skin-depot-gold';
+export const CHAPTER2_SKIN = 'skin-depot-night';
+const CHAPTER_SKINS = { 1: CHAPTER_SKIN, 2: CHAPTER2_SKIN };
+const SKIN_NAMES = { 1: 'Gold Depot', 2: 'Night Depot' };
 
 export const emptyProgress = () => ({ v: 1, stars: {}, coins: 0, unlocks: [] });
 
@@ -157,14 +169,23 @@ export function completeLevel(progress, levels, level, taps) {
     const inChapter = levels.filter((l) => l.chapter === level.chapter);
     const done = inChapter.every((l) => (next.stars[l.id] || 0) > 0);
     const chapterKey = `chapter-${level.chapter}`;
-    if (done && !next.unlocks.includes(chapterKey)) {
-      next.unlocks.push(chapterKey, `chapter-${level.chapter + 1}`);
+    // chapter-N is also pushed as the "next chapter open" marker by the chapter
+    // before it, so payment is tracked by its own chapter-N-done key (chapter 1
+    // has no earlier chapter, so its old saves are covered by chapter-1 itself)
+    const doneKey = `${chapterKey}-done`;
+    const paid = next.unlocks.includes(doneKey) || (level.chapter === 1 && next.unlocks.includes(chapterKey));
+    if (done && !paid) {
+      next.unlocks.push(doneKey);
+      if (!next.unlocks.includes(chapterKey)) next.unlocks.push(chapterKey);
+      const following = `chapter-${level.chapter + 1}`;
+      if (!next.unlocks.includes(following)) next.unlocks.push(following);
       result.unlocks.push(chapterKey);
       result.chapterComplete = true;
       result.coins += CHAPTER_COINS;
-      if (level.chapter === 1 && !next.unlocks.includes(CHAPTER_SKIN)) {
-        next.unlocks.push(CHAPTER_SKIN);
-        result.unlocks.push(CHAPTER_SKIN);
+      const skin = CHAPTER_SKINS[level.chapter];
+      if (skin && !next.unlocks.includes(skin)) {
+        next.unlocks.push(skin);
+        result.unlocks.push(skin);
       }
     }
   }
@@ -182,14 +203,14 @@ export function grantRewardedAd(progress, outcome) {
 export function nextUnlock(progress, levels, chapter = 1) {
   const inChapter = levels.filter((l) => l.chapter === chapter);
   const done = inChapter.filter((l) => (progress.stars[l.id] || 0) > 0).length;
-  const got = progress.unlocks.includes(`chapter-${chapter}`);
+  const got = progress.unlocks.includes(`chapter-${chapter}-done`) || (chapter === 1 && progress.unlocks.includes('chapter-1'));
   return {
     done,
     total: inChapter.length,
     complete: got,
     text: got
       ? `Chapter ${chapter} complete`
-      : `Clear ${inChapter.length - done} more to finish chapter ${chapter} and win the Gold Depot bus skin`,
+      : `Clear ${inChapter.length - done} more to finish chapter ${chapter}${SKIN_NAMES[chapter] ? ` and win the ${SKIN_NAMES[chapter]} bus skin` : ''}`,
   };
 }
 

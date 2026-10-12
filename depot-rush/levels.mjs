@@ -2,7 +2,10 @@
 // Buses are front first in each lane. See sim.mjs for the level shape.
 // Colours: r red, b blue, g green, y yellow.
 
-export const CHAPTERS = [{ id: 1, name: 'Morning Depot', blocker: 'Limited bays' }];
+export const CHAPTERS = [
+  { id: 1, name: 'Morning Depot', blocker: 'Limited bays' },
+  { id: 2, name: 'Reserved Row', blocker: 'Reserved bays' },
+];
 
 export const LEVELS = [
   { id: 'c1-01', chapter: 1, name: 'First Stop', objective: 'Tap a bus to send it to the passengers of its colour.',
@@ -26,4 +29,35 @@ export const LEVELS = [
   { id: 'c1-10', chapter: 1, name: 'Grand Terminal', objective: 'Twelve buses, four lanes. Park them all to open chapter 2.',
     bays: 2, seats: 2, par: 12, lanes: [['r', 'b', 'g'], ['y', 'r', 'b'], ['g', 'y', 'r'], ['b', 'g', 'y']],
     queue: 'rr bb gg yy rr bb gg yy rr bb gg yy' },
+
+  // Chapter 2, "Reserved Row": some bays only take one colour (bayColours).
+  { id: 'c2-01', chapter: 2, name: 'Red Bay', objective: 'The first bay only takes red buses. Others use the open bay.',
+    bays: 2, seats: 2, par: 2, bayColours: ['r', null], lanes: [['b'], ['r']], queue: 'bb rr' },
+  { id: 'c2-02', chapter: 2, name: 'Keep Clear', objective: 'Red buses can use either bay. Park them so the others still fit.',
+    bays: 2, seats: 2, par: 4, bayColours: ['r', null], lanes: [['g', 'r'], ['r', 'g']], queue: 'gg rr gg rr' },
+  { id: 'c2-03', chapter: 2, name: 'Two Reserved', objective: 'Red and blue each have a bay. Green uses the last one.',
+    bays: 3, seats: 2, par: 6, bayColours: ['r', 'b', null], lanes: [['g', 'r'], ['b', 'g'], ['r', 'b']],
+    queue: 'gg bb rr gg rr bb' },
+  { id: 'c2-04', chapter: 2, name: 'Tight Budget', objective: 'Blue has its own bay. Finish within 4 taps.',
+    bays: 2, seats: 2, par: 3, maxTaps: 4, bayColours: ['b', null], lanes: [['y', 'b'], ['r', 'g'], ['b']],
+    queue: 'rr bb yy' },
+  { id: 'c2-05', chapter: 2, name: 'Blue Corner', objective: 'Two blue bays and one open bay. Keep the open bay moving.',
+    bays: 3, seats: 2, par: 6, bayColours: ['b', 'b', null], lanes: [['b', 'r'], ['b', 'g'], ['r', 'g']],
+    queue: 'rr bb gg bb rr gg' },
+  { id: 'c2-06', chapter: 2, name: 'Big and Small', objective: 'Different seat counts and a yellow bay. Match seats to the crowd.',
+    bays: 2, seats: 2, par: 6, bayColours: ['y', null], lanes: [['r3', 'y2'], ['g1', 'y1'], ['r1', 'g2']],
+    queue: 'rrr r yy gg y g' },
+  { id: 'c2-07', chapter: 2, name: 'Crossing', objective: 'Four lanes, a red bay and two open bays. Read the line ahead.',
+    bays: 3, seats: 2, par: 8, bayColours: ['r', null, null],
+    lanes: [['b', 'r'], ['g', 'b'], ['y', 'g'], ['r', 'y']], queue: 'bb gg yy rr bb gg rr yy' },
+  { id: 'c2-08', chapter: 2, name: 'Squeeze', objective: 'Green has a bay and spare buses sit in the way. Finish within 6 taps.',
+    bays: 2, seats: 2, par: 5, maxTaps: 6, bayColours: ['g', null],
+    lanes: [['r', 'g'], ['b', 'y'], ['r', 'g'], ['y', 'b']], queue: 'rr gg bb yy rr' },
+  { id: 'c2-09', chapter: 2, name: 'Park Ahead', objective: 'A needed bus is buried. Park a bus early to reach it.',
+    bays: 3, seats: 2, par: 9, bayColours: ['r', 'b', null],
+    lanes: [['g', 'b', 'r'], ['y', 'r', 'g'], ['b', 'y', 'g']], queue: 'gg yy bb rr gg bb yy rr gg' },
+  { id: 'c2-10', chapter: 2, name: 'Night Terminal', objective: 'Twelve buses, red and blue bays. Park them all to open chapter 3.',
+    bays: 3, seats: 2, par: 12, bayColours: ['r', 'b', null],
+    lanes: [['g', 'r', 'y'], ['y', 'b', 'g'], ['b', 'g', 'r'], ['r', 'y', 'b']],
+    queue: 'gg rr yy bb rr gg bb yy yy gg rr bb' },
 ];

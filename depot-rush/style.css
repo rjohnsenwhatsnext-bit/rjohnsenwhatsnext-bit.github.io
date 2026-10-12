@@ -4,3 +4,41 @@
 /* Keep the visible queue and its remaining count readable on narrow phones. */
 #passengers{flex-wrap:wrap;overflow:visible;row-gap:12px;padding-block:12px}
 @media(max-width:360px){.screen{padding-inline:16px}.play-screen{padding-inline:12px}.play-footer{gap:8px}.play-footer button{padding-inline:12px}.section-label{letter-spacing:.5px}}
+/* Reserved Row: the same depot after sunset, with illuminated bay signs. */
+body[data-chapter="2"]{--lime:#b9b8ff;background:radial-gradient(ellipse at 70% 0,#424265,#171e34 70%)}
+body[data-chapter="2"] .hero{background:linear-gradient(#303751,#ad7d88)}
+body[data-chapter="2"] .sun{background:#fff1cf;box-shadow:0 0 35px #fff1cf55;width:54px;height:54px;top:20px}
+body[data-chapter="2"] .skyline{background:repeating-linear-gradient(90deg,#303951 0 35px,transparent 35px 48px)}
+body[data-chapter="2"] .terminal{background:#e1dfed}
+body[data-chapter="2"] .depot{background:repeating-linear-gradient(0deg,#30364e 0 25px,#3d435d 25px 26px)}
+body[data-chapter="2"] .lane{background:#202b42;border-color:#606685}
+body[data-chapter="2"] .boarding-label{border-color:#aaa6bf}
+body[data-chapter="2"] .exit-road{color:#ddd5ec;border-color:#a19bb4}
+body[data-chapter="2"] .reward-card{background:#343950;border-color:#71748d}
+.chapter-heading{grid-column:1/-1;padding:18px 0 5px;border-top:1px solid #607b7b}
+.chapter-heading h3{font-size:27px;margin:0 0 8px;letter-spacing:-1px}
+.chapter-heading p{font-size:12px;margin-bottom:8px}
+.chapter-heading .eyebrow{font-size:10px}
+.chapter-2{--lime:#c9c0ff}
+.level-card.chapter-2{background:#343950;border-color:#73728c}
+#bays{gap:8px;align-items:stretch}
+.bay{position:relative;height:126px;padding-top:25px;justify-content:center;min-width:0}
+.bay-sign{position:absolute;inset:0 0 auto;min-height:22px;padding:5px 2px;text-align:center;background:#c0d0c5;border-radius:9px 9px 0 0;font-weight:900;line-height:1.2}
+.bay.reserved{border-style:solid;border-color:var(--shade);background:linear-gradient(0deg,#ffffff22,#ffffff55)}
+.bay.reserved .bay-sign{background:var(--bus);color:#152e39}
+.bay .bus{margin-bottom:7px}
+.night .bus{outline:3px solid #c8c1ff;outline-offset:1px;box-shadow:inset 0 -9px var(--shade),-4px 15px 0 -2px #142b34,4px 15px 0 -2px #142b34,0 0 14px #b8b5ff66}
+.chapter-celebration #result-symbol{font-size:72px;text-shadow:0 0 28px #f4d17c66}
+.chapter-celebration #result-earned{border:2px solid var(--lime)}
+@media(max-width:360px){.bay-sign{font-size:8px}.bay .bus{width:57px}.chapter-celebration #result-symbol{font-size:58px}}
+
+/* Chapter milestones remain readable with motion switched off. */
+.unlock-preview{padding:18px;border:1px solid #b9b8ff;border-radius:18px;background:linear-gradient(135deg,#343950,#202b42);margin-bottom:14px}
+.unlock-preview h3{margin:8px 0;font-size:24px;color:#eeeaff}
+.unlock-preview p{font-size:13px;color:#dedcec}
+.unlock-preview button{width:100%;border-color:#b9b8ff}
+.chapter-status{font-weight:800;color:var(--lime)}
+body[data-chapter="2"] .hero:after{content:'';position:absolute;left:8%;top:14px;width:3px;height:3px;background:#fff1cf;border-radius:50%;box-shadow:38px 14px #fff1cf,97px -3px #fff1cf,155px 18px #fff1cf,263px 5px #fff1cf;opacity:.8}
+body[data-chapter="2"] .road{background:#202b42;border-color:#a19bb4}
+body[data-chapter="2"] .hero-bus{box-shadow:inset 0 -13px #c55748,0 10px 0 -4px #122d38,18px 3px 24px #fff1cf33}
+@media(max-width:380px){.result-symbol{font-size:48px;letter-spacing:2px}.result-symbol+h2{font-size:34px}.unlock-preview{padding:14px}}
