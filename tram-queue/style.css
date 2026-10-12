@@ -62,3 +62,25 @@ body[data-chapter="4"] .hero{border-radius:22px;margin:18px auto 16px}
 .chapter-prize-3,.chapter-prize-4{background:radial-gradient(ellipse at top,#786291,transparent 75%),linear-gradient(140deg,#343052,#254d56);border-color:#a6dfd2;color:#fff6e5}
 .chapter-prize-3>span,.chapter-prize-4>span{color:#a8eadb}.chapter-prize-4{padding:32px 16px}
 @media(max-width:380px){.chapter-4{padding-left:8px;padding-right:8px}.pulse-gate b{font-size:8px;padding:0 2px}.pulse-gate i{width:26px;height:26px;font-size:19px}}
+/* Beat Street: lantern-lit night market, mint rails and berry paving. */
+body[data-chapter="5"]{--paper:#edf5ed;--ink:#234653;--muted:#526b69;color:var(--ink);background:radial-gradient(ellipse at top right,#ead1e6,transparent 55%),linear-gradient(160deg,#d8f1e3,#f4f4e9 65%,#e9ddec)}
+body[data-chapter="5"] .board{background:linear-gradient(145deg,#304f59,#473e59);border-color:#78b7a7;box-shadow:0 7px 0 #396e69,inset 0 0 0 2px #b8ecd7}
+body[data-chapter="5"] .track-cell{border-color:#87aaa9;background:repeating-linear-gradient(90deg,transparent 0 9px,#c5f3dd25 9px 11px,transparent 11px 19px)}
+body[data-chapter="5"] .platform{background:#234653;border-color:#d6a0c9}
+body[data-chapter="5"] .lane{background:#e0eee4;border-color:#7faaa0}
+body[data-chapter="5"] .district{border-bottom:2px solid #aa80a3;padding-bottom:10px}
+body[data-chapter="5"] .hero{border-radius:22px;margin:18px auto 16px}
+.chapter-5{padding:20px 12px 6px;border:1px solid #81b8a9;border-radius:22px;color:#f3fff5;background:linear-gradient(150deg,#234653ed,#573858ed),url("assets/beat-street.svg") center/cover}
+.chapter-5 .eyebrow{color:#b6f1d6}.chapter-5 .level{color:#234653}.chapter-5 .level:disabled{opacity:1;background:#dfe5e1;color:#596b66}
+.beat-gate{align-self:center;justify-self:center;display:flex;flex-direction:column;align-items:center;gap:2px;max-width:100%;pointer-events:none;z-index:2}
+.beat-gate i{display:grid;place-items:center;width:30px;height:30px;border:3px solid #aff5d3;border-radius:5px;background:#214e4c;color:#ddffec;font-size:22px;line-height:1;font-style:normal}
+.beat-gate b{font-size:9px;line-height:16px;border-radius:4px;padding:0 4px;background:#214e4c;color:#ddffec;border:1px solid #aff5d3}
+.beat-gate small{font-size:8px;letter-spacing:1px;color:#fff8eb;background:#293c4a;border-radius:3px;padding:1px 3px}
+.beat-gate.shut i{background:repeating-linear-gradient(135deg,#67334f 0 6px,#834563 6px 12px);border-color:#ffd0e7;color:#fff3fa}
+.beat-gate.shut b{background:#67334f;border-color:#ffd0e7;color:#fff3fa}
+.beat-gate.occupied{align-self:start;transform:translateY(-15px)}.beat-gate.occupied i,.beat-gate.occupied small{display:none}
+.aurora .tram{border-top:5px solid #a7f1cb;box-shadow:0 5px 0 var(--dark),0 0 0 2px #b46ca0,0 8px 5px #29432f33}.aurora .tram-windows{border-top:2px solid #eaa3d1}
+.chapter-prize-4,.chapter-prize-5{background:radial-gradient(ellipse at top,#668b80,transparent 70%),linear-gradient(140deg,#234653,#573858);border-color:#adeace;color:#fff7ee}
+.chapter-prize-4>span,.chapter-prize-5>span{color:#b7f3d8}.chapter-prize-5{padding:36px 16px;box-shadow:0 0 0 5px #b0dfc94d}.chapter-prize-5>span{display:block;animation:market-glow 1.2s ease-out}
+@keyframes market-glow{from{opacity:0;transform:translateY(12px) scale(.7)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:380px){.chapter-5{padding-left:8px;padding-right:8px}.beat-gate i{width:26px;height:26px;font-size:18px}.beat-gate b{font-size:8px}}

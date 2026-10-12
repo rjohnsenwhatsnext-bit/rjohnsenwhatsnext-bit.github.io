@@ -9,6 +9,7 @@ export const CHAPTERS = [
   { id: 2, name: 'Signal Box', idea: 'Closed signals and sleeping trams open once enough trams have been served.' },
   { id: 3, name: 'Closing Gates', idea: 'Gates shut for good once enough trams are served. Send the trams that need them first.' },
   { id: 4, name: 'Pulse Line', idea: 'Pulsing gates shut for a while, then open again. Park before they shut or wait them out.' },
+  { id: 5, name: 'Beat Street', idea: 'Beat gates swap open and shut every time a tram is served. Time each send to the beat.' },
 ];
 
 export const LEVELS = [
@@ -261,5 +262,67 @@ export const LEVELS = [
     w: 4, h: 3, lanes: 2, par: 1, maxParks: 1, held: [0], pulses: [[3, 0, 1, 3]], shut: [[3, 1, 4]], signals: [[2, 2, 2]], locks: { 1: 1 },
     trams: [[0, 0, 'R', 0], [0, 1, 'R', 1], [0, 2, 'R', 2], [3, 2, 'U', 3], [2, 1, 'U', 1]],
     queue: [3, 0, 1, 0, 1, 2],
+  },
+  // Chapter 5, "Beat Street". `flips` are [x, y, phase]: the gate swaps open and shut every time a tram
+  // is served. Phase 0 starts open, phase 1 starts shut.
+  {
+    id: 'c5-01', chapter: 5, name: 'Off Beat', objective: 'The gate swaps every time a tram is served. Park the top tram while it is open.',
+    w: 3, h: 2, lanes: 2, par: 1, flips: [[2, 0, 0]],
+    trams: [[0, 0, 'R', 0], [0, 1, 'R', 1]],
+    queue: [1, 0],
+  },
+  {
+    id: 'c5-02', chapter: 5, name: 'Starts Shut', objective: 'This gate starts shut and opens after one tram. No parking at all.',
+    w: 4, h: 2, lanes: 1, par: 0, maxParks: 0, flips: [[3, 0, 1]],
+    trams: [[0, 0, 'R', 0], [0, 1, 'R', 1], [1, 1, 'R', 2]],
+    queue: [2, 0, 1],
+  },
+  {
+    id: 'c5-03', chapter: 5, name: 'Opposite Beats', objective: 'Two gates swap in opposite time. Serve the middle row, then the bottom, then the top.',
+    w: 4, h: 3, lanes: 2, par: 0, flips: [[3, 0, 0], [3, 2, 1]],
+    trams: [[0, 0, 'R', 0], [0, 2, 'R', 1], [0, 1, 'R', 2]],
+    queue: [2, 1, 0],
+  },
+  {
+    id: 'c5-04', chapter: 5, name: 'Park on the Beat', objective: 'One lane, one park. Park the tram in front while the gate is open.',
+    w: 4, h: 2, lanes: 1, par: 1, maxParks: 1, flips: [[3, 0, 0]],
+    trams: [[0, 0, 'R', 0], [1, 0, 'R', 1], [0, 1, 'R', 2], [1, 1, 'R', 3]],
+    queue: [3, 2, 0, 1],
+  },
+  {
+    id: 'c5-05', chapter: 5, name: 'Sleeper on the Beat', objective: 'A sleeper, a beat gate and a tram that must wait its turn. No parking.',
+    w: 4, h: 3, lanes: 1, par: 0, maxParks: 0, flips: [[3, 1, 1]], locks: { 0: 1 },
+    trams: [[0, 1, 'R', 0], [1, 1, 'R', 1], [0, 0, 'R', 2], [0, 2, 'R', 3]],
+    queue: [2, 1, 3, 0],
+  },
+  {
+    id: 'c5-06', chapter: 5, name: 'Beat and Last Call', objective: 'One lane, one park. Park the top tram before its gate shuts for good.',
+    w: 4, h: 3, lanes: 1, par: 1, maxParks: 1, shut: [[3, 0, 2]], flips: [[3, 2, 0]],
+    trams: [[0, 0, 'R', 0], [0, 2, 'R', 1], [0, 1, 'R', 2], [1, 1, 'R', 3]],
+    queue: [3, 2, 1, 0],
+  },
+  {
+    id: 'c5-07', chapter: 5, name: 'Beat and Pulse', objective: 'A pulse and a beat gate cross over. Wait for each to open, with no parking.',
+    w: 4, h: 3, lanes: 2, par: 0, maxParks: 0, pulses: [[3, 0, 1, 3]], flips: [[3, 2, 1]],
+    trams: [[0, 0, 'R', 0], [0, 2, 'R', 1], [0, 1, 'R', 2], [1, 1, 'R', 3]],
+    queue: [3, 1, 2, 0],
+  },
+  {
+    id: 'c5-08', chapter: 5, name: 'Signal and Beats', objective: 'Two beat gates and a signal. The tram on the end opens the way for the rest.',
+    w: 4, h: 3, lanes: 1, par: 0, maxParks: 0, signals: [[2, 1, 1]], flips: [[3, 0, 0], [3, 2, 1]],
+    trams: [[0, 0, 'R', 0], [0, 2, 'R', 1], [0, 1, 'R', 2], [3, 1, 'U', 3]],
+    queue: [3, 2, 0, 1],
+  },
+  {
+    id: 'c5-09', chapter: 5, name: 'Four Rules, One Street', objective: 'Closing gate, pulse, signal and beat together. One lane and no parking.',
+    w: 4, h: 3, lanes: 1, par: 0, maxParks: 0, shut: [[3, 0, 3]], pulses: [[3, 1, 2, 3]], signals: [[1, 2, 1]], flips: [[3, 2, 1]],
+    trams: [[0, 0, 'R', 0], [0, 2, 'R', 1], [0, 1, 'R', 2], [1, 1, 'R', 3]],
+    queue: [3, 2, 0, 1],
+  },
+  {
+    id: 'c5-10', chapter: 5, name: 'Beat Street Finale', objective: 'Every rule at once. Park the middle tram once, then clear the street before the top gate shuts.',
+    w: 4, h: 3, lanes: 2, par: 1, maxParks: 1, held: [1], shut: [[3, 0, 4]], pulses: [[3, 2, 2, 3]], flips: [[3, 1, 1]], locks: { 0: 2 },
+    trams: [[0, 0, 'R', 0], [0, 1, 'R', 1], [0, 2, 'R', 2], [1, 2, 'R', 3]],
+    queue: [3, 2, 1, 0, 1],
   },
 ];

@@ -34,6 +34,12 @@
 //                    trams have been served, and opens again once `to` trams have been served. While
 //                    it is shut it blocks any tram whose path crosses that cell. Park a tram before
 //                    it shuts, or wait for it to open. A tram already in a lane is never stopped.
+//
+// CHAPTER 5 RULE (also depends only on how many trams have been served, so undo restores it):
+//   flips: [[x, y, phase]]  a beat gate on a cell. It swaps every time a tram is served. With phase 0 it
+//                    is open while an even number of trams have been served and shut while an odd number
+//                    have; with phase 1 it is the other way round (shut at the start). While it is shut it
+//                    blocks any tram whose path crosses that cell. A tram already in a lane is never stopped.
 
 const DIRS ={ U: [0, -1], D: [0, 1], L: [-1, 0], R: [1, 0] };
 
@@ -43,10 +49,11 @@ export const CHAPTER_REWARDS = {
   2: { tokens: 75, unlock: 'livery-night', name: 'Night livery' },
   3: { tokens: 100, unlock: 'livery-dawn', name: 'Dawn livery' },
   4: { tokens: 125, unlock: 'livery-dusk', name: 'Dusk livery' },
+  5: { tokens: 150, unlock: 'livery-aurora', name: 'Aurora livery' },
 };
 
 // level: { w, h, lanes, trams: [[x, y, dir, colour]], queue: [colour], held?: [colour], maxParks?,
-//          signals?: [[x, y, n]], locks?: { id: n } }
+//          signals?: [[x, y, n]], locks?: { id: n }, shut?, pulses?, flips? }
 // queue has one entry per tram, parked-at-start ones included.
 export function newGame(level, seed = 1) {
   const trams = level.trams.map(([x, y, d, c], id) => ({ id, x, y, d, c, where: 'board' }));
@@ -54,7 +61,7 @@ export function newGame(level, seed = 1) {
   const s = {
     w: level.w, h: level.h, lanes: level.lanes, maxParks: level.maxParks, par: level.par,
     signals: (level.signals || []).map((g) => g.slice()), shut: (level.shut || []).map((g) => g.slice()),
-    pulses: (level.pulses || []).map((g) => g.slice()), locks: { ...(level.locks || {}) },
+    pulses: (level.pulses || []).map((g) => g.slice()), flips: (level.flips || []).map((g) => g.slice()), locks: { ...(level.locks || {}) },
     trams, queue: level.queue.slice(), qi: 0,
     held: trams.filter((t) => t.where === 'held').map((t) => t.id),
     parks: 0, taps: 0, undos: 0, shuffles: 0,
@@ -73,6 +80,7 @@ export function isFree(s, t, ignoreGates = false) {
     if (!ignoreGates && s.signals.some(([gx, gy, n]) => gx === x && gy === y && s.qi < n)) return false;
     if (!ignoreGates && s.shut.some(([gx, gy, n]) => gx === x && gy === y && s.qi >= n)) return false;
     if (!ignoreGates && s.pulses.some(([gx, gy, from, to]) => gx === x && gy === y && s.qi >= from && s.qi < to)) return false;
+    if (!ignoreGates && s.flips.some(([gx, gy, phase]) => gx === x && gy === y && (s.qi + phase) % 2 === 1)) return false;
     if (s.trams.some((o) => o.where === 'board' && o.x === x && o.y === y)) return false;
   }
   return true;
