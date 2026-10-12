@@ -8,6 +8,7 @@ export const CHAPTERS = [
   { id: 1, name: 'Town Loop', idea: 'Send trams to the stop in the order the queue wants them.' },
   { id: 2, name: 'Signal Box', idea: 'Closed signals and sleeping trams open once enough trams have been served.' },
   { id: 3, name: 'Closing Gates', idea: 'Gates shut for good once enough trams are served. Send the trams that need them first.' },
+  { id: 4, name: 'Pulse Line', idea: 'Pulsing gates shut for a while, then open again. Park before they shut or wait them out.' },
 ];
 
 export const LEVELS = [
@@ -198,5 +199,67 @@ export const LEVELS = [
     w: 4, h: 3, lanes: 2, par: 1, maxParks: 1, held: [1], shut: [[3, 0, 3]], signals: [[3, 2, 1]], locks: { 2: 2 },
     trams: [[0, 0, 'R', 0], [1, 0, 'R', 1], [0, 1, 'R', 2], [0, 2, 'R', 0], [3, 1, 'U', 3]],
     queue: [3, 1, 0, 2, 0, 1],
+  },
+  // Chapter 4, "Pulse Line". `pulses` are [x, y, from, to]: open, shut once `from` trams are served,
+  // open again once `to` trams are served.
+  {
+    id: 'c4-01', chapter: 4, name: 'Pulse Ahead', objective: 'The gate shuts for a moment after the first tram. Park the top tram before it does.',
+    w: 3, h: 2, lanes: 2, par: 1, pulses: [[2, 0, 1, 2]],
+    trams: [[0, 0, 'R', 2], [2, 1, 'R', 0], [1, 1, 'R', 1]],
+    queue: [0, 2, 1],
+  },
+  {
+    id: 'c4-02', chapter: 4, name: 'Back Open', objective: 'The gate shuts, then opens again. Wait it out with no parking.',
+    w: 4, h: 2, lanes: 1, par: 0, maxParks: 0, pulses: [[3, 0, 1, 3]],
+    trams: [[0, 0, 'R', 1], [1, 1, 'R', 0], [0, 1, 'R', 2], [2, 1, 'R', 3]],
+    queue: [3, 0, 2, 1],
+  },
+  {
+    id: 'c4-03', chapter: 4, name: 'Two Pulses', objective: 'Two gates pulse at different times. Park both rows first, then serve the middle tram.',
+    w: 4, h: 3, lanes: 2, par: 2, pulses: [[3, 0, 1, 2], [3, 2, 2, 3]],
+    trams: [[0, 0, 'R', 0], [0, 2, 'R', 1], [0, 1, 'R', 2]],
+    queue: [2, 0, 1],
+  },
+  {
+    id: 'c4-04', chapter: 4, name: 'Pulse Queue', objective: 'One lane, one park. Park the front tram of the top row before the gate shuts.',
+    w: 3, h: 2, lanes: 1, par: 1, maxParks: 1, pulses: [[2, 0, 1, 3]],
+    trams: [[0, 0, 'R', 0], [1, 0, 'R', 1], [0, 1, 'R', 2], [1, 1, 'R', 3]],
+    queue: [3, 1, 2, 0],
+  },
+  {
+    id: 'c4-05', chapter: 4, name: 'Wake and Park', objective: 'The sleeper wakes after one tram, just before its gate shuts. Park it in the gap.',
+    w: 4, h: 3, lanes: 2, par: 1, maxParks: 1, pulses: [[3, 0, 2, 3]], locks: { 0: 1 },
+    trams: [[0, 0, 'R', 0], [0, 1, 'R', 1], [0, 2, 'R', 2]],
+    queue: [1, 2, 0],
+  },
+  {
+    id: 'c4-06', chapter: 4, name: 'Signal and Pulse', objective: 'A signal opens the top row and a pulse shuts it again. Wait for the pulse to pass.',
+    w: 4, h: 3, lanes: 2, par: 0, maxParks: 0, signals: [[1, 0, 1]], pulses: [[3, 0, 2, 3]],
+    trams: [[0, 0, 'R', 0], [0, 1, 'R', 1], [0, 2, 'R', 2], [1, 2, 'R', 3]],
+    queue: [1, 3, 2, 0],
+  },
+  {
+    id: 'c4-07', chapter: 4, name: 'Shut and Pulse', objective: 'One lane, one park. One gate shuts for good and one only pulses. Park for the one that shuts.',
+    w: 4, h: 3, lanes: 1, par: 1, maxParks: 1, shut: [[3, 0, 2]], pulses: [[3, 2, 1, 2]],
+    trams: [[0, 0, 'R', 0], [0, 2, 'R', 1], [0, 1, 'R', 2], [1, 1, 'R', 3]],
+    queue: [3, 2, 1, 0],
+  },
+  {
+    id: 'c4-08', chapter: 4, name: 'Shut From the Start', objective: 'A waiting tram is served at once and the gate is already shut. One lane, no parking.',
+    w: 3, h: 2, lanes: 1, par: 0, maxParks: 0, held: [1], pulses: [[2, 0, 1, 3]],
+    trams: [[0, 0, 'R', 2], [1, 1, 'R', 0], [0, 1, 'R', 3]],
+    queue: [1, 0, 3, 2],
+  },
+  {
+    id: 'c4-09', chapter: 4, name: 'Three Rules Twice', objective: 'A pulse, a closing gate and a signal. Serve one tram, park one, and the rest follow.',
+    w: 4, h: 3, lanes: 2, par: 1, maxParks: 1, pulses: [[3, 0, 2, 4]], shut: [[3, 1, 3]], signals: [[3, 2, 2]],
+    trams: [[0, 0, 'R', 0], [0, 1, 'R', 1], [0, 2, 'R', 2], [1, 2, 'R', 3], [1, 1, 'U', 0]],
+    queue: [0, 1, 0, 3, 2],
+  },
+  {
+    id: 'c4-10', chapter: 4, name: 'Pulse Line Finale', objective: 'Pulse, closing gate, signal and sleeper together. Park once, after the second tram.',
+    w: 4, h: 3, lanes: 2, par: 1, maxParks: 1, held: [0], pulses: [[3, 0, 1, 3]], shut: [[3, 1, 4]], signals: [[2, 2, 2]], locks: { 1: 1 },
+    trams: [[0, 0, 'R', 0], [0, 1, 'R', 1], [0, 2, 'R', 2], [3, 2, 'U', 3], [2, 1, 'U', 1]],
+    queue: [3, 0, 1, 0, 1, 2],
   },
 ];

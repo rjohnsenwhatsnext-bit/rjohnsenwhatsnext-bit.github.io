@@ -1,0 +1,16 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 265">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#343052"/><stop offset="1" stop-color="#aa7897"/></linearGradient><linearGradient id="water" x2="0" y2="1"><stop stop-color="#466674"/><stop offset="1" stop-color="#243d55"/></linearGradient></defs>
+<rect width="480" height="265" rx="22" fill="url(#sky)"/>
+<circle cx="374" cy="46" r="22" fill="#fff0c4"/>
+<g fill="#ded6ed"><circle cx="46" cy="30" r="2"/><circle cx="149" cy="47" r="2"/><circle cx="275" cy="23" r="2"/><circle cx="438" cy="62" r="2"/></g>
+<path d="M0 140V95h36V74h26v66h26V105h51V83h28v57h34V65h43v75h48V96h49v44h52v-38h27v38h60v125H0" fill="#393953"/>
+<g fill="#f6c99d"><path d="M44 86h8v12h-8zm106 9h8v12h-8zm61-18h8v14h-8zm17 0h8v14h-8zm77 31h9v12h-9zm96 4h9v12h-9z"/></g>
+<path d="M0 170h480v95H0z" fill="url(#water)"/>
+<g stroke="#83c9c1" stroke-width="3" opacity=".5"><path d="M21 211h58m30 26h99m131-20h99M245 249h71M364 192h51"/></g>
+<path d="M-15 163Q230 126 495 155v23Q230 153-15 189z" fill="#a394b4" stroke="#292f49" stroke-width="5"/>
+<path d="M64 180v85m325-90v90" stroke="#7c7292" stroke-width="18"/>
+<path d="M0 157Q230 120 480 149" fill="none" stroke="#c4eee0" stroke-width="3"/>
+<g stroke="#273850" stroke-width="5" fill="#ffe5ac"><path d="M67 150V93m353 52V88"/><circle cx="67" cy="89" r="8"/><circle cx="420" cy="84" r="8"/></g>
+<g transform="translate(157 91) rotate(-2)"><rect x="8" y="51" width="109" height="17" rx="8" fill="#252e46"/><rect width="126" height="64" rx="14" fill="#f58369" stroke="#843c4c" stroke-width="3"/><path d="M12 3h101" stroke="#c5a3ef" stroke-width="7"/><g fill="#294656"><rect x="12" y="15" width="28" height="23" rx="4"/><rect x="47" y="15" width="28" height="23" rx="4"/><rect x="82" y="15" width="30" height="23" rx="4"/></g><circle cx="62" cy="51" r="7" fill="#fff1d0"/><path d="M12 51h12m78 0h12" stroke="#ffedac" stroke-width="5"/></g>
+<g transform="translate(324 122)"><circle r="19" fill="#244c51" stroke="#a8eadb" stroke-width="4"/><path d="M8-6a10 10 0 1 0 1 11M8-13v8H0" fill="none" stroke="#d3fff1" stroke-width="3"/></g>
+</svg>

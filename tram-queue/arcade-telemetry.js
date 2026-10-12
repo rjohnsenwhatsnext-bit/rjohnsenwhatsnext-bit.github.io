@@ -25,6 +25,19 @@
   const local = /^(localhost|127\.|0\.0\.0\.0|\[::1\])/.test(location.hostname);
   const platform = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() ? window.Capacitor.getPlatform() : 'web';
   const base = { build: G.version || 0, platform };
+  // Sent with session_start only: the phone's time zone and language (Ryan,
+  // 13 Oct 2026). Google's test phones install every build we upload and look
+  // like players; they sit in a data centre, so this tells them from people,
+  // and shows which countries paid installs come from. Not a location.
+  const where = () => {
+    let tz = '';
+    try {
+      tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    } catch {
+      tz = ''; // an old WebView without Intl: the session is still counted, under "unknown"
+    }
+    return { tz: String(tz).slice(0, 40), lang: String(navigator.language || '').slice(0, 12) };
+  };
   const store = {
     get(k) {
       try {
@@ -146,7 +159,7 @@
     if (document.visibilityState === 'hidden') hiddenAt = Date.now();
     else if (hiddenAt && Date.now() - hiddenAt > 30 * 60 * 1000) {
       played = false;
-      track('session_start', { resumed: true });
+      track('session_start', Object.assign({ resumed: true }, where()));
     }
   });
 
@@ -177,5 +190,5 @@
       return call(method, path, body);
     },
   };
-  track('session_start', {});
+  track('session_start', where());
 })();

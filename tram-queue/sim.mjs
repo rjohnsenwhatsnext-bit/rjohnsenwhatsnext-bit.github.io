@@ -28,6 +28,12 @@
 //                    it is shut for good and blocks any tram whose path crosses that cell. Send
 //                    (or park) the trams that need it before it closes. A tram that is already
 //                    parked in a lane has passed and is never stopped by it.
+//
+// CHAPTER 4 RULE (also depends only on how many trams have been served, so undo restores it):
+//   pulses: [[x, y, from, to]]  a pulsing gate on a cell. It is open at the start, shuts when `from`
+//                    trams have been served, and opens again once `to` trams have been served. While
+//                    it is shut it blocks any tram whose path crosses that cell. Park a tram before
+//                    it shuts, or wait for it to open. A tram already in a lane is never stopped.
 
 const DIRS ={ U: [0, -1], D: [0, 1], L: [-1, 0], R: [1, 0] };
 
@@ -36,6 +42,7 @@ export const CHAPTER_REWARDS = {
   1: { tokens: 50, unlock: 'livery-gold', name: 'Gold livery' },
   2: { tokens: 75, unlock: 'livery-night', name: 'Night livery' },
   3: { tokens: 100, unlock: 'livery-dawn', name: 'Dawn livery' },
+  4: { tokens: 125, unlock: 'livery-dusk', name: 'Dusk livery' },
 };
 
 // level: { w, h, lanes, trams: [[x, y, dir, colour]], queue: [colour], held?: [colour], maxParks?,
@@ -46,7 +53,8 @@ export function newGame(level, seed = 1) {
   for (const c of level.held || []) trams.push({ id: trams.length, x: -1, y: -1, d: 'U', c, where: 'held' });
   const s = {
     w: level.w, h: level.h, lanes: level.lanes, maxParks: level.maxParks, par: level.par,
-    signals: (level.signals || []).map((g) => g.slice()), shut: (level.shut || []).map((g) => g.slice()), locks: { ...(level.locks || {}) },
+    signals: (level.signals || []).map((g) => g.slice()), shut: (level.shut || []).map((g) => g.slice()),
+    pulses: (level.pulses || []).map((g) => g.slice()), locks: { ...(level.locks || {}) },
     trams, queue: level.queue.slice(), qi: 0,
     held: trams.filter((t) => t.where === 'held').map((t) => t.id),
     parks: 0, taps: 0, undos: 0, shuffles: 0,
@@ -64,6 +72,7 @@ export function isFree(s, t, ignoreGates = false) {
   for (let x = t.x + dx, y = t.y + dy; x >= 0 && y >= 0 && x < s.w && y < s.h; x += dx, y += dy) {
     if (!ignoreGates && s.signals.some(([gx, gy, n]) => gx === x && gy === y && s.qi < n)) return false;
     if (!ignoreGates && s.shut.some(([gx, gy, n]) => gx === x && gy === y && s.qi >= n)) return false;
+    if (!ignoreGates && s.pulses.some(([gx, gy, from, to]) => gx === x && gy === y && s.qi >= from && s.qi < to)) return false;
     if (s.trams.some((o) => o.where === 'board' && o.x === x && o.y === y)) return false;
   }
   return true;

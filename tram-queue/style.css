@@ -42,3 +42,23 @@ body[data-chapter="3"] .hero{border-radius:22px;margin-top:18px;margin-bottom:16
 @media(max-width:380px){.chapter-3{padding-left:8px;padding-right:8px}.closing-gate b{font-size:8px;padding:0 2px}.closing-gate{min-width:40px}}
 
 .chapter-3{background-image:linear-gradient(145deg,#ffe2aeee,#ebbdabed 55%,#c6ded9f5),url("assets/harbour.svg");background-size:cover}
+/* Pulse Line: violet riverside, lit bridge rails and mint loop gates. */
+body[data-chapter="4"]{--paper:#eeeaf6;--ink:#343052;--muted:#655b79;color:var(--ink);background:linear-gradient(160deg,#ddd5ee,#f3edf5 48%,#d8ece8)}
+body[data-chapter="4"] .board{background:linear-gradient(145deg,#414566,#283951);border-color:#85769d;box-shadow:0 7px 0 #51476c,inset 0 0 0 2px #bbafd0}
+body[data-chapter="4"] .track-cell{border-color:#8390aa;background:repeating-linear-gradient(90deg,transparent 0 9px,#a3dace30 9px 11px,transparent 11px 19px)}
+body[data-chapter="4"] .platform{background:#343052;border-color:#83d8c9}
+body[data-chapter="4"] .lane{background:#e4deef;border-color:#9c8cae}
+body[data-chapter="4"] .district{border-bottom:2px solid #b6a1d3;padding-bottom:10px}
+body[data-chapter="4"] .hero{border-radius:22px;margin:18px auto 16px}
+.chapter-4{padding:20px 12px 6px;border:1px solid #9482b1;border-radius:22px;color:#fff6e5;background:linear-gradient(150deg,#343052ef,#63517aed),url("assets/riverside.svg") center/cover}
+.chapter-4 .eyebrow{color:#a8eadb}.chapter-4 .level{color:#343052}.chapter-4 .level:disabled{opacity:1;background:#ded9e9;color:#62576f}
+.pulse-gate{align-self:center;justify-self:center;display:flex;flex-direction:column;align-items:center;gap:4px;max-width:100%;pointer-events:none;z-index:2}
+.pulse-gate i{display:grid;place-items:center;width:30px;height:30px;border:3px double #9cebd8;border-radius:50%;background:#244c51;color:#c5fff0;font-style:normal;font-size:22px;line-height:1}
+.pulse-gate b{font-size:9px;line-height:17px;white-space:nowrap;padding:0 3px;border:1px solid #9cebd8;border-radius:5px;background:#244c51;color:#e1fff6}
+.pulse-gate.shut i{border-color:#ffd29a;background:#694057;color:#ffdeb5;border-radius:7px}
+.pulse-gate.shut b{background:#694057;border-color:#ffd29a;color:#fff0dd}
+.pulse-gate.occupied{align-self:start;transform:translateY(-15px)}.pulse-gate.occupied i{display:none}
+.dusk .tram{border-top:5px solid #c5a3ef;box-shadow:0 5px 0 var(--dark),0 0 0 2px #614c82,0 8px 5px #29432f33}
+.chapter-prize-3,.chapter-prize-4{background:radial-gradient(ellipse at top,#786291,transparent 75%),linear-gradient(140deg,#343052,#254d56);border-color:#a6dfd2;color:#fff6e5}
+.chapter-prize-3>span,.chapter-prize-4>span{color:#a8eadb}.chapter-prize-4{padding:32px 16px}
+@media(max-width:380px){.chapter-4{padding-left:8px;padding-right:8px}.pulse-gate b{font-size:8px;padding:0 2px}.pulse-gate i{width:26px;height:26px;font-size:19px}}
