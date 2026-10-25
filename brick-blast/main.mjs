@@ -6,6 +6,7 @@
 import {createPaint,artReady} from './paint.mjs';
 import { newGame, place, fits, SHAPES, SIZE, planBlast, detonate, reviveBlast, winTier, checkOver } from './logic.mjs';
 import { initAds, maybeInterstitial, showRewarded, adsAvailable, bannerOnScreens } from './arcade-ads.js';
+import { mountRemoveAds } from './arcade-noads.js';
 
 const $ = (id) => document.getElementById(id);
 const cv = $('game');
@@ -48,6 +49,8 @@ let shownScore = 0;
 let shake = 0;
 let parts = [];
 let blasts = [];
+let smoke = [];
+let flash = 0;
 let floats = [];
 let banner = null; // big text: { text, sub, t }
 let miner = null; // { x, y, tx, ty, state, t, facing }
@@ -123,15 +126,16 @@ const sfx = {
   stick: (i) => tone(520 + i * 30, 0.06, 'square', 0.03),
   fuse: () => noise(1.1, 0.06, 6000),
   boom: (big) => {
-    noise(big ? 0.9 : 0.55, big ? 0.5 : 0.35, big ? 500 : 800);
-    tone(big ? 55 : 70, 0.4, 'sine', 0.2);
+    noise(0.11, big ? 0.22 : 0.16, 4200);
+    noise(big ? 1.15 : 0.8, big ? 0.34 : 0.24, big ? 370 : 500);
+    tone(big ? 48 : 62, big ? 0.65 : 0.48, 'sine', big ? 0.19 : 0.14);
   },
   tick: (i) => tone(600 + (i % 12) * 40, 0.04, 'square', 0.02),
   win: () => [0, 4, 7, 12, 16, 19, 24].forEach((s, i) => tone(262 * 2 ** (s / 12), 0.35, 'triangle', 0.05, i * 0.08)),
 };
 
 // ---- drawing
-function drawWorld(){paint.world(L,game,view,t,cart,motion())}
+function drawWorld(){paint.world(L,game,view,t,cart,motion(),flash)}
 function brick(x,y,size,k,alpha=1){paint.brick(x,y,size,k,alpha)}
 function drawBoard() {
   const { bx, by, cell } = L;
@@ -139,8 +143,12 @@ function drawBoard() {
   g2.fillRect(bx - 4, by - 4, cell * SIZE + 8, cell * SIZE + 8);
   for (let r = 0; r < SIZE; r++)
     for (let c = 0; c < SIZE; c++) {
-      g2.fillStyle = (r + c) % 2 ? '#172425' : '#1c2b2c';
-      g2.fillRect(bx + c * cell + 1, by + r * cell + 1, cell - 2, cell - 2);
+      const x=bx+c*cell,y=by+r*cell;
+      g2.fillStyle=(r+c)%2?'#192627':'#1e2c2c';
+      g2.fillRect(x+1,y+1,cell-2,cell-2);
+      g2.fillStyle='#57727225';g2.fillRect(x+2,y+2,cell-4,1);
+      g2.fillStyle='#01090b48';g2.fillRect(x+2,y+cell-3,cell-4,1);
+      if((r*13+c*7)%6===0){g2.strokeStyle='#6b89721b';g2.lineWidth=1;g2.beginPath();g2.moveTo(x+cell*.18,y+cell*.72);g2.lineTo(x+cell*.29,y+cell*.58);g2.lineTo(x+cell*.38,y+cell*.63);g2.stroke()}
       const k = disp?.[r][c];
       if (k) brick(bx + c * cell, by + r * cell, cell, k);
     }
@@ -188,23 +196,30 @@ const fitsAnywhereCached = (i) => {
 };
 function drawMiner(){paint.miner(L,miner,t,motion())}
 function drawEffects(dt) {
+  if(flash>0){g2.fillStyle=`rgba(255,209,137,${Math.min(.18,flash*.16)})`;g2.fillRect(0,0,L.W,L.H);flash=Math.max(0,flash-dt*2.4)}
   blasts=blasts.filter(b=>(b.life-=dt)>0);
   for(const b of blasts){
-    const u=1-b.life/b.max,rad=b.size*(.25+u*1.2);
-    g2.save();g2.globalAlpha=(1-u)*(motion()?1:.45);
+    const u=1-b.life/b.max,rad=b.size*(.3+u*1.4),ignite=Math.min(1,u/.12)*Math.pow(1-u,1.3);
+    g2.save();g2.globalCompositeOperation='lighter';
     const fire=g2.createRadialGradient(b.x,b.y,0,b.x,b.y,rad);
-    fire.addColorStop(0,'#fff9dccc');fire.addColorStop(.2,'#ffce57bb');fire.addColorStop(.5,'#e96e2588');fire.addColorStop(1,'#a7350000');
-    g2.globalCompositeOperation='lighter';g2.fillStyle=fire;g2.beginPath();g2.arc(b.x,b.y,rad,0,Math.PI*2);g2.fill();
-    g2.strokeStyle='#ffd788';g2.lineWidth=2*(1-u);g2.beginPath();g2.arc(b.x,b.y,rad*.82,0,Math.PI*2);g2.stroke();g2.restore();
+    fire.addColorStop(0,`rgba(255,252,225,${.7*(1-u)})`);fire.addColorStop(.23,`rgba(255,166,49,${.56*(1-u)})`);fire.addColorStop(.65,`rgba(201,64,15,${.27*(1-u)})`);fire.addColorStop(1,'rgba(104,35,8,0)');
+    g2.fillStyle=fire;g2.beginPath();g2.arc(b.x,b.y,rad,0,Math.PI*2);g2.fill();g2.restore();
+    paint.blast(b.x,b.y,b.size*(.8+u*1.9),ignite*(motion()?.86:.65),b.angle+u*.14);
+    g2.save();g2.globalAlpha=(1-u)*(motion()?.75:.45);g2.strokeStyle=u<.35?'#fff1b2':'#e89a51';g2.lineWidth=Math.max(1,3.2*(1-u));g2.beginPath();g2.arc(b.x,b.y,b.size*(.22+u*1.7),0,Math.PI*2);g2.stroke();g2.restore();
   }
+  smoke=smoke.filter(p=>(p.life-=dt)>0);
+  for(const p of smoke){p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=p.grow*dt;const a=(p.life/p.max)*p.opacity;const cloud=g2.createRadialGradient(p.x,p.y,p.r*.1,p.x,p.y,p.r);cloud.addColorStop(0,`rgba(65,61,55,${a})`);cloud.addColorStop(.55,`rgba(38,42,40,${a*.65})`);cloud.addColorStop(1,'rgba(27,32,33,0)');g2.fillStyle=cloud;g2.fillRect(p.x-p.r,p.y-p.r,p.r*2,p.r*2)}
   parts = parts.filter((p) => (p.life -= dt) > 0);
   for (const p of parts) {
     p.vy += 900 * dt * (p.grav ?? 1);
+    p.vx *= Math.max(.7,1-dt*.6);
     p.x += p.vx * dt;
     p.y += p.vy * dt;
-    g2.globalAlpha = Math.min(1, p.life * 2);
-    g2.fillStyle = p.col;
-    g2.save();g2.translate(p.x,p.y);g2.rotate(p.life*5);g2.beginPath();g2.moveTo(-p.s,0);g2.lineTo(0,-p.s*.7);g2.lineTo(p.s,p.s*.4);g2.lineTo(0,p.s);g2.closePath();g2.fill();g2.restore();
+    g2.globalAlpha = Math.min(1,p.life*2);
+    g2.save();g2.translate(p.x,p.y);g2.rotate(p.rot+p.spin*(p.max-p.life));
+    if(p.kind==='ember'){g2.globalCompositeOperation='lighter';g2.strokeStyle=p.col;g2.lineWidth=Math.max(1,p.s*.45);g2.beginPath();g2.moveTo(0,0);g2.lineTo(-p.vx*.018,-p.vy*.018);g2.stroke();g2.fillStyle='#ffe5a0';g2.fillRect(-1,-1,2,2)}
+    else{g2.fillStyle=p.col;g2.beginPath();g2.moveTo(-p.s,0);g2.lineTo(-p.s*.25,-p.s*.85);g2.lineTo(p.s*.85,-p.s*.45);g2.lineTo(p.s,p.s*.6);g2.lineTo(0,p.s);g2.closePath();g2.fill();g2.fillStyle='#ffbb6170';g2.beginPath();g2.moveTo(-p.s,0);g2.lineTo(-p.s*.25,-p.s*.85);g2.lineTo(p.s*.85,-p.s*.45);g2.closePath();g2.fill()}
+    g2.restore();
   }
   g2.globalAlpha = 1;
   floats = floats.filter((f) => (f.life -= dt) > 0);
@@ -256,12 +271,15 @@ function hud() {
   }
 }
 function burst(x, y, n, cols, speed = 300) {
-  if(n>=16&&speed>=420)blasts.push({x,y,size:L.cell*(n>=30?2.5:1.7),life:.65,max:.65});
-  for (let i = 0; i < n; i++) {
+  const explosive=n>=16&&speed>=420;
+  if(explosive){const max=n>=30?1.05:.82;blasts.push({x,y,size:L.cell*(n>=30?2.6:1.9),life:max,max,angle:Math.random()*Math.PI*2});blasts=blasts.slice(-12);flash=Math.max(flash,n>=30?.8:.55);if(motion())for(let i=0;i<6;i++){const a=Math.random()*Math.PI*2,v=20+Math.random()*65,max=.8+Math.random()*.85;smoke.push({x:x+Math.cos(a)*10,y:y+Math.sin(a)*10,vx:Math.cos(a)*v,vy:Math.sin(a)*v-38,r:L.cell*(.28+Math.random()*.18),grow:L.cell*(.4+Math.random()*.5),life:max,max,opacity:.25+Math.random()*.18})}smoke=smoke.slice(-60)}
+  for (let i = 0; i < (motion()?n:Math.ceil(n*.3)); i++) {
     const a = Math.random() * Math.PI * 2;
     const v = speed * (0.3 + Math.random());
-    parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 200, s: 2 + Math.random() * 4, life: 0.6 + Math.random() * 0.6, col: cols[i % cols.length] });
+    const max=.55+Math.random()*.85;
+    parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-155,s:2+Math.random()*4,life:max,max,col:cols[i%cols.length],kind:explosive&&i%3===0?'ember':'rock',rot:Math.random()*6.28,spin:(Math.random()-.5)*13});
   }
+  parts=parts.slice(-280);
 }
 const cellXY = (r, c) => [L.bx + c * L.cell + L.cell / 2, L.by + r * L.cell + L.cell / 2];
 const wait = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -515,10 +533,15 @@ function frame(now) {
 $('settings').onclick=()=>{drag=null;$('sound').checked=prefs.sound;$('motion').checked=prefs.motion;$('settingsPanel').showModal()};
 $('closeSettings').onclick=()=>$('settingsPanel').close();
 for(const key of ['sound','motion'])$(key).onchange=()=>{prefs[key]=$(key).checked;if(key==='sound'&&!prefs.sound)ac?.suspend();try{localStorage.setItem('brickblast.settings',JSON.stringify(prefs))}catch{}};
-await artReady;
+// not a top-level await: Android WebViews before Chrome 89 refuse the whole module for one
+artReady.then(()=>{
 Object.defineProperty(window,'__brickQA',{get:()=>({view,game:game?JSON.parse(JSON.stringify(game)):null,L:{...L},miner:miner?{x:miner.x,y:miner.y,state:miner.state}:null,sticks:sticks.length,prefs:{...prefs},banner:banner?.text||null})});
 layout();
 $('homeBest').textContent = best ? `Best ${best.toLocaleString()}` : '';
 initAds().catch((e) => console.warn('Ads unavailable:', e?.message || e));
 bannerOnScreens('view', ['home', 'over']);
 requestAnimationFrame(frame);
+
+// Remove ads, A$4.99 (shell/noads.js), on settings. Only in the app.
+mountRemoveAds($('settingsPanel'), { toast });
+});
