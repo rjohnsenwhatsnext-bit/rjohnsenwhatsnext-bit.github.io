@@ -3,3 +3,7 @@
 
 /* clear of the bottom banner (ads.js sets --ad-banner) */
 #home{padding-bottom:calc(24px + var(--ad-banner, 0px))}
+
+#dailyContract{margin:12px 0;padding:12px 14px;border:1px solid #ffb54a66;border-left:3px solid #ffb54a;border-radius:8px;background:#171d19dd;display:grid;gap:5px}#dailyContract small{color:#ffb54a;letter-spacing:.12em;font-size:.68rem;font-weight:800}#dailyContract strong{font-size:.9rem;color:#f4eedf}.contract-result{padding:10px;border-radius:7px;background:#263029;color:#ffc36b;font-weight:700}
+
+.mode-row{display:flex;gap:9px;margin-top:10px}.mode-row button{flex:1;color:#ffe0a5}.mode-row small{display:block;font-size:8px;margin-top:4px;color:#adceba;letter-spacing:.05em}

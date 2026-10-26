@@ -23,7 +23,8 @@ const setting = (k, fallback) => (window.arcade && window.arcade.config ? window
 const RUNS_BETWEEN_INTERSTITIALS = () => setting('ads.interstitialEveryRuns', 3);
 const MIN_MS_BETWEEN_INTERSTITIALS = () => setting('ads.interstitialMinSeconds', 120) * 1000;
 // every ad outcome goes to the numbers page (arcade-telemetry), if loaded
-const report = (format, result) => window.arcade && window.arcade.track && window.arcade.track('ad', { format, result });
+// reason: Google's own words for a failure, so the numbers page can say why
+const report = (format, result, reason) => window.arcade && window.arcade.track && window.arcade.track('ad', reason ? { format, result, reason: String(reason).slice(0, 140) } : { format, result });
 
 // registerPlugin gives the promise based proxy the plugin's API expects.
 // Capacitor.Plugins.AdMob is the legacy proxy: on a real Android build its
@@ -71,6 +72,12 @@ export function adsAvailable() {
   return plugin() !== null;
 }
 
+// Whether this build has a unit of that kind at all (a store build with no
+// rewarded unit yet should not offer "watch an ad" buttons that cannot work).
+export function hasUnit(kind) {
+  return unitId(kind) !== null;
+}
+
 // Consent first (Google's UMP form, shown only where the law requires it),
 // then initialise. Resolves true when ads can be requested.
 export function initAds() {
@@ -107,9 +114,28 @@ export function initAds() {
   return ready;
 }
 
+// Told when an ad between games has been closed and the game is back in front
+// of the player (shell/noads.js uses it to offer Remove ads; Ryan, 12 Oct 2026:
+// "when interstitial ads come up ... the game prompts them to remove the ads").
+// Never while the ad is up: AdMob forbids anything drawn over an ad.
+const closedHooks = new Set();
+let closedListener = false;
+export function onInterstitialClosed(fn) {
+  closedHooks.add(fn);
+  return () => closedHooks.delete(fn);
+}
+function interstitialClosed() {
+  for (const fn of closedHooks) {
+    try { fn(); } catch (e) { console.error('[ads] a listener for the closed ad failed: ' + (e && e.message ? e.message : e)); }
+  }
+}
+// for tests and the web preview, where there is no ad to close
+export const _interstitialClosed = interstitialClosed;
+
 // Called at every game over. Shows an interstitial only when both the run
 // count and the time gap allow it. Returns what happened, for the caller.
 export async function maybeInterstitial() {
+  if (adFree) return 'ad free';
   runsSinceInterstitial += 1;
   if (runsSinceInterstitial < RUNS_BETWEEN_INTERSTITIALS()) return 'not due';
   if (Date.now() - lastInterstitialAt < MIN_MS_BETWEEN_INTERSTITIALS()) return 'too soon';
@@ -117,6 +143,11 @@ export async function maybeInterstitial() {
   if (!(await initAds())) return 'unavailable';
   const AdMob = plugin();
   try {
+    if (!closedListener) {
+      // registered once; the event is the plugin's word that the ad has gone
+      closedListener = true;
+      await AdMob.addListener('interstitialAdDismissed', interstitialClosed);
+    }
     await AdMob.prepareInterstitial({ adId: unitId('interstitial') });
     await AdMob.showInterstitial();
     runsSinceInterstitial = 0;
@@ -126,7 +157,7 @@ export async function maybeInterstitial() {
   } catch (e) {
     lastError = 'No ad this time: ' + (e && e.message ? e.message : String(e));
     console.error(lastError);
-    report('interstitial', 'failed');
+    report('interstitial', 'failed', e && e.message ? e.message : e);
     return 'failed';
   }
 }
@@ -141,7 +172,7 @@ export async function showRewarded() {
   } catch (e) {
     lastError = 'No ad available: ' + (e && e.message ? e.message : String(e));
     console.error(lastError);
-    report('rewarded', 'no fill');
+    report('rewarded', 'no fill', e && e.message ? e.message : e);
     return { rewarded: false, reason: lastError };
   }
   // The plugin resolves showRewardVideoAd only when the reward is earned, so a
@@ -184,6 +215,15 @@ export async function showRewarded() {
 // who paid to remove ads with bannersAllowed(false).
 let bannerState = 'hidden'; // 'hidden' | 'showing' | 'shown'
 let bannerOk = true;
+// Somebody who bought Remove ads (shell/noads.js): no banners and no ads
+// between games, whatever the game itself asks for. Rewarded ads stay, because
+// the player chooses those for a reward.
+let adFree = false;
+export function setAdFree(on) {
+  adFree = Boolean(on);
+  if (adFree) hideBanner();
+}
+export const isAdFree = () => adFree;
 let bannerListener = false;
 let bannerReported = false;
 function setBannerHeight(px) {
@@ -195,7 +235,7 @@ export function bannersAllowed(ok) {
   if (!bannerOk) hideBanner();
 }
 export async function showBanner() {
-  if (!bannerOk || bannerState !== 'hidden' || !unitId('banner')) return bannerState;
+  if (adFree || !bannerOk || bannerState !== 'hidden' || !unitId('banner')) return bannerState;
   bannerState = 'showing';
   try {
     if (!(await initAds())) {
@@ -206,6 +246,12 @@ export async function showBanner() {
     if (!bannerListener) {
       bannerListener = true;
       await AdMob.addListener('bannerAdSizeChanged', (s) => setBannerHeight(bannerState === 'hidden' ? 0 : (s && s.height) || 0));
+      // Google's own word that a banner was really seen, or why none came.
+      // 'shown' below only means the game asked for one (once a session): on
+      // 12 Oct 2026 the games counted 3,897 'shown' in a week against 41 ads
+      // AdMob said it had shown, and these two are what tell them apart.
+      await AdMob.addListener('bannerAdImpression', () => report('banner', 'impression'));
+      await AdMob.addListener('bannerAdFailedToLoad', (e) => report('banner', 'failed to load', (e && (e.message || e.code)) || 'no reason given'));
     }
     await AdMob.showBanner({ adId: unitId('banner'), adSize: 'ADAPTIVE_BANNER', position: 'BOTTOM_CENTER', margin: 0 });
     if (bannerState === 'hidden') {
