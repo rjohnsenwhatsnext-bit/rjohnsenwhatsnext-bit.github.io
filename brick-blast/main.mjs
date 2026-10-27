@@ -10,6 +10,10 @@ import { initAds, maybeInterstitial, showRewarded, adsAvailable, bannerOnScreens
 import { mountRemoveAds } from './arcade-noads.js';
 
 const $ = (id) => document.getElementById(id);
+const trackMission = (event, extra = {}) => {
+  if (missionIndex < 0) return;
+  try { window.arcade?.track(event, { level: missionIndex + 1, mode: 'mine_missions', ...extra }); } catch {}
+};
 const cv = $('game');
 const g2 = cv.getContext('2d');
 const paint=createPaint(g2);
@@ -314,6 +318,7 @@ function start(index = -1) {
   }
   updateMissionHud();
   setView('play');
+  trackMission('level_start');
 }
 function setView(v) {
   view = v;
@@ -332,9 +337,12 @@ function updateMissionHud() {
 }
 function finishMission(won) {
   const m = MISSIONS[missionIndex];
+  trackMission(won ? 'level_complete' : 'level_fail', { moves: game.moves });
   if (won && clearedMissions < missionIndex + 1) {
     clearedMissions = missionIndex + 1;
-    try { localStorage.setItem('brickblast.missions.v1', String(clearedMissions)); } catch {}
+    try { localStorage.setItem('brickblast.missions.v1', String(clearedMissions)); }
+    catch { trackMission('save_failure'); }
+    if (clearedMissions < MISSIONS.length) trackMission('unlock', { unlocked: clearedMissions + 1 });
   }
   $('missionResultLabel').textContent = won ? 'MINE JOB COMPLETE' : 'THE SHIFT IS OVER';
   $('missionResultTitle').textContent = won ? m.title : 'Try another route';
@@ -521,7 +529,7 @@ $('missionsOpen').onclick = () => {
   $('missionPicker').showModal();
 };
 $('missionsClose').onclick = () => $('missionPicker').close();
-$('missionRetry').onclick = () => start(missionIndex);
+$('missionRetry').onclick = () => { trackMission('level_retry'); start(missionIndex); };
 $('missionNext').onclick = () => start(missionIndex + 1);
 $('missionHome').onclick = () => { missionIndex = -1; game = null; $('missionHud').hidden = true; setView('home'); };
 $('toHome').onclick = () => {
