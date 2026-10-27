@@ -28,7 +28,23 @@
   <p class="lede">Fill the rows. Fill the cart.<br>Let the old boy light it up.</p>
   <p id="homeBest"></p>
   <button id="play" class="big">Enter the mine <span aria-hidden="true">→</span></button>
+  <button id="missionsOpen" class="missionOpen">Mine missions <span id="missionProgress">0/3 cleared</span></button>
   <p class="small">A little planning. A lot of dynamite.</p>
+</section>
+
+<div id="missionHud" hidden><strong id="missionName"></strong><span id="missionGoal"></span><small id="missionMoves"></small></div>
+<dialog id="missionPicker">
+  <div class="dialogHead"><h2>Mine missions</h2><button id="missionsClose" aria-label="Close missions">×</button></div>
+  <p class="small">Three hand-built jobs. Clear one to open the next.</p>
+  <div id="missionList"></div>
+</dialog>
+<section id="missionEnd" class="screen hidden">
+  <p class="eyebrow" id="missionResultLabel"></p>
+  <h2 id="missionResultTitle"></h2>
+  <p id="missionResultNote"></p>
+  <button id="missionNext" class="big">Next mission →</button>
+  <button id="missionRetry">Try again</button>
+  <button id="missionHome">Back to mine</button>
 </section>
 
 <section id="over" class="screen hidden">

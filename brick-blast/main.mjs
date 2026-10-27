@@ -5,6 +5,7 @@
 // paint.mjs; this file preserves the rule calls and feature timing.
 import {createPaint,artReady} from './paint.mjs';
 import { newGame, place, fits, SHAPES, SIZE, planBlast, detonate, reviveBlast, winTier, checkOver } from './logic.mjs';
+import { MISSIONS, applyMission } from './missions.mjs';
 import { initAds, maybeInterstitial, showRewarded, adsAvailable, bannerOnScreens } from './arcade-ads.js';
 import { mountRemoveAds } from './arcade-noads.js';
 
@@ -43,6 +44,12 @@ const ORE = [
 ];
 
 let game = null;
+let missionIndex = -1;
+let missionLines = 0;
+let missionDouble = false;
+let missionBlasts = 0;
+let clearedMissions = 0;
+try { clearedMissions = Math.min(MISSIONS.length, Math.max(0, Math.floor(Number(localStorage.getItem('brickblast.missions.v1')) || 0))); } catch {}
 let view = 'home';
 let disp = null; // the board as drawn (lags the rules board during a blast)
 let shownScore = 0;
@@ -285,21 +292,27 @@ const cellXY = (r, c) => [L.bx + c * L.cell + L.cell / 2, L.by + r * L.cell + L.
 const wait = (ms) => new Promise((res) => setTimeout(res, ms));
 
 // ---- a round
-function start() {
+function start(index = -1) {
+  missionIndex = index;
+  missionLines = 0;
+  missionDouble = false;
+  missionBlasts = 0;
   game = newGame((Date.now() & 0x7fffffff) >>> 0);
+  if (missionIndex >= 0) applyMission(game, missionIndex);
   disp = game.board.map((r) => r.slice());
   shownScore = 0;
   revived = false;
   sticks = [];
   miner = null;
   // a test hook, only with #blast in the address: the cart starts nearly full
-  if (location.hash === '#blast') {
+  if (missionIndex < 0 && location.hash === '#blast') {
     game.meter = game.meterMax - 1;
     for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) game.board[r][c] = r === SIZE - 1 ? (c < SIZE - 1 ? 1 + (c % 6) : 0) : (r * 5 + c * 3) % 4 === 0 ? 0 : 1 + ((r + c) % 6);
     for (let c = 0; c < SIZE; c++) game.board[3][c] = 0;
     game.tray = [{ shape: 0, colour: 5 }, null, null];
     disp = game.board.map((row) => row.slice());
   }
+  updateMissionHud();
   setView('play');
 }
 function setView(v) {
@@ -307,6 +320,30 @@ function setView(v) {
   document.body.dataset.view = v === 'feature' ? 'play' : v;
   $('home').classList.toggle('hidden', v !== 'home');
   $('over').classList.toggle('hidden', v !== 'over');
+  $('missionEnd').classList.toggle('hidden', v !== 'missionEnd');
+  $('missionHud').hidden = missionIndex < 0 || (v !== 'play' && v !== 'feature');
+}
+function updateMissionHud() {
+  if (missionIndex < 0) return;
+  const m = MISSIONS[missionIndex];
+  $('missionName').textContent = `JOB ${missionIndex + 1} · ${m.title.toUpperCase()}`;
+  $('missionGoal').textContent = m.objective;
+  $('missionMoves').textContent = `${Math.max(0, m.moves - game.moves)} moves left`;
+}
+function finishMission(won) {
+  const m = MISSIONS[missionIndex];
+  if (won && clearedMissions < missionIndex + 1) {
+    clearedMissions = missionIndex + 1;
+    try { localStorage.setItem('brickblast.missions.v1', String(clearedMissions)); } catch {}
+  }
+  $('missionResultLabel').textContent = won ? 'MINE JOB COMPLETE' : 'THE SHIFT IS OVER';
+  $('missionResultTitle').textContent = won ? m.title : 'Try another route';
+  $('missionResultNote').textContent = won
+    ? missionIndex + 1 < MISSIONS.length ? `You opened Job ${missionIndex + 2}. ${MISSIONS[missionIndex + 1].objective}.` : 'All three mine jobs cleared. Classic mode is always open.'
+    : `${m.objective}. Choose your placements carefully and try again.`;
+  $('missionNext').classList.toggle('hidden', !won || missionIndex + 1 >= MISSIONS.length);
+  $('missionProgress').textContent = `${clearedMissions}/${MISSIONS.length} cleared`;
+  setView('missionEnd');
 }
 function toast(msg) {
   const el = $('toast');
@@ -316,6 +353,11 @@ function toast(msg) {
 }
 
 async function afterPlace(res) {
+  if (missionIndex >= 0) {
+    missionLines += res.lines;
+    missionDouble ||= res.lines >= 2;
+    updateMissionHud();
+  }
   if (res.lines) {
     sfx.clear(res.lines, res.streak);
     shake = Math.min(12, 3 + res.lines * 3);
@@ -325,7 +367,15 @@ async function afterPlace(res) {
     if (res.lines >= 3) toast(['', '', '', 'Triple!', 'Huge!', 'Unreal!'][Math.min(5, res.lines)]);
   } else sfx.place();
   disp = game.board.map((r) => r.slice());
-  if (res.blastReady) await feature();
+  if (res.blastReady) {
+    await feature();
+    if (missionIndex >= 0) missionBlasts++;
+  }
+  if (missionIndex >= 0) {
+    const m = MISSIONS[missionIndex];
+    const won = m.target === 'lines' ? missionLines >= m.count : m.target === 'double' ? missionDouble : missionBlasts >= m.count;
+    if (won || game.moves >= m.moves || game.over) return finishMission(won);
+  }
   if (game.over) return gameOver();
 }
 
@@ -412,6 +462,7 @@ function runTo(x, y, speed) {
 }
 
 function gameOver() {
+  if (missionIndex >= 0) return finishMission(false);
   if (game.score > best) {
     best = game.score;
     saveBest();
@@ -442,13 +493,37 @@ $('revive').onclick = async () => {
 };
 $('again').onclick = () => {
   maybeInterstitial().catch((e) => console.warn('Interstitial not shown:', e?.message || e));
-  start();
+  start(-1);
 };
 $('play').onclick = () => {
   audio();
   document.documentElement.requestFullscreen?.().catch(()=>{});
-  start();
+  start(-1);
 };
+$('missionsOpen').onclick = () => {
+  const list = $('missionList');
+  list.replaceChildren();
+  MISSIONS.forEach((m, i) => {
+    const button = document.createElement('button');
+    const text = document.createElement('span');
+    const title = document.createElement('strong');
+    const detail = document.createElement('small');
+    title.textContent = `${i + 1}. ${m.title}`;
+    detail.textContent = m.objective;
+    text.append(title, detail);
+    const status = document.createElement('small');
+    status.textContent = i < clearedMissions ? 'CLEARED' : i === clearedMissions ? 'PLAY' : 'LOCKED';
+    button.append(text, status);
+    button.disabled = i > clearedMissions;
+    button.onclick = () => { $('missionPicker').close(); audio(); document.documentElement.requestFullscreen?.().catch(() => {}); start(i); };
+    list.append(button);
+  });
+  $('missionPicker').showModal();
+};
+$('missionsClose').onclick = () => $('missionPicker').close();
+$('missionRetry').onclick = () => start(missionIndex);
+$('missionNext').onclick = () => start(missionIndex + 1);
+$('missionHome').onclick = () => { missionIndex = -1; game = null; $('missionHud').hidden = true; setView('home'); };
 $('toHome').onclick = () => {
   $('homeBest').textContent = best ? `Best ${best.toLocaleString()}` : '';
   setView('home');

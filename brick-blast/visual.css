@@ -26,6 +26,22 @@ dialog label{display:flex;justify-content:space-between;gap:16px;align-items:cen
 input{accent-color:#e4b35d;width:22px;height:22px}dialog .small{margin-top:20px}
 #toast{position:fixed;top:19%;left:50%;transform:translateX(-50%);color:var(--gold);font-size:20px;text-shadow:0 2px 8px #000;pointer-events:none;z-index:6;white-space:nowrap}
 #over{background:linear-gradient(#071215cc,#071215f5),url('assets/mine.webp') center/cover}
+#missionEnd{background:linear-gradient(#071215dc,#071215f5),url('assets/mine.webp') center/cover}
+#missionEnd h2{font-size:clamp(38px,10vw,58px);line-height:1}
+#missionResultNote{max-width:320px;line-height:1.5}
+#missionHome{border:0;background:transparent;text-decoration:underline}
+.missionOpen{width:min(310px,90vw);display:flex;justify-content:space-between;align-items:center;gap:10px;background:#102124dd;border-color:#b99053;color:#f3d296;text-transform:uppercase;letter-spacing:.8px}
+.missionOpen span{font:700 11px system-ui;color:#d7bea0;letter-spacing:0;text-transform:none}
+#missionPicker .small{margin:0 0 16px}
+#missionList{display:grid;gap:9px}
+#missionList button{display:flex;justify-content:space-between;align-items:center;text-align:left;width:100%;background:linear-gradient(110deg,#233630,#102024);border-color:#8e7650}
+#missionList button span{display:grid;gap:3px}
+#missionList button small{font:500 11px system-ui;color:#c7b89b}
+#missionList button:disabled{opacity:.45;cursor:not-allowed}
+#missionHud{position:fixed;z-index:3;left:12px;top:max(14px,env(safe-area-inset-top));width:min(118px,30vw);display:grid;gap:3px;padding:7px 9px;background:#081719d9;border:1px solid #b99053;border-radius:7px;font:700 10px/1.2 system-ui;color:#efd394;pointer-events:none}
+#missionHud[hidden]{display:none}
+#missionHud span{font-weight:500;color:#fff0cb}
+#missionHud small{color:#c7b89b}
 #overScore{font-variant-numeric:tabular-nums}#revive{font-size:14px}
 @media(min-width:700px){#home{background-size:auto,auto 100%;background-position:center,calc(50% + 210px) center;align-items:flex-start;text-align:left;padding:10vh max(40px,calc(50vw - 490px));background-image:linear-gradient(90deg,#071216 8%,#071216f5 29%,#07121677 58%,#07121611),url('assets/title.webp')}#home>.eyebrow{left:max(40px,calc(50vw - 490px));top:9vh}h1{font-size:110px}#home .lede{font-size:20px}#home .small{max-width:300px}}
 @media(max-height:650px){#home{gap:8px;padding-bottom:calc(22px + var(--ad-banner,0px))}h1{font-size:54px}.lede{font-size:14px}#home .small{font-size:10px}}
